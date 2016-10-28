@@ -3,7 +3,7 @@ dist/*
 cache/*
 stage/*
 .idea/workspace.xml
-.idea/uiDesigner.xml
+.idea/tasks.xml
 extras/AntInstaller/ant.install.log
 extras/AntInstaller/AntInstaller-beta0.8/artifacts/prepare/*
 extras/AntInstaller/AntInstaller-beta0.8/lib/ant-installer-ext.jar

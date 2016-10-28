@@ -22,36 +22,45 @@ import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.*;
+import com.vaadin.server.ExternalResource;
+import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Resource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
-import com.vaadin.ui.*;
+import com.vaadin.ui.AbstractField;
+import com.vaadin.ui.AbstractLayout;
+import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.annotations.Context;
-import org.apache.felix.ipojo.annotations.Controller;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Validate;
 
 import com.vaadin.annotations.StyleSheet;
+import com.vaadin.ui.CssLayout;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.Layout;
+import com.vaadin.ui.Notification;
+import com.vaadin.ui.TextField;
+import com.vaadin.ui.UI;
+import com.vaadin.ui.VerticalLayout;
+
 import org.osgi.framework.BundleContext;
 
-import org.lucidj.task.CompositeTask;
-import org.lucidj.task.TaskContext;
-import org.lucidj.system.SystemAPI;
-import org.rationalq.editor.ComponentState;
+import org.lucidj.api.ComponentState;
+import org.lucidj.api.TaskContext;
+import org.lucidj.runtime.Kernel;
+import org.lucidj.shiro.Shiro;
+import org.lucidj.runtime.CompositeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -85,12 +94,6 @@ public class Formulas extends VerticalLayout implements View
 
     private static final String PROP_FORMULAE_VERSION = "Formulae-Version";
 
-    @Property(name="Init-Data")
-    private List<HashMap> init_data = new LinkedList<> ();
-
-    @Property(name="View-Body")
-    private String formula_name;
-
     @Property(name="View-Caption")
     private String caption = "Formulas";
 
@@ -101,14 +104,17 @@ public class Formulas extends VerticalLayout implements View
     private Accordion acSidebar = null;
     private ComponentPalette sidebar = null;
 
-    @Requires SystemAPI sapi;
+    @Requires
+    private Shiro shiro;
 
     private TaskContext tctx;
 
+    private String view_name = null;
     private long last_save = 0;
     private boolean formulae_changed = false;
 
     private CompositeTask object_list = null;
+    private String task_source = null;
     private Object current_object;
     private Map<Object, Cell> active_cells = new ConcurrentHashMap<> ();
 
@@ -117,7 +123,7 @@ public class Formulas extends VerticalLayout implements View
 
     public Formulas () throws ConfigurationException
     {
-        log.info ("sapi = {}", sapi);
+
     }
 
     class Cell extends AbstractCell
@@ -132,7 +138,7 @@ public class Formulas extends VerticalLayout implements View
         public Object insertNewObjectBefore (String obj_canonical_name, Object ref_obj)
         {
             Object new_object = insert_new_cell (obj_canonical_name, object_list.indexOf (ref_obj));
-            update_cell_focus (new_object);
+            update_cell_focus (new_object, true);
             return (new_object);
         }
 
@@ -140,7 +146,7 @@ public class Formulas extends VerticalLayout implements View
         public Object insertNewObjectAfter (String obj_canonical_name, Object ref_obj)
         {
             Object new_object = insert_new_cell (obj_canonical_name, object_list.indexOf (ref_obj) + 1);
-            update_cell_focus (new_object);
+            update_cell_focus (new_object, true);
             return (new_object);
         }
 
@@ -150,7 +156,7 @@ public class Formulas extends VerticalLayout implements View
             object_list.remove (source_object);
             object_list.add (object_list.indexOf (target_object), source_object);
             synchronize_cell_view ();
-            update_cell_focus (source_object);
+            update_cell_focus (source_object, false);
         }
 
         @Override
@@ -159,7 +165,7 @@ public class Formulas extends VerticalLayout implements View
             object_list.remove (source_object);
             object_list.add (object_list.indexOf (target_object) + 1, source_object);
             synchronize_cell_view ();
-            update_cell_focus (source_object);
+            update_cell_focus (source_object, false);
         }
 
         @Override
@@ -183,7 +189,7 @@ public class Formulas extends VerticalLayout implements View
         @Override
         public void layoutClick (Component component)
         {
-            update_cell_focus (getSourceObject ());
+            update_cell_focus (getSourceObject (), false);
         }
 
         @Override
@@ -214,7 +220,7 @@ public class Formulas extends VerticalLayout implements View
         }
     }
 
-    private void update_cell_focus (Object focus_object)
+    private void update_cell_focus (Object focus_object, boolean scroll_into_view)
     {
         // Set focus to null selects the first object
         if (focus_object == null && object_list.size () > 0)
@@ -233,6 +239,11 @@ public class Formulas extends VerticalLayout implements View
             if (object_ref == current_object)
             {
                 cell.setFocus ();
+
+                if (scroll_into_view)
+                {
+                    cell.scrollIntoView ();
+                }
             }
             else
             {
@@ -331,12 +342,12 @@ public class Formulas extends VerticalLayout implements View
     {
         log.info ("insert_new_object: canonical_name={} index={}", canonical_name, index);
 
-        // TODO: ADD DEFAULT BASIC CELL, WHICH CAN CHANGE WITH PLUGINS
         Object new_object = null;
 
         try
         {
-            tctx.bindThread ();
+            // TODO: LOAD OBJECT FROM CONTEXT CLASSLOADER? tctx.newInstance (cn)?
+            Kernel.bindTaskContext (tctx);
             Class cls = tctx.getClassLoader ().loadClass (canonical_name);
             new_object = cls.newInstance ();
         }
@@ -378,7 +389,7 @@ public class Formulas extends VerticalLayout implements View
         if (index >= 0 && index < object_list.size())
         {
             current_object = object_list.get (index);
-            update_cell_focus (current_object);
+            update_cell_focus (current_object, true);
         }
     }
 
@@ -388,20 +399,22 @@ public class Formulas extends VerticalLayout implements View
         {
             case "save":
             {
-                save_formulae (formula_name);
+                // TODO: EMBED task_source INTO TaskContext
+                save_formulae (task_source);
                 break;
             }
             case VM_NOTEBOOK:
             {
+                // TODO: CREATE BETTER VIEW REPRESENTATION/REFERENCE
                 UI.getCurrent().getNavigator().navigateTo(navid + ":" +
-                                                          formula_name + "/" +
+                                                          task_source + "/" +
                                                           VM_NOTEBOOK);
                 break;
             }
             case VM_SINGLE:
             {
                 UI.getCurrent().getNavigator().navigateTo(navid + ":" +
-                                                          formula_name + "/" +
+                                                          task_source + "/" +
                                                           VM_SINGLE + "/" +
                                                           get_current_cell_index());
                 break;
@@ -541,7 +554,7 @@ public class Formulas extends VerticalLayout implements View
         view_controls.addStyleName("v-component-group");
         view_controls.addStyleName("ui-toolbar-spacer");
         createButton (view_controls, VM_NOTEBOOK,
-            new ExternalResource("vaadin://formulas/notebook-view.png"));
+            new ExternalResource ("vaadin://formulas/notebook-view.png"));
         createButton (view_controls, VM_SINGLE,
             new ExternalResource("vaadin://formulas/single-view.png"), null,
                 ShortcutAction.KeyCode.INSERT, ShortcutAction.ModifierKey.CTRL);
@@ -612,7 +625,7 @@ public class Formulas extends VerticalLayout implements View
                     log.info ("layoutClick: DoubleClick clicked={} canonical_name={}", clicked, canonical_name);
                     int cell_index = get_current_cell_index ();
                     Object new_object = insert_new_cell (canonical_name, cell_index + 1);
-                    update_cell_focus (new_object);
+                    update_cell_focus (new_object, true);
                 }
             }
         });
@@ -656,7 +669,7 @@ public class Formulas extends VerticalLayout implements View
             return (false);
         }
 
-        Path userdir = sapi.getDefaultUserDir ();
+        Path userdir = shiro.getDefaultUserDir ();
 
         if (userdir == null)
         {
@@ -678,7 +691,7 @@ public class Formulas extends VerticalLayout implements View
     public boolean load_formulae (String formulae_name)
     {
         // TODO: REGISTER COMPLETE FILE SOURCE INCLUDING SOURCE FILESYSTEM
-        Path userdir = sapi.getDefaultUserDir ();
+        Path userdir = shiro.getDefaultUserDir ();
 
         if (userdir == null)
         {
@@ -737,7 +750,7 @@ public class Formulas extends VerticalLayout implements View
     private void build_formula_view (String view_mode)
     {
         // TODO: VERIFICAR SE É MELHOR CHECAR A EXISTÊNCIA DA FORMULA AQUI OU NA CRIAÇÃO DO COMPONENTE
-        caption = "Formula: <b>" + formula_name + "</b>";
+        caption = "Formula: <b>" + task_source + "</b>";
 
         setMargin (new MarginInfo (true, false, true, false));
 
@@ -815,8 +828,8 @@ public class Formulas extends VerticalLayout implements View
         addComponent (content);
 
         // TODO: RETRIEVE RUNNING TASKS WITHOUT LOAD
-        tctx = sapi.newTaskContext ();
-        load_formulae(formula_name);
+        tctx = Kernel.createTaskContext ();
+        load_formulae (task_source);
         object_list = tctx.currentTask (CompositeTask.class);
 
         log.info ("object_list: {}", object_list);
@@ -824,50 +837,24 @@ public class Formulas extends VerticalLayout implements View
         synchronize_cell_view ();
 
         // Set focus to first available object
-        update_cell_focus (null);
-    }
-
-    @Controller
-    private boolean is_valid = true;
-
-    @Validate
-    private void validate ()
-    {
-        log.info ("*** VALIDATE ***: formula_name = {}", formula_name);
-
-        if (System.getProperty("rq.home") == null)
-        {
-            log.info("FATAL: Missing rq.home");
-            is_valid = false;
-            return;
-        }
-
-        // TODO: CORRIGIR INSTANCIAÇÃO DO COMPONENTE PARA SINCRONIZAR COM O IPOJO
-        if (formula_name != null && formula_name.contains("@"))
-        {
-            log.info("Service INVALIDATED");
-            is_valid = false;
-        }
-        else
-        {
-            log.info("Service validated");
-        }
-
-        HashMap menu_item = new HashMap()
-        {{
-            put("title", "default");
-            put("icon", icon);
-            put("weight", weight);
-            put("navid", navid + ":default");
-        }};
-
-        init_data.add(menu_item);
+        update_cell_focus (null, true);
     }
 
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event)
     {
-        log.info ("Enter viewName={} parameters={}", event.getViewName(), event.getParameters());
+        view_name = event.getViewName ();
+
+        log.info ("Enter viewName={} parameters={}", view_name, event.getParameters());
+
+        if (view_name.contains (":"))
+        {
+            task_source = view_name.substring (view_name.indexOf (":") + 1);
+        }
+        else
+        {
+            task_source = null;
+        }
 
         if (getComponentCount() == 0)
         {

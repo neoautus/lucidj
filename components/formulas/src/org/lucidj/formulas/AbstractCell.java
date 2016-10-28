@@ -17,10 +17,10 @@
 package org.lucidj.formulas;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import org.lucidj.api.ComponentInterface;
+import org.lucidj.api.ComponentState;
+import org.lucidj.api.EditorInterface;
 import org.lucidj.renderer.ObjectRenderer;
-import org.rationalq.editor.ComponentInterface;
-import org.rationalq.editor.ComponentState;
-import org.rationalq.editor.EditorInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -299,22 +299,24 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
     {
         return (source_object);
     }
+    
+    public void scrollIntoView ()
+    {
+        EditorInterface ei = (EditorInterface)rendered_object;
+
+        if (ei.getFocusComponent () != null)
+        {
+            // TODO: BETTER HANDLING OF SCROLL INTO
+            ei.getFocusComponent ().focus();
+            UI.getCurrent().scrollIntoView (ei.getFocusComponent ());
+        }
+    }
 
     public void setFocus ()
     {
         if (rendered_object instanceof EditorInterface)
         {
-            EditorInterface ei = (EditorInterface)rendered_object;
-
-            setToolbar (ei.toolbar());
-
-            if (ei.getFocusComponent () != null)
-            {
-                // TODO: BETTER HANDLING OF SCROLL INTO
-                ei.getFocusComponent ().focus();
-                UI.getCurrent().scrollIntoView (ei.getFocusComponent ());
-            }
-
+            setToolbar (((EditorInterface)rendered_object).toolbar ());
         }
         else // No toolbar interface
         {

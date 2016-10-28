@@ -6,10 +6,8 @@
      ********************************************************************** -->
 
     <property environment="env"/>
-    <include file="build.inc"/>
-    <!--property name="cache.dir" value="${basedir}/cache"/>
-    <property name="libcache.dir" value="${cache.dir}/lib"/>
-    <property name="configure.ok.file" value="${cache.dir}/configure.ok"/-->
+    <property file="build.properties"/>
+    <property name="build.tstamp" value="${tstamp}"/>
 
 <!-- **********************************************************************
       CONFIGURATION (./configure :)
@@ -93,6 +91,7 @@
             <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo" rev="${ipojo.rev}" />
             <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.api" rev="${ipojo.rev}" />
             <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.annotations" rev="${ipojo.rev}"/>
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.handler.eventadmin" rev="1.8.0"/>
         </pathdep>
 
         <pathdep group="tinkerpop">
@@ -116,6 +115,15 @@
         <pathdep group="vaadin-widgets">
             <ivy:dependency org="com.vaadin.addon" name="vaadin-context-menu" rev="0.7.3" transitive="false"/>
             <ivy:dependency org="org.vaadin.alump.gridstack" name="gridstack-addon" rev="0.2.1"/>
+            <ivy:dependency org="org.vaadin.addons" name="sizereporter" rev="0.1.4" />
+            <ivy:dependency org="org.vaadin.addons" name="restrain" rev="0.1" />
+
+            <!-- Vaadin Leaflet plugin + JTS, jackson -->
+            <ivy:dependency org="org.vaadin.addon" name="v-leaflet" rev="1.0.0-rc2" />
+            <ivy:dependency org="com.vividsolutions" name="jts" rev="1.13" />
+            <ivy:dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.7.8" />
+            <ivy:dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.7.8" />
+            <ivy:dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.7.8" />
         </pathdep>
 
         <pathdep group="osgi">
@@ -127,8 +135,17 @@
         <pathdep group="karaf-runtime">
             <ivy:dependency org="org.apache.karaf.shell" name="org.apache.karaf.shell.console"
                 rev="${karaf.release}" transitive="false"/>
+            <ivy:dependency org="org.apache.karaf.shell" name="org.apache.karaf.shell.core"
+                rev="${karaf.release}" transitive="false"/>
             <ivy:dependency org="org.apache.karaf.features" name="org.apache.karaf.features.core"
                 rev="${karaf.release}" transitive="false"/>
+        </pathdep>
+
+        <pathdep group="karaf-util">
+            <ivy:dependency org="org.apache.karaf" name="org.apache.karaf.util"
+                rev="${karaf.release}" transitive="false"/>
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.utils"
+                rev="1.8.4" transitive="false"/>
         </pathdep>
 
         <pathdep group="javaee-api">
@@ -168,6 +185,10 @@
 
         <pathdep group="kryo">
             <ivy:dependency org="com.esotericsoftware" name="kryo" rev="3.0.3"/>
+        </pathdep>
+
+        <pathdep group="jansi">
+            <ivy:dependency org="org.fusesource.jansi" name="jansi" rev="1.14" />
         </pathdep>
 
         <!-- Ready to go! -->

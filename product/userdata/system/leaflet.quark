@@ -1,0 +1,50 @@
+#!/usr/bin/quark-handler
+Q-Quark-Version: "1.0.0"
+Q-Object: "org.lucidj.runtime.CompositeTask"
+Q-Content-Type: "multipart/mixed"; boundary="-------THINK_BIG_BE_BOLD-------"
+Formulae-Version: "1.0.0"
+
+-------THINK_BIG_BE_BOLD-------
+Q-Content-Type: "text/plain"
+Q-Object: "org.rationalq.smartbox.SmartBox"
+output0: Embedded; refid=3
+
+map = new org.vaadin.addon.leaflet.LMap ();
+tiles = new org.vaadin.addon.leaflet.LOpenStreetMapLayer ();
+map.addBaseLayer(tiles, "Open Street Map");
+Vaadin.addComponent (map);
+map.setHeight ("400px");
+map.setZoomLevel (6);
+map.setCenter (56, 9);
+marker = new org.vaadin.addon.leaflet.LMarker (56.0639344617945, 9.87637293767504);
+map.addComponent (marker);
+
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.smartbox.SmartBox"
+Q-Content-Type: "text/plain"
+output0: Embedded; refid=4
+
+Console.println (map);
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.vaadin.Vaadin"; id=3; embedded
+Q-Content-Type: "text/plain"
+
+<!doctype html>
+<html>
+    <head>
+        <meta name="package-mapping" content="org_rationalq_vaadin:org.rationalq.vaadin">
+        <meta name="package-mapping" content="org_vaadin_addon_leaflet:org.vaadin.addon.leaflet">
+    </head>
+    <body>
+        <org_rationalq_vaadin-vaadin>
+            <org_vaadin_addon_leaflet-l-map height="400px"></org_vaadin_addon_leaflet-l-map>
+        </org_rationalq_vaadin-vaadin>
+    </body>
+</html>
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.lucidj.console.Console"; id=4; embedded
+Q-Content-Type: "text/plain"
+
+2016-10-17 07:53:20.715 | OUT | org.vaadin.addon.leaflet.LMap@33be948f\n
+
+-------THINK_BIG_BE_BOLD---------

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/modules/classtracker/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/dygraphs/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/editor/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/plotchart/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/quark/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/shiro/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/smartbox/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/timeseries/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/uiaccess/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/themes/kuori" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/vaadin-kernel/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/buttons_and_links/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/common_parts/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/dygraph_charts/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/resources/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/security/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/vaadin/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/aceeditor/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/formulas/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/librarian/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/beanshell/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/console/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/vaadin/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/exception/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/launcher/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/system/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/executive/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/top/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/components/explorer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/html/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/markdown/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/bootstrap/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/renderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/test_renderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/test_component/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/smartbox_renderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/task/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/objectmanager/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/html_renderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/markdown_renderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/plotly/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/plotly_renderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/shadowmap/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/gaussui/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/vaadinui/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/test/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/api/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/layoutmanager/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/runtime/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/search/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/stage" />
+    </content>
+    <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="vaadin-7.x" level="project" />
+    <orderEntry type="library" name="ipojo-1.x" level="project" />
+    <orderEntry type="library" name="shiro-core-1.x" level="project" />
+    <orderEntry type="library" name="osgi-r5" level="project" />
+    <orderEntry type="library" name="gson-2.4" level="project" />
+    <orderEntry type="library" name="kryo-3.x" level="project" />
+    <orderEntry type="library" name="commons-lang3-3.x" level="project" />
+    <orderEntry type="library" name="guava-18.x" level="project" />
+    <orderEntry type="library" name="slf4j-api-1.7.x" level="project" />
+    <orderEntry type="library" name="bnd-2.4.x" level="project" />
+    <orderEntry type="library" name="karaf-runtime-4.x" level="project" />
+    <orderEntry type="library" name="vaadin-addons" level="project" />
+    <orderEntry type="library" name="extras" level="project" />
+    <orderEntry type="library" name="javaee-api-7.0" level="project" />
+    <orderEntry type="library" name="commons-exec-1.x" level="project" />
+    <orderEntry type="library" name="bouncycastle-1.5x" level="project" />
+  </component>
+</module>

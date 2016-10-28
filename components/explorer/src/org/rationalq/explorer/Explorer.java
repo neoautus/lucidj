@@ -16,10 +16,13 @@
 
 package org.rationalq.explorer;
 
-import org.lucidj.system.SystemAPI;
+import org.lucidj.shiro.Shiro;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.lucidj.uiaccess.UIAccess;
 
+import com.vaadin.data.util.FilesystemContainer;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
@@ -29,15 +32,15 @@ import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
+import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 
 import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
@@ -46,42 +49,39 @@ import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.ServiceProperty;
 
 @Component
 @Instantiate
 @Provides (specifications = com.vaadin.navigator.View.class)
-public class Explorer extends VerticalLayout implements View
+public class Explorer extends VerticalLayout implements View, ItemClickEvent.ItemClickListener
 {
     @Property public String title = "Explorer";
     @Property public int weight = 100;
     @Property public Resource icon = FontAwesome.FOLDER_OPEN_O;
-    @Property private String navid = "explorer";
+    @Property private String navid = "home";
     //@Property private String options = "header";
-
-    @ServiceProperty (name="X-Buga-Munga")
-    private String[] caption = new String[] { "Ugamunga", "Oingoboingo" };
 
     @Context
     transient BundleContext ctx;
 
+    @Requires
+    private Shiro shiro;
+
     private final transient Logger log = LoggerFactory.getLogger (Explorer.class);
-
-    @Property(name="Init-Data")
-    private List<HashMap> init_data = new LinkedList<> ();
-
-    @Property(name="View-Body")
-    private String formula_name;
 
     @Property(name="View-Toolbar")
     private CssLayout toolbar = null;
 
-    @Requires
-    SystemAPI sapi;
+    private final VerticalLayout self = this;
+    private Path userdir;
+    private transient boolean filesystem_changed = false;
+    private TreeTable treetable;
+    private Object[] treetable_visible_columns;
+    private transient WatchService watch_service;
 
     public Explorer ()
     {
-        log.info ("sapi = {}", sapi);
+
     }
 
     private void build_toolbar ()
@@ -127,89 +127,203 @@ public class Explorer extends VerticalLayout implements View
         toolbar.addComponent(group);
     }
 
+    private void refresh_treetable ()
+    {
+        log.info ("Refreshing filesystem treetable");
+        treetable.setContainerDataSource (treetable.getContainerDataSource ());
+        treetable.setVisibleColumns (treetable_visible_columns);
+    }
+
+    private void deactivate_file_change_watcher ()
+    {
+        if (watch_service != null)
+        {
+            try
+            {
+                watch_service.close ();
+            }
+            catch (Exception ignore) {};
+
+            watch_service = null;
+        }
+    }
+
+    private void activate_file_change_watcher (Path userdir)
+    {
+        try
+        {
+            watch_service = userdir.getFileSystem ().newWatchService();
+            userdir.register (watch_service,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_MODIFY,
+                StandardWatchEventKinds.ENTRY_DELETE);
+        }
+        catch (Exception e)
+        {
+            // No watch, rely on manual refresh
+        }
+
+        if (watch_service != null)
+        {
+            Thread watch_thread = new Thread ()
+            {
+                public void run()
+                {
+                    log.info ("watch_thread START");
+
+                    while (watch_service != null)
+                    {
+                        log.debug ("poll events");
+
+                        WatchKey watch_key = watch_service.poll ();
+
+                        //log.info ("watch_key > {}", watch_key.isValid ());
+
+                        if (watch_key != null)
+                        {
+                            for (WatchEvent<?> event : watch_key.pollEvents ())
+                            {
+                                log.debug ("events ready");
+
+                                WatchEvent.Kind eventKind = event.kind();
+
+                                if (eventKind.equals(StandardWatchEventKinds.OVERFLOW) ||
+                                        eventKind.equals(StandardWatchEventKinds.ENTRY_CREATE) ||
+                                        eventKind.equals(StandardWatchEventKinds.ENTRY_MODIFY) ||
+                                        eventKind.equals(StandardWatchEventKinds.ENTRY_DELETE))
+                                {
+                                    filesystem_changed = true;
+                                    log.debug ("Filesystem changed.");
+                                }
+                            }
+
+                            // Reset key and check whether it's still valid
+                            if (!watch_key.reset())
+                            {
+                                log.debug ("Watch no longer valid.");
+                                watch_key.cancel();
+                                deactivate_file_change_watcher ();
+                                break;
+                            }
+                        }
+
+                        try
+                        {
+                            Thread.sleep (1000);
+                        }
+                        catch (InterruptedException ignore) {};
+                    }
+
+                    log.info ("watch_thread STOP");
+                }
+            };
+
+            watch_thread.start();
+
+            Thread refresh_thread = new Thread ()
+            {
+                public void run()
+                {
+                    log.info ("refresh_thread START");
+
+                    while (watch_service != null)
+                    {
+                        log.debug ("treetable watcher...");
+
+                        if (filesystem_changed)
+                        {
+                            new UIAccess (self)
+                            {
+                                @Override
+                                public void updateUI()
+                                {
+                                    // Refresh treetable contents
+                                    refresh_treetable ();
+                                    filesystem_changed = false;
+                                }
+                            };
+                        }
+
+                        try
+                        {
+                            Thread.sleep (1000);
+                        }
+                        catch (InterruptedException ignore) {};
+                    }
+
+                    log.info ("refresh_thread STOP");
+                }
+            };
+
+            refresh_thread.start ();
+        }
+
+        // Initial treetable refresh
+        refresh_treetable ();
+    }
+
     @Override
     public void detach ()
     {
         super.detach();
-        //save_formulae(formula_name);
+        deactivate_file_change_watcher ();
     }
 
     private void build_explorer_view ()
     {
-        //setMargin (new MarginInfo(true, true, true, true));
         setMargin(true);
 
-        Label private_caption = new Label ("Your Formulas");
+        Label private_caption = new Label ("Home");
         private_caption.addStyleName("h2");
         addComponent(private_caption);
 
-        VerticalLayout content = new VerticalLayout ();
-        content.setSpacing (true);
-        content.setSizeFull();
-        addComponent (content);
+        FilesystemContainer fc = new FilesystemContainer (userdir.toFile ());
 
-        Path userdir = sapi.getDefaultUserDir ();
-
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(userdir))
-        {
-            for (Path p: stream)
-            {
-                if (Files.isRegularFile (p))
-                {
-                    log.info ("p={}", p);
-                    if (!p.toString ().endsWith (".quark"))
-                    {
-                        continue;
-                    }
-
-                    String filename = p.getFileName ().toString ();
-
-                    if (filename.contains("."))
-                    {
-                        filename = filename.substring (0, filename.lastIndexOf('.'));
-                    }
-
-                    final String formula = filename;
-                    Button formulae = new Button (formula);
-
-                    formulae.addClickListener(new Button.ClickListener()
-                    {
-                        @Override
-                        public void buttonClick(Button.ClickEvent clickEvent)
-                        {
-                            UI.getCurrent().getNavigator().navigateTo ("formulas:" + formula);
-                        }
-                    });
-
-                    content.addComponent(formulae);
-                    formulae.setSizeFull();
-                }
-                else
-                {
-                    log.info ("Entry: {}", p.toString() + "/");
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            log.error ("Exception listing files", e);
-        }
+        treetable = new TreeTable();
+        treetable.setContainerDataSource (fc);
+        treetable.setItemIconPropertyId ("Icon");
+        treetable.setWidth ("100%");
+        treetable.setSelectable (true);
+        treetable.setImmediate (true);
+        treetable.setPageLength (0);
+        treetable.setHeightUndefined ();
+        treetable.addItemClickListener (this);
+        treetable_visible_columns = new Object[] { "Name", "Size", "Last Modified" };
+        addComponent (treetable);
     }
 
     @Override
-    public void enter(ViewChangeListener.ViewChangeEvent event)
+    public void itemClick (ItemClickEvent itemClickEvent)
+    {
+        String item_name = (String)itemClickEvent.getItem ().getItemProperty ("Name").getValue ();
+        log.info ("itemClickEvent: {}", item_name);
+
+        if (item_name.endsWith (".quark"))
+        {
+            item_name = item_name.substring (0, item_name.lastIndexOf ('.'));
+        }
+
+        treetable.unselect (itemClickEvent.getItem ().getItemPropertyIds ());
+
+        UI.getCurrent().getNavigator().navigateTo ("formulas:" + item_name);
+    }
+
+    @Override
+    public void enter (ViewChangeListener.ViewChangeEvent event)
     {
         log.info ("Enter viewName=" + event.getViewName() + " parameters=" + event.getParameters());
 
-        if (getComponentCount() == 0)
+        if (shiro.getSubject ().isAuthenticated ())
         {
-            build_explorer_view ();
-            build_toolbar ();
-        }
-        else // View already built
-        {
-            // TODO: PLACE A FILE CHANGE LISTENER
-            // updateBrowserView ();
+            userdir = shiro.getDefaultUserDir ();
+
+            if (getComponentCount() == 0)
+            {
+                build_explorer_view ();
+                build_toolbar ();
+            }
+
+            activate_file_change_watcher (userdir);
         }
     }
 }

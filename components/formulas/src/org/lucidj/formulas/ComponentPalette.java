@@ -16,14 +16,13 @@
 
 package org.lucidj.formulas;
 
-import org.rationalq.editor.ComponentInterface;
+import org.lucidj.api.ComponentInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.kuori.uiaccess.UIAccess;
+import org.lucidj.uiaccess.UIAccess;
 
 import com.vaadin.event.LayoutEvents;
 import com.vaadin.shared.ui.label.ContentMode;
-import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.DragAndDropWrapper;
 import com.vaadin.ui.Label;

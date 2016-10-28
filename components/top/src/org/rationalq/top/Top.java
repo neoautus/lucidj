@@ -16,11 +16,11 @@
 
 package org.rationalq.top;
 
-import org.lucidj.system.SystemAPI;
-import org.lucidj.task.TaskContext;
+import org.lucidj.api.TaskContext;
+import org.lucidj.runtime.Kernel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import xyz.kuori.uiaccess.UIAccess;
+import org.lucidj.uiaccess.UIAccess;
 
 import com.vaadin.annotations.StyleSheet;
 import com.vaadin.data.Item;
@@ -40,7 +40,6 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
 
 @StyleSheet ("vaadin://top_components/styles.css")
 @Component
@@ -53,9 +52,6 @@ public class Top extends VerticalLayout implements View
     @Property public String title = "Top tasks";
     @Property public int weight = 200;
     @Property public Resource icon = FontAwesome.TASKS;
-
-    @Requires
-    SystemAPI sapi;
 
     private IndexedContainer container;
     private Grid grid;
@@ -71,7 +67,7 @@ public class Top extends VerticalLayout implements View
     private void updateView ()
     {
         Set<String> valid_ctxids = new HashSet<> ();
-        TaskContext[] ctx_list = sapi.getAllContexts ();
+        TaskContext[] ctx_list = Kernel.taskManager ().getTaskContexts ();
 
         for (int i = 0; i < ctx_list.length; i++)
         {

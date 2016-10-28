@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="shiro-core-1.x">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/cache/lib/shiro/bundle/shiro-core-1.2.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

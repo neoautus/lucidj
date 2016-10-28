@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="extras">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/cache/lib/markdown/jar/commonmark-0.5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/markdown/jar/commonmark-ext-gfm-tables-0.5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/jansi/jar/jansi-1.14.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

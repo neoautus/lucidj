@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="kryo-3.x">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/cache/lib/kryo/bundle/kryo-3.0.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/kryo/jar/objenesis-2.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

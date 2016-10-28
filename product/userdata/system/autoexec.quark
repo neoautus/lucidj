@@ -1,0 +1,55 @@
+#!/usr/bin/quark-handler
+Q-Quark-Version: "1.0.0"
+Q-Object: "org.lucidj.task.CompositeTask"
+Q-Content-Type: "multipart/mixed"; boundary="-------THINK_BIG_BE_BOLD-------"
+Formulae-Version: "1.0.0"
+
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.smartbox.SmartBox"
+Q-Content-Type: "text/plain"
+Long-Value: 31415926535898L
+View-Mode: "default"
+output0: Embedded; refid=1
+Content-Type: "text/plain"
+
+for (int i = 0; i < 5; i++)
+{
+    Console.println ("Hello world! i=" + i);
+    Console.flush ();
+    Thread.sleep (500);
+}
+
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.smartbox.SmartBox"
+Q-Content-Type: "text/plain"
+output0: Embedded; refid=2
+Content-Type: "text/plain"
+
+new Image (null, new ExternalResource ("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"));
+
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.console.Console"; id=1; embedded
+Q-Content-Type: "text/plain"
+
+[OUT] Hello world! i=0
+[OUT] Hello world! i=1
+[OUT] Hello world! i=2
+[OUT] Hello world! i=3
+[OUT] Hello world! i=4
+
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.vaadin.Vaadin"; id=2; embedded
+Q-Content-Type: "text/plain"
+
+<!doctype html>
+<html>
+    <head>
+        <meta name="package-mapping" content="org_rationalq_vaadin:org.rationalq.vaadin">
+    </head>
+    <body>
+        <org_rationalq_vaadin-vaadin>
+            <vaadin-image source="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"></vaadin-image>
+        </org_rationalq_vaadin-vaadin>
+    </body>
+</html>
+-------THINK_BIG_BE_BOLD---------

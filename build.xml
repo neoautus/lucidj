@@ -1,0 +1,1414 @@
+<?xml version="1.0"?>
+<project name="rationalq" default="build" basedir=".">
+
+<!-- **********************************************************************
+      INIT
+     ********************************************************************** -->
+
+    <property environment="env"/>
+    <include file="build.inc"/>
+
+    <!-- Ensures we have base libraries configuration ready -->
+    <script language="javascript"><![CDATA[
+    do {
+        if (org.apache.tools.ant.util.JavaEnvUtils.getJavaVersionNumber() < 17) {
+            project.setProperty("errmsg", "Unsupported Java. Please use Java version 1.7 or higher.");
+            break;
+        }
+        if (!new java.io.File(project.getProperty("cache.dir"), "configure.ok").exists()) {
+            project.setProperty("errmsg", "Not configured. Please run 'ant -f configure.xml' first." );
+            break;
+        }
+    } while (false);
+    ]]></script>
+    <fail if="errmsg">Error:
+
+        ${errmsg}
+
+    </fail>
+
+<!-- **********************************************************************
+      BASE LIBRARIES
+     ********************************************************************** -->
+
+    <path id="bnd.cp">
+        <fileset dir="${libcache.dir}" includes="bnd/jar/*.jar"/>
+    </path>
+
+    <path id="tasks.cp">
+        <fileset dir="${libcache.dir}" includes="tasks/**/*.jar"/>
+    </path>
+
+    <path id="slf4j.cp">
+        <fileset dir="${libcache.dir}" includes="slf4j/**/*.jar"/>
+    </path>
+
+    <path id="netty.cp">
+        <fileset dir="${libcache.dir}" includes="netty/jar/**/*.jar"/>
+    </path>
+
+    <path id="shiro.cp">
+        <fileset dir="${libcache.dir}" includes="shiro/bundle/**/*.jar"/>
+    </path>
+
+    <path id="bouncycastle.cp">
+        <fileset dir="${libcache.dir}" includes="bouncycastle/jar/**/*.jar"/>
+    </path>
+
+    <path id="ipojo.cp">
+        <fileset dir="${libcache.dir}">
+            <include name="ipojo/jar/**/*.jar"/>
+            <include name="ipojo/bundle/**/*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="tinkerpop.cp">
+        <fileset dir="${libcache.dir}">
+            <include name="tinkerpop/jar/**/*.jar"/>
+            <include name="tinkerpop/bundle/**/*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="classpath.vaadin.server">
+        <fileset dir="${libcache.dir}">
+            <include name="vaadin/jar/vaadin-server-*.jar"/>
+            <include name="vaadin/jar/vaadin-shared-*.jar"/>
+            <include name="vaadin/jar/vaadin-themes-*.jar"/>
+            <include name="vaadin/jar/vaadin-client-compiler-*.jar"/><!-- ??? -->
+            <include name="vaadin/jar/vaadin-icons-*.jar"/>
+            <include name="vaadin/jar/guava-*.jar"/>
+            <include name="vaadin/jar/jsoup-*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="vaadin-sass-compiler.cp">
+        <fileset dir="${libcache.dir}" includes="vaadin/jar/vaadin-sass-compiler-*.jar"/>
+    </path>
+
+    <path id="vaadin-compile-widgets.cp">
+        <fileset dir="${libcache.dir}">
+            <include name="vaadin-client-compiler/jar/*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="osgi.ext">
+        <fileset dir="${libcache.dir}" includes="osgi/jar/**/*.jar"/>
+    </path>
+
+    <path id="karaf-runtime.cp">
+        <fileset dir="${libcache.dir}" includes="karaf-runtime/bundle/**/*.jar"/>
+    </path>
+
+    <path id="javaee-api.cp">
+        <fileset dir="${libcache.dir}" includes="javaee-api/jar/javaee-api-*.jar"/>
+    </path>
+
+    <!--path id="bsh.cp">
+        <fileset dir="${libcache.dir}" includes="bsh/jar/**/*.jar"/>
+    </path-->
+
+    <path id="gson.cp">
+        <fileset dir="${libcache.dir}" includes="gson/jar/**/*.jar"/>
+    </path>
+
+    <path id="guava.cp">
+        <fileset dir="${libcache.dir}" includes="guava/bundle/**/*.jar"/>
+    </path>
+
+    <path id="markdown.cp">
+        <fileset dir="${libcache.dir}" includes="markdown/jar/**/*.jar"/>
+    </path>
+
+    <path id="apache-commons.cp">
+        <fileset dir="${libcache.dir}" includes="apache-commons/jar/**/*.jar"/>
+    </path>
+
+    <path id="apache-commons-exec.cp">
+        <fileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
+    </path>
+
+    <path id="kryo.cp">
+        <fileset dir="${libcache.dir}" includes="kryo/bundle/kryo-*.jar"/>
+        <fileset dir="${libcache.dir}" includes="kryo/jar/objenesis-*.jar"/>
+    </path>
+
+    <!--path id="vaadin-widgets.cp">
+        <fileset dir="${basedir}" includes="build/widgetset/temp-widgetset.jar"/>
+    </path-->
+
+    <path id="classpath.static">
+
+        <path refid="bnd.cp"/>
+        <path refid="slf4j.cp"/>
+        <path refid="netty.cp"/>
+        <path refid="shiro.cp"/>
+        <path refid="bouncycastle.cp"/>
+        <path refid="gson.cp"/>
+        <path refid="guava.cp"/>
+        <!--path refid="bsh.cp"/-->
+        <path refid="apache-commons.cp"/>
+        <path refid="kryo.cp"/>
+        <path refid="markdown.cp"/>
+
+        <!-- jsoup -->
+        <!--fileset dir="${lib.dir}/static/jsoup-1.8.x">
+            <include name="*.jar"/>
+        </fileset-->
+
+        <!-- javassist -->
+        <!--fileset dir="${lib.dir}/static/javassist-3.x">
+            <include name="javassist.jar"/>
+        </fileset-->
+
+        <!-- Bouncy Castle -->
+        <!--fileset dir="${lib.dir}/static/bouncy-castle-1.x">
+            <include name="bcprov-jdk15on-1*.jar"/>
+        </fileset-->
+
+        <!-- Logback -->
+        <!--fileset dir="${lib.dir}/static/logback-1.x">
+            <include name="logback-core-1.*.jar"/>
+            <exclude name="logback-core-1.*-sources.jar"/>
+            <include name="logback-classic-1.*.jar"/>
+            <exclude name="logback-classic-1.*-sources.jar"/>
+        </fileset-->
+
+    </path>
+
+    <!-- ***** INTERFACES CLASSPATH ******************************************* -->
+
+    <!-- As interfaces nao deveriam nem mesmo enxergar-se entre si -->
+    <path id="classpath.interfaces">
+
+        <!-- Interfaces -->
+        <pathelement location="${interfaces.class}"/>
+
+        <!-- Classpath base -->
+        <path refid="classpath.static"/>
+
+    </path>
+
+    <property name="classpath.interfaces.literal" refid="classpath.interfaces"/>
+
+    <!-- ***** MODULES & LIBRARIES CLASSPATH ********************************** -->
+
+    <path id="classpath.runtime">
+
+        <!-- JavaEE API 7.x -->
+        <path refid="javaee-api.cp"/>
+
+        <!-- OSGi -->
+        <path refid="osgi.ext"/>
+        <path refid="ipojo.cp"/>
+        <path refid="karaf-runtime.cp"/>
+
+        <!-- Vaadin etc -->
+        <path refid="vaadin-sass-compiler.cp"/>
+        <!--path refid="vaadin-widgets.cp"/-->
+        <path refid="classpath.vaadin.server"/>
+        <path refid="classpath.static"/>
+
+    </path>
+
+    <property name="classpath.runtime.literal" refid="classpath.runtime"/>
+
+    <path id="classpath.build">
+
+        <!-- Libraries -->
+        <pathelement location="${libraries.class}"/>
+
+        <!-- Compiled widgets -->
+        <pathelement location="${widgetset.root.dir}"/>
+
+        <path refid="classpath.runtime"/>
+
+        <path refid="classpath.interfaces"/>
+
+    </path>
+
+    <property name="classpath.build.literal" refid="classpath.build"/>
+
+<!-- **********************************************************************
+      TASKS
+     ********************************************************************** -->
+
+    <!-- Define tasks presentes em tools/ant-contrib (ex. if, foreach) -->
+    <taskdef resource="net/sf/antcontrib/antlib.xml">
+        <classpath refid="tasks.cp"/>
+    </taskdef>
+
+    <taskdef name="ipojo" classname="org.apache.felix.ipojo.task.IPojoTask">
+        <classpath refid="tasks.cp"/>
+    </taskdef>
+
+    <taskdef resource="aQute/bnd/ant/taskdef.properties">
+        <classpath refid="bnd.cp"/>
+    </taskdef>
+
+<!-- **********************************************************************
+      MACROS
+     ********************************************************************** -->
+
+    <macrodef name="listpackages">
+        <attribute name="dir"/>
+        <attribute name="property"/>
+        <sequential>
+            <fileset dir="@{dir}" id="classes">
+                <include name="**/*.class"/>
+            </fileset>
+            <pathconvert dirsep="/" refid="classes" property="packages" pathsep=",">
+                <mapper type="regexp" from="@{dir}/(.*)/.*\.class" to="\1" />
+            </pathconvert>
+            <dirset id="unique.packages" dir="@{dir}" includes="${packages}"/>
+            <pathconvert dirsep="." refid="unique.packages" property="@{property}" pathsep=", ">
+                <map from="@{dir}/" to=""/>
+            </pathconvert>
+        </sequential>
+    </macrodef>
+
+<!-- **********************************************************************
+      Targets do Control Center
+     ********************************************************************** -->
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+        <delete>
+            <fileset dir="${basedir}" defaultexcludes="no">
+               <include name="**/*~"/>
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="configure">
+        <ant antfile="configure.xml"/>
+    </target>
+
+    <target name="build">
+        <if><not><available file="${vaadin.static.jar}"/></not>
+            <then>
+                <ant target="clean"/>
+                <ant target="build.stage"/>
+                <ant target="build.vaadin.static"/>
+            </then>
+        </if>
+        <ant target="build.theme"/>
+        <ant target="build.all.interfaces"/>
+        <ant target="build.all.libraries"/>
+        <ant target="build.all.components"/>
+    </target>
+
+    <target name="install">
+        <!-- TODO: MAKE install A PREREQ FOR NORMAL BUILD -->
+        <ant target="clean"/>
+        <ant target="build.stage"/>
+        <ant target="build.vaadin.static"/>
+        <ant target="build.theme"/>
+        <ant target="build.all.interfaces"/>
+        <ant target="build.all.libraries"/>
+        <ant target="build.all.components"/>
+        <!-- TODO: BUILD MAVEN PRELOAD CACHE -->
+        <ant target="installer"/>
+    </target>
+
+    <target name="run">
+        <!-- TODO: BUILD STAGE IF NOT AVAILABLE -->
+        <java jar="${stage.dir}/bin/launcher.jar" fork="true" failonerror="true">
+            <arg value="start"/>
+        </java>
+    </target>
+
+    <target name="start">
+        <ant target="run"/>
+    </target>
+
+    <target name="stop">
+        <java jar="${stage.dir}/bin/launcher.jar" fork="true" failonerror="true">
+            <arg value="stop"/>
+        </java>
+    </target>
+
+    <target name="save.maven_preload.cache">
+        <copy todir="${maven2.preload.dir}">
+            <fileset dir="${stage.dir}/cache/maven2">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <target name="installer">
+
+        <echo message="ant.library.dir=${ant.library.dir}"/>
+
+        <!-- Our own AntInstaller sources, since antinstaller.sourceforge.net looks abandoned -->
+        <property name="ant-installer.dir" value="${basedir}/extras/AntInstaller/AntInstaller-beta0.8"/>
+
+        <!-- Build it -->
+        <ant antfile="${ant-installer.dir}/build/build.xml"
+             useNativeBasedir="true"/>
+
+        <path id="ant-installer.cp">
+            <fileset dir="${ant-installer.dir}/lib">
+                <include name="ant-installer-ext.jar"/>
+                <include name="ant-installer.jar"/>
+            </fileset>
+        </path>
+
+        <taskdef name="installer" classpathref="ant-installer.cp"
+            classname="org.tp23.antinstaller.taskdefs.Installer"/>
+
+        <zip destfile="${dist.dir}/installpack.zip">
+            <fileset dir="${stage.dir}" includes="**/*"/>
+        </zip>
+
+        <!-- Now build the installer itself -->
+        <installer file="${dist.dir}/rationalq-setup.jar" compress="true"
+                   extractType="SelfExtractor"
+                   installConfig="${basedir}/extras/installer/antinstall-config.xml"
+                   buildFile="${basedir}/extras/installer/build.xml"
+                   antInstallLib="${ant-installer.dir}/lib"
+                   antLib="${ant.library.dir}"
+                   validateConfig="true"
+                   failOnError="true"
+                   icons="eclipse">
+            <fileset file="${dist.dir}/installpack.zip"/>
+        </installer>
+    </target>
+
+    <target name="karaf">
+
+        <property name="rq.home" value="/home/marcond/Lab/rationalq-dev/stage"/>
+        <property name="jdk.home" value="/srv/lab/tools/jdk1.8.x"/>
+        <property name="karaf.dirname" value="apache-karaf-4.0.4"/>
+
+        <property name="karaf.home" value="${runtime.dir}/${karaf.dirname}"/>
+        <property name="karaf.data" value="${rq.home}/cache/${karaf.dirname}"/>
+        <java classname="org.apache.karaf.main.Main" fork="yes" spawn="true">
+            <jvmarg value="-server" />
+            <jvmarg value="-Xms128M" />
+            <jvmarg value="-Xmx1024M" />
+            <jvmarg value="-XX:+UnlockDiagnosticVMOptions" />
+            <jvmarg value="-XX:+UnsyncloadClass" />
+            <jvmarg value="-Djava.awt.headless=true" />
+            <jvmarg value="-Dcom.sun.management.jmxremote" />
+            <sysproperty key="rq.home" value="${rq.home}" />
+            <sysproperty key="rq.deploy" value="${rq.home}/runtime/application-dev" />
+            <sysproperty key="java.endorsed.dirs" value="${jdk.home}/jre/lib/endorsed:${jdk.home}/lib/endorsed:${karaf.home}/lib/endorsed" />
+            <sysproperty key="java.ext.dirs" value="${jdk.home}/jre/lib/ext:${jdk.home}/lib/ext:${karaf.home}/lib/ext" />
+            <sysproperty key="karaf.instances" value="${karaf.home}/instances" />
+            <sysproperty key="karaf.home" value="${karaf.home}" />
+            <sysproperty key="karaf.base" value="${karaf.home}" />
+            <sysproperty key="karaf.data" value="${karaf.data}" />
+            <sysproperty key="karaf.etc" value="${rq.home}/conf" />
+            <sysproperty key="karaf.restart.jvm.supported" value="true" />
+            <sysproperty key="java.io.tmpdir" value="${karaf.data}/tmp" />
+            <sysproperty key="java.util.logging.config.file" value="${karaf.home}/etc/java.util.logging.properties" />
+            <sysproperty key="karaf.startLocalConsole" value="false" />
+            <sysproperty key="karaf.startRemoteShell" value="true" />
+            <classpath>
+                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.diagnostic.boot-4.0.4.jar"/>
+                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.jaas.boot-4.0.4.jar"/>
+                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.main-4.0.4.jar"/>
+                <pathelement location="${karaf.home}/lib/boot/org.osgi.core-6.0.0.jar"/>
+            </classpath>
+        </java>
+    </target>
+
+    <target name="launch4j">
+
+        <property name="launch4j.dist.url"
+            value="http://downloads.sourceforge.net/project/launch4j/launch4j-3/3.9/launch4j-3.9-linux.tgz"/>
+        <property name="launch4j.dist.file" value="launch4j-3.9-linux.tgz"/>
+        <property name="launch4j.cache.dir" value="${cache.dir}/launch4j"/>
+        <property name="launch4j.dist.dir" value="${build.dir}/launch4j"/>
+        <mkdir dir="${launch4j.cache.dir}"/>
+
+        <if><not><available file="${launch4j.cache.dir}/${launch4j.dist.file}"/></not>
+            <then>
+                <get src="${launch4j.dist.url}" dest="${launch4j.cache.dir}/download.tmp" verbose="true"/>
+                <move file="${launch4j.cache.dir}/download.tmp"
+                      tofile="${launch4j.cache.dir}/${launch4j.dist.file}"/>
+            </then>
+        </if>
+
+        <delete dir="${launch4j.dist.dir}"/>
+        <mkdir dir="${launch4j.dist.dir}"/>
+
+        <apply executable="tar" dir="${launch4j.dist.dir}"
+               failonerror="true" verbose="true" parallel="true" relative="false" >
+            <arg value="xf"/>
+            <srcfile/>
+            <!-- Strip 2 because launch4j tar looks like './launch4j/build.xml...' -->
+            <arg value="--strip-components=2"/>
+            <fileset dir="${launch4j.cache.dir}" includes="${launch4j.dist.file}"/>
+        </apply>
+
+        <taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask">
+            <classpath>
+                <fileset dir="${launch4j.dist.dir}">
+                    <include name="launch4j.jar"/>
+                </fileset>
+            </classpath>
+        </taskdef>
+
+        <!-- Build windows exe -->
+        <launch4j>
+            <config
+                dontWrapJar="false"
+                headerType="gui"
+                jar="${stage.dir}/bin/launcher.jar"
+                outfile="${stage.dir}/bin/lucidj.exe"
+                downloadUrl="http://www.azul.com/downloads/zulu"
+                icon="${launcher.src.dir}/org/lucidj/launcher/tangram_64.ico">
+                <jre
+                    path="../runtime/zulu8.15.0.1-jdk8.0.92-win_x64"
+                    bundledJre64Bit="true"
+                    bundledJreAsFallback="true"
+                    minVersion="1.7.0"
+                    jdkPreference="preferJdk"
+                    runtimeBits="64/32"/>
+            </config>
+        </launch4j>
+
+        <!-- Strip -x from .exe -->
+        <chmod perm="uog-x">
+            <fileset dir="${stage.dir}" includes="bin/*.exe"/>
+        </chmod>
+
+    </target>
+
+    <target name="build.launcher">
+
+        <property name="launcher.classes.dir" value="${build.dir}/launcher/classes"/>
+        <property name="launcher.src.dir" value="${basedir}/extras/launcher/src"/>
+        <mkdir dir="${launcher.classes.dir}"/>
+
+        <javac srcdir="${launcher.src.dir}" destdir="${launcher.classes.dir}"
+               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+               includeantruntime="false">
+            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <classpath>
+                <path refid="apache-commons-exec.cp"/>
+            </classpath>
+        </javac>
+
+        <!-- Package it to run with 'java -jar' !!!!!!!!!!!!!!!!!!!!! weird place /bin -->
+        <delete file="${stage.dir}/bin/launcher.jar"/>
+        <jar destfile="${stage.dir}/bin/launcher.jar" filesonly="true">
+            <manifest>
+                <attribute name="Main-Class" value="org.lucidj.launcher.Main"/>
+            </manifest>
+            <fileset dir="${launcher.classes.dir}" includes="**/*"/>
+            <fileset dir="${launcher.src.dir}" excludes="**/*.java"/>
+            <zipgroupfileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
+        </jar>
+
+        <ant target="launch4j"/>
+
+    </target>
+
+    <macrodef name="build.standandalone.bundle">
+        <attribute name="modulename"/>
+        <attribute name="category" default="extras"/>
+        <sequential>
+            <property name="module.classes.dir" value="${build.dir}/@{category}-@{modulename}/classes"/>
+            <property name="module.dist.dir" value="${dist.dir}/@{category}"/>
+            <property name="module.dist.jar" value="${module.dist.dir}/@{modulename}.jar"/>
+
+            <delete dir="${module.classes.dir}"/>
+            <mkdir dir="${module.classes.dir}"/>
+
+            <javac srcdir="${basedir}/@{category}/@{modulename}/src" destdir="${module.classes.dir}"
+                   source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+                   debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+                   includeantruntime="false">
+                <compilerarg value="${javac.optional}"/>
+                <classpath refid="classpath.runtime"/>
+            </javac>
+
+            <delete file="${module.dist.jar}"/>
+            <mkdir dir="${module.dist.dir}"/>
+
+            <bnd files="${basedir}/@{category}/@{modulename}/bundle.bnd" output="${module.dist.jar}"
+                 classpath="${module.classes.dir}:${classpath.runtime.literal}"
+                 eclipse="false" failok="false" exceptions="true"/>
+        </sequential>
+    </macrodef>
+
+    <target name="build.bootstrap">
+
+        <build.standandalone.bundle modulename="bootstrap"/>
+
+        <property name="bootstrap.mvn.dir" value="${stage.dir}/cache/maven2/org/lucidj/bootstrap"/>
+        <copy todir="${bootstrap.mvn.dir}/bootstrap-features">
+            <fileset dir="${basedir}/extras/bootstrap/features">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+
+        <property name="bootstrap.core.dir" value="${bootstrap.mvn.dir}/bootstrap-core/1.0.0"/>
+        <property name="bootstrap.core.jar" value="${bootstrap.core.dir}/bootstrap-core-1.0.0.jar"/>
+        <!--mkdir dir="${bootstrap.core.dir}"/-->
+        <copy file="${dist.dir}/extras/bootstrap.jar" tofile="${bootstrap.core.jar}"/>
+
+    </target>
+
+    <!-- Compile theme -->
+    <target name="build.theme">
+
+        <property name="theme.name" value="kuori"/>
+        <property name="bundle" value="${theme.name}_theme"/>
+        <property name="bnd.jar" value="${dist.dir}/${bundle}.jar"/>
+        <mkdir dir="${dist.dir}"/>
+
+        <!-- ** NOW WE ARE REUSING THE VAADIN/themes FROM build.vaadin.static -->
+        <!--property name="theme.temp.dir" value="${temp.dir}/themes"/-->
+        <property name="theme.temp.dir" value="${widgetset.root.dir}"/>
+        <mkdir dir="${theme.temp.dir}"/>
+
+        <if><not><available filepath="${theme.temp.dir}" file="VAADIN" type="dir"/></not>
+            <then>
+                <!-- Extract base themes into our build directory -->
+                <unzip dest="${theme.temp.dir}">
+                    <fileset dir="${libcache.dir}" includes="vaadin/jar/vaadin-themes-*.jar"/>
+                    <patternset>
+                        <include name="VAADIN/**"/>
+                    </patternset>
+                </unzip>
+            </then>
+        </if>
+
+        <!-- Sync theme sources to temp build tree -->
+        <property name="theme.src.dir" value="${basedir}/themes/${theme.name}"/>
+        <property name="theme.build.dir" value="${theme.temp.dir}/VAADIN/themes/${theme.name}"/>
+        <sync todir="${theme.build.dir}">
+            <fileset dir="${theme.src.dir}" includes="**/*"/>
+        </sync>
+
+        <!-- Get generated addons.scss from widgetset build -->
+        <copy file="${widgetset.root.dir}/addons.scss" todir="${theme.build.dir}"/>
+
+        <property name="sass.input" value="${theme.build.dir}/styles.scss"/>
+        <property name="sass.output" value="${theme.build.dir}/styles.css"/>
+        <echo message="SASS compiling ${sass.input}"/>
+
+        <java classname="com.vaadin.sass.SassCompiler" fork="true">
+            <classpath>
+                <path refid="classpath.build"/>
+            </classpath>
+            <arg value="${sass.input}"/>
+            <arg value="${sass.output}"/>
+        </java>
+
+        <!-- Create an OSGi-compliant MANIFEST.MF with empty jar -->
+        <bnd files="${theme.src.dir}/bundle.bnd" output="${bnd.jar}"
+             classpath="${theme.build.dir}"
+             eclipse="false" failok="false" exceptions="true"/>
+
+        <!-- Add the theme files -->
+        <jar destfile="${bnd.jar}" update="true" filesonly="true">
+            <mappedresources>
+                <fileset dir="${theme.build.dir}">
+                    <include name="**/*"/>
+                    <exclude name="**/*.jar"/>
+                    <exclude name="**/*.java"/>
+                    <exclude name="**/*.scss"/>
+                    <exclude name="**/*.bnd"/>
+                </fileset>
+                <globmapper from="*" to="resources/*"/>
+            </mappedresources>
+        </jar>
+
+        <available file="${application.dir}" property="autodeploy.flag"/>
+        <if><isset property="autodeploy.flag"/>
+            <then>
+                <copy file="${bnd.jar}" todir="${application.dir}" overwrite="true"/>
+                <delete dir="${build.dir}/jars/${bundle}"/>
+                <mkdir dir="${build.dir}/jars/${bundle}"/>
+                <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>
+            </then>
+        </if>
+
+    </target>
+
+    <target name="build-widgetset">
+
+        <!-- TODO: REFACTOR widgetset.root.dir TO widgetset.build.dir -->
+        <property name="widgetset.tmp-src.dir" value="${widgetset.dir}/tmp-src"/>
+        <property name="widgetset.gwt-name" value="xyz.kuori.CustomWidgetSet"/>
+        <property name="gwt-name-xml.file" value="xyz/kuori/CustomWidgetSet"/>
+
+        <available file="${widgetset.root.dir}/VAADIN/themes" type="dir" property="themes.ok"/>
+        <fail unless="themes.ok" message="VAADIN/themes not available, 'ant ...' before"/>
+
+        <!--mkdir dir="${widgetset.dir}"/>
+        <mkdir dir="${widgetset.root.dir}"/-->
+
+        <!--unzip dest="${widgetset.tmp-src.dir}">
+            <fileset dir="${libcache.dir}" includes="vaadin-widgets/source/*.jar"/>
+        </unzip-->
+
+        <!-- ================================================= -->
+        <!-- EXTRACTS ALL SOURCE CODE AVAILABLE IN THE WIDGETS -->
+        <!-- ================================================= -->
+
+        <!-- Kinda hacky, but I couldn't figure out a standard rule to locate widget sources -->
+        <property name="temp.src.dir" value="${temp.dir}/source-scanner"/>
+        <for param="possible-source-jar">
+            <mappedresources>
+                <fileset dir="${libcache.dir}/vaadin-widgets">
+                    <!-- Exclude some common non-addon jars -->
+                    <exclude name="**/vaadin-shared-*"/>
+                    <exclude name="**/vaadin-server-*"/>
+                    <exclude name="**/vaadin-client-*"/>
+                    <exclude name="**/vaadin-sass-compiler-*"/>
+                    <exclude name="**/jsoup-*"/>
+                    <exclude name="**/streamhtmlparser-jsilver-*"/>
+                    <exclude name="**/guava-*"/>
+                    <exclude name="**/flute-*"/>
+                    <exclude name="**/validation-api-*"/>
+                    <exclude name="**/sac-*"/>
+                    <!-- Include the remaining jars -->
+                    <include name="**/*.jar"/>
+                </fileset>
+            </mappedresources>
+            <sequential>
+                <echo message="--- Scanning @{possible-source-jar} ..."/>
+
+                <!-- Extract one jar at time to look for .java sources -->
+                <delete dir="${temp.src.dir}"/>
+                <mkdir dir="${temp.src.dir}"/>
+                <unzip src="${libcache.dir}/vaadin-widgets/@{possible-source-jar}"
+                       dest="${temp.src.dir}"/>
+                <if>
+                    <!-- If we find at least 1 java source file, copy jar contents -->
+                    <resourcecount when="greater" count="0">
+                        <fileset dir="${temp.src.dir}" includes="**/*.java"/>
+                    </resourcecount>
+                    <then>
+                        <copy todir="${widgetset.tmp-src.dir}">
+                            <fileset dir="${temp.src.dir}">
+                                <exclude name="**/*.class"/>
+                                <include name="**/*"/>
+                            </fileset>
+                        </copy>
+                        <echo message="*** Found .java sources in @{possible-source-jar} ***"/>
+                    </then>
+                </if>
+            </sequential>
+        </for>
+
+        <!-- Adds our own widgets too -->
+        <copy todir="${widgetset.tmp-src.dir}">
+            <fileset dir="${widgets.src}">
+                <include name="**/*"/>
+            </fileset>
+            <!-- IMPORTANT: Note that all widgets sources will be merged! -->
+            <cutdirsmapper dirs="1"/>
+        </copy>
+
+        <!-- ======================================================================= -->
+        <!-- CREATE A PROPER CustomWidgetSet.gwt.xml INCLUDING ALL AVAILABLE WIDGETS -->
+        <!-- ======================================================================= -->
+
+        <property name="gwt-xml.file" value="${widgetset.dir}/CustomWidgetSet.gwt.xml"/>
+
+        <echo file="${gwt-xml.file}" append="false"
+              message="&lt;module&gt;&lt;!-- Automatically generated --&gt;${line.separator}"/>
+        <echo file="${gwt-xml.file}" append="true"
+              message="    &lt;inherits name=&quot;com.vaadin.DefaultWidgetSet&quot;/&gt;${line.separator}"/>
+
+        <for param="widgetset-xml">
+            <mappedresources>
+                <fileset dir="${widgetset.tmp-src.dir}">
+                    <include name="**/*.gwt.xml"/>
+                </fileset>
+                <packagemapper from="*.gwt.xml" to="*"/>
+            </mappedresources>
+            <sequential>
+                <echo message="*** Found widgetset @{widgetset-xml}"/>
+                <echo file="${gwt-xml.file}" append="true"
+                      message="    &lt;inherits name=&quot;@{widgetset-xml}&quot;/&gt;${line.separator}"/>
+            </sequential>
+        </for>
+
+        <echo file="${gwt-xml.file}" append="true"
+              message="&lt;/module&gt;${line.separator}"/>
+
+        <!-- ============= -->
+        <!-- COMPILE TIME! -->
+        <!-- ============= -->
+
+        <javac srcdir="${widgetset.tmp-src.dir}" includeantruntime="false"
+            source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+            destdir="${widgetset.root.dir}">
+            <classpath>
+                <path refid="classpath.build"/>
+                <pathelement path="${widgetset.root.dir}"/>
+                <path refid="vaadin-compile-widgets.cp"/>
+            </classpath>
+        </javac>
+
+        <!-- ================================ -->
+        <!-- GENERATE DREADFUL addons.scss :) -->
+        <!-- ================================ -->
+
+        <property name="addons.scss.file" value="${widgetset.root.dir}/addons.scss"/>
+        <property name="addons.include.file" value="${widgetset.root.dir}/addons.include"/>
+
+        <echo file="${addons.scss.file}" append="false"
+              message="/* This file is automagically generated, go read Harry Potter :) */${line.separator}"/>
+        <echo file="${addons.include.file}" append="false"
+              message="@mixin addons {${line.separator}"/>
+
+        <for param="scss.file">
+            <fileset dir="${widgetset.tmp-src.dir}" includes="**/*.scss"/>
+            <sequential>
+                <echo message="Addon SCSS stylesheet: @{scss.file}"/>
+                <echo file="${addons.scss.file}" append="true"
+                      message="@import &quot;@{scss.file}&quot;;${line.separator}"/>
+                <local name="scss.basename"/>
+                <basename property="scss.basename" file="@{scss.file}" suffix=".scss"/>
+                <echo file="${addons.include.file}" append="true"
+                      message="    @include ${scss.basename};${line.separator}"/>
+            </sequential>
+        </for>
+
+        <echo file="${addons.include.file}" append="true" message="}${line.separator}"/>
+
+        <concat destfile="${addons.scss.file}" append="true">
+            <fileset dir="${widgetset.root.dir}" includes="addons.include"/>
+        </concat>
+
+        <delete file="${addons.include.file}"/>
+
+        <!-- =================== -->
+        <!-- COPY ALL RESOURCES  -->
+        <!-- =================== -->
+
+        <copy todir="${widgetset.root.dir}" overwrite="true">
+            <fileset dir="${widgetset.tmp-src.dir}">
+                <include name="**/*"/>
+                <exclude name="**/*.jar"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </copy>
+
+        <!-- ================================================================ -->
+        <!-- PACK COMPILED CLASSES                                            -->
+        <!-- IMPORTANT: NEEDED IN ORDER TO GWT COMPILER SEE WIDGET CLASSES!!! -->
+        <!-- ================================================================ -->
+
+        <property name="gwt.xml" value="${widgetset.root.dir}/${gwt-name-xml.file}.gwt.xml"/>
+        <copy file="${gwt-xml.file}" tofile="${gwt.xml}" overwrite="true"/>
+
+        <property name="temp-widgetset.jar" value="${widgetset.dir}/temp-widgetset.jar"/>
+        <jar destfile="${temp-widgetset.jar}" filesonly="true">
+            <fileset dir="${widgetset.root.dir}" includes="**/*"/>
+        </jar>
+
+        <!-- ============= -->
+        <!-- GWT COMPILER -->
+        <!-- ============= -->
+
+        <java classname="com.google.gwt.dev.Compiler" failonerror="yes" fork="yes">
+            <arg value="-war" />
+            <arg value="${widgetset.root.dir}/VAADIN/widgetsets" />
+            <arg value="${widgetset.gwt-name}" />
+            <arg value="-logLevel" />
+            <arg value="WARN" />
+            <arg value="-strict" />
+            <arg value="-localWorkers" />
+            <arg value="4" />
+            <jvmarg value="-Xss1024k"/>
+            <jvmarg value="-Djava.awt.headless=true"/>
+            <classpath>
+                <pathelement location="${widgetset.tmp-src.dir}"/>
+                <pathelement location="${temp-widgetset.jar}"/>
+                <path refid="classpath.build"/>
+                <path refid="vaadin-compile-widgets.cp"/>
+            </classpath>
+        </java>
+
+        <!-- cleanup -->
+        <delete dir="${widgetset.root.dir}/VAADIN/gwt-unitCache" />
+        <delete dir="${widgetset.root.dir}/VAADIN/widgetsets/WEB-INF" />
+
+    </target>
+
+    <target name="build.vaadin.static">
+
+        <property name="bundle" value="${vaadin.static}"/>
+
+        <delete dir="${widgetset.root.dir}"/><!-- Ensures only new .class -->
+        <mkdir dir="${widgetset.root.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+
+        <!-- We include vaadin-themes so theme resources can be found from vaadin-server -->
+        <echo message="Extracting themes to ${widgetset.root.dir} ..."/>
+        <unzip dest="${widgetset.root.dir}">
+            <fileset dir="${libcache.dir}" includes="vaadin/jar/vaadin-themes-*.jar"/>
+            <patternset>
+                <include name="VAADIN/**"/>
+            </patternset>
+        </unzip>
+
+        <ant target="build-widgetset"/>
+
+        <!-- Basic bundle info -->
+        <local name="bnd.file"/>
+        <property name="bnd.file" value="${widgetset.root.dir}/bundle.bnd"/>
+        <echo file="${bnd.file}" append="true"
+              message="### Automagically created on build.vaadin.static ###${line.separator}"/>
+        <echo file="${bnd.file}" append="true"
+              message="Bundle-Name: ${bundle}${line.separator}"/>
+        <echo file="${bnd.file}" append="true"
+              message="Bundle-SymbolicName: ${bundle}${line.separator}"/>
+
+        <!-- Widget exports -->
+        <listpackages dir="${widgetset.root.dir}" property="package.list"/>
+        <echo file="${bnd.file}" append="true"
+            message="Export-Package: ${package.list}${line.separator}"/>
+
+        <!-- Make resources available through APP/PUBLISHED -->
+        <!-- TODO: Is there a better way to make them visible to APP/PUBLISHED??? -->
+        <echo file="${bnd.file}" append="true"
+            message="Fragment-Host: com.vaadin.server;bundle-version=&quot;[7.1.0,8.0.0)&quot;${line.separator}"/>
+
+        <!-- Create an OSGi-compliant MANIFEST.MF with empty jar -->
+        <bnd files="${bnd.file}" output="${vaadin.static.jar}"
+             classpath="${widgetset.root.dir}"
+             eclipse="false" failok="false" exceptions="true"/>
+
+        <mkdir dir="${widgetset.root.dir}/WEB-INF/lib"/>
+        <copy todir="${widgetset.root.dir}/WEB-INF/lib">
+            <fileset dir="${dist.dir}" includes="AceEditor.jar"/>
+        </copy>
+
+        <!-- Add the theme files -->
+        <jar destfile="${vaadin.static.jar}" update="true" filesonly="true">
+            <mappedresources>
+                <fileset dir="${widgetset.root.dir}">
+                    <include name="**/*"/>
+                    <!--exclude name="**/*.jar"/-->
+                    <exclude name="**/*.java"/>
+                    <!--exclude name="**/*.scss"/-->
+                    <exclude name="**/*.bnd"/>
+                </fileset>
+            </mappedresources>
+        </jar>
+
+        <available file="${application.dir}" property="autodeploy.flag"/>
+        <if><isset property="autodeploy.flag"/>
+            <then>
+                <copy file="${vaadin.static.jar}" todir="${application.dir}" overwrite="true"/>
+                <delete dir="${build.dir}/jars/${bundle}"/>
+                <mkdir dir="${build.dir}/jars/${bundle}"/>
+                <unjar src="${vaadin.static.jar}" dest="${build.dir}/jars/${bundle}"/>
+            </then>
+        </if>
+
+    </target>
+
+    <scriptdef language="javascript" name="shortname">
+        <attribute name="property"/>
+        <attribute name="input"/>
+        project.setProperty (attributes.get ("property"),
+            attributes.get ("input").toLowerCase ().split (" ")[0]);
+    </scriptdef>
+
+    <target name="build.stage">
+
+        <delete dir="${stage.dir}"/><!-- needed? -->
+        <mkdir dir="${stage.dir}"/>
+        <mkdir dir="${runtime.dir}"/>
+        <mkdir dir="${application.dir}"/>
+
+        <property name="karaf.dist.dir" value="${cache.dir}/karaf"/>
+        <mkdir dir="${karaf.dist.dir}"/>
+
+        <if><not><available file="${karaf.dist.dir}/${karaf.dist.zip}"/></not>
+            <then>
+                <get src="${karaf.dist.url}" dest="${karaf.dist.dir}/download.tmp" verbose="true"/>
+                <move file="${karaf.dist.dir}/download.tmp"
+                    tofile="${karaf.dist.dir}/${karaf.dist.zip}"/>
+            </then>
+        </if>
+
+        <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${runtime.dir}"/>
+
+        <copy todir="${stage.dir}" overwrite="true">
+            <fileset dir="${product.dir}" includes="**/*"/>
+        </copy>
+
+        <!--
+            TODO: IS THERE A 'latest' DOWNLOAD DIRECTORY?
+            wget http://cdn.azul.com/zulu/bin/zulu8.15.0.1-jdk8.0.92-win_x64.zip
+            wget http://cdn.azul.com/zulu/bin/zulu8.15.0.1-jdk8.0.92-linux_x64.tar.gz
+            wget http://cdn.azul.com/zulu/bin/zulu8.15.0.1-jdk8.0.92-macosx_x64.zip
+        -->
+        <if><available file="${cache.dir}/zulu" type="dir"/>
+            <then>
+                <shortname property="short.os.name" input="${os.name}"/>
+                <property name="target_platform" value="${short.os.name}_${os.arch}"/>
+                <echo message="Embedding Zulu JDK for ${target_platform}"/>
+
+                <copy todir="${runtime.dir}" overwrite="true">
+                    <fileset dir="${cache.dir}/zulu/${target_platform}" includes="**/*"/>
+                </copy>
+            </then>
+        </if>
+
+        <!-- Make /bin/* +x since we get Karaf from .zip -->
+        <chmod perm="ug+rx">
+            <fileset dir="${stage.dir}">
+                <include name="bin/*"/>
+                <exclude name="**/*.bat"/>
+            </fileset>
+            <fileset dir="${runtime.dir}">
+                <include name="apache-karaf-*/bin/*"/>
+                <include name="zulu*/bin/*"/>
+                <exclude name="**/*.bat"/>
+            </fileset>
+        </chmod>
+
+        <!-- Preload maven2 repository if we have available files -->
+        <if><available file="${maven2.preload.dir}" type="dir"/>
+            <then>
+                <echo message="Preloading Maven2 cache repository..."/>
+                <copy todir="${stage.dir}/cache/maven2">
+                    <fileset dir="${maven2.preload.dir}">
+                        <include name="**/*"/>
+                    </fileset>
+                </copy>
+            </then>
+        </if>
+
+        <!-- Build platform independent launcher -->
+        <ant target="build.launcher"/>
+
+        <!-- Build Karaf deployment bootstrap -->
+        <ant target="build.bootstrap"/>
+
+        <!-- Copy support libraries directly to deploy dir,
+             should figure out better placement -->
+        <copy todir="${application.dir}" flatten="true">
+            <fileset dir="${libcache.dir}">
+                <!-- Vaadin -->
+                <include name="vaadin/jar/vaadin-server-*.jar"/>
+                <include name="vaadin/jar/vaadin-push-*.jar"/>
+                <include name="vaadin/jar/vaadin-slf4j-*.jar"/>
+                <include name="vaadin/jar/jsoup-*.jar"/>
+                <include name="vaadin/jar/streamhtmlparser-jsilver-*.jar"/>
+                <include name="vaadin/jar/guava-*.jar"/>
+                <include name="vaadin/jar/flute-*.jar"/>
+                <!--include name="vaadin/jar/javax.servlet-*.jar"/-->
+                <include name="vaadin/bundle/atmosphere-runtime-*.jar"/>
+                <include name="vaadin/jar/vaadin-shared-*.jar"/>
+                <exclude name="vaadin/jar/vaadin-shared-deps-*.jar"/>
+                <include name="vaadin/jar/vaadin-client-*.jar"/>
+                <exclude name="vaadin/jar/vaadin-client-compiled-*.jar"/>
+                <exclude name="vaadin/jar/vaadin-client-compiler-*.jar"/>
+                <include name="vaadin/jar/vaadin-icons-*.jar"/>
+
+                <!-- Netty -->
+                <include name="netty/jar/netty-common-*.jar"/>
+                <include name="netty/jar/netty-buffer-*.jar"/>
+                <include name="netty/jar/netty-transport-*.jar"/>
+                <include name="netty/jar/netty-codec-*.jar"/>
+                <include name="netty/jar/netty-handler-*.jar"/>
+                <include name="netty/jar/netty-codec-http-*.jar"/>
+                <include name="netty/jar/netty-codec-socks-*.jar"/>
+                <include name="netty/jar/netty-transport-sctp-*.jar"/>
+
+                <!-- Kryo -->
+                <include name="kryo/bundle/*.jar"/>
+                <include name="kryo/jar/*.jar"/>
+
+                <!-- Misc -->
+                <include name="bnd/jar/bnd-*.jar"/>
+                <include name="gson/jar/gson-*.jar"/>
+                <include name="guava/bundle/guava-*.jar"/>
+                <include name="apache-commons/jar/commons-lang3-*.jar"/>
+                <include name="bouncycastle/jar/*.jar"/>
+            </fileset>
+        </copy>
+
+    </target>
+
+<!-- ***** INTERFACES ***************************************************** -->
+
+    <target name="build.interface.store">
+        <delete dir="${interfaces.class}"/>
+        <mkdir dir="${interfaces.class}"/>
+        <!--mkdir dir="${libraries.dir}"/--> <!-- BUG: Workaround BND missing dir -->
+        <javac srcdir="${interfaces.src.dir}" destdir="${interfaces.class}"
+            debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+            source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+            includeantruntime="false">
+            <compilerarg value="${javac.optional}"/>
+            <classpath>
+                <path refid="classpath.build"/>
+                <pathelement path="${interfaces.class}"/>
+            </classpath>
+            <exclude name="*/public/**"/>
+        </javac>
+    </target>
+
+    <target name="build.interface.bundle" depends="build.interface.store">
+        <local name="bnd.basename"/>
+        <dirname property="bnd.dirname" file="${bnd.path}"/>
+        <echo message="bnd.path=${bnd.path} bnd.dirname=${bnd.dirname}"/>
+        <basename property="module" file="${bnd.dirname}"/>
+        <echo message="Interface: ${module}"/>
+        <ant target="build.generic.bundle">
+            <property name="type" value="interfaces"/>
+            <property name="bundle" value="${module}"/>
+            <property name="bnd.src" value="${bnd.path}"/>
+            <property name="bnd.root" value="${bnd.dirname}"/>
+            <property name="classpath" value="${classpath.build.literal}"/>
+        </ant>
+
+    </target>
+
+    <target name="build.callback.interfaces">
+        <!-- bnd.build => classes compiladas -->
+        <!-- bnd.file => descritor bundle -->
+        <listpackages dir="${bnd.build}" property="package.list"/>
+        <echo file="${bnd.file}" append="true"
+            message="Export-Package: ${package.list}${line.separator}"/>
+        <!-- Inclui qualquer Activator presente >
+        <ant target="build.include.activator"/-->
+    </target>
+
+    <target name="build.all.interfaces" depends="build.interface.store">
+        <foreach target="build.interface.bundle" param="bnd.path" inheritall="true">
+            <path>
+                <dirset dir="${interfaces.src.dir}">
+                    <include name="*/src"/>
+                </dirset>
+            </path>
+        </foreach>
+    </target>
+
+<!-- ***** LIBRARIES ****************************************************** -->
+
+    <target name="build.libraries.store">
+        <delete dir="${libraries.class}"/>
+        <mkdir dir="${libraries.class}"/>
+        <javac srcdir="${libraries.src.dir}" destdir="${libraries.class}"
+            debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+            source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+            includeantruntime="false">
+            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <classpath>
+                <path refid="classpath.build"/>
+                <pathelement path="${libraries.class}"/>
+            </classpath>
+            <exclude name="*/public/**"/>
+        </javac>
+    </target>
+
+    <target name="build.libraries.bundle">
+        <local name="bnd.basename"/>
+        <dirname property="bnd.dirname" file="${bnd.path}"/>
+        <echo message="bnd.path=${bnd.path} bnd.dirname=${bnd.dirname}"/>
+        <basename property="module" file="${bnd.dirname}"/>
+        <echo message="Library: ${module}"/>
+        <ant target="build.generic.bundle">
+            <property name="type" value="libraries"/>
+            <property name="bundle" value="${module}"/>
+            <property name="bnd.src" value="${bnd.path}"/>
+            <property name="bnd.root" value="${bnd.dirname}"/>
+            <property name="classpath" value="${classpath.build.literal}"/>
+        </ant>
+        <!-- Add library classes to class store -->
+        <javac srcdir="${bnd.path}" destdir="${libraries.class}"
+               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+               includeantruntime="false">
+            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <classpath>
+                <path refid="classpath.build"/>
+                <pathelement path="${libraries.class}"/>
+            </classpath>
+        </javac>
+
+    </target>
+
+    <target name="build.callback.libraries">
+        <!-- bnd.build => classes compiladas -->
+        <!-- bnd.file => descritor bundle -->
+        <listpackages dir="${bnd.build}" property="package.list"/>
+        <echo file="${bnd.file}" append="true"
+            message="Export-Package: ${package.list}${line.separator}"/>
+        <!-- Inclui qualquer Activator presente -->
+        <ant target="build.include.activator"/>
+    </target>
+
+    <target name="build.all.libraries" depends="build.libraries.store">
+        <foreach target="build.libraries.bundle" param="bnd.path" inheritall="true">
+            <path>
+                <dirset dir="${libraries.src.dir}">
+                    <include name="*/src"/>
+                </dirset>
+            </path>
+        </foreach>
+    </target>
+
+<!-- ***** COMPONENTS ******************************************************** -->
+
+    <target name="build.components.bundle">
+        <local name="bnd.basename"/>
+        <dirname property="bnd.dirname" file="${bnd.path}"/>
+        <echo message="bnd.path=${bnd.path} bnd.dirname=${bnd.dirname}"/>
+        <basename property="module" file="${bnd.dirname}"/>
+        <echo message="Component: ${module}"/>
+        <ant target="build.generic.bundle">
+            <property name="type" value="components"/>
+            <property name="bundle" value="${module}"/>
+            <property name="bnd.src" value="${bnd.path}"/>
+            <property name="bnd.root" value="${bnd.dirname}"/>
+            <property name="classpath" value="${classpath.build.literal}"/>
+        </ant>
+    </target>
+
+    <target name="build.callback.components">
+        <!-- bnd.build => classes compiladas -->
+        <!-- bnd.file => descritor bundle -->
+        <listpackages dir="${bnd.build}" property="package.list"/>
+        <echo file="${bnd.file}" append="true"
+            message="Private-Package: ${package.list}${line.separator}"/>
+        <!-- Inclui qualquer Activator presente -->
+        <ant target="build.include.activator"/>
+    </target>
+
+    <target name="build.all.components">
+        <foreach target="build.components.bundle" param="bnd.path" inheritall="true">
+            <path>
+                <dirset dir="${components.src.dir}">
+                    <include name="*/src"/>
+                </dirset>
+            </path>
+        </foreach>
+    </target>
+
+<!-- ***** COMMON FOR ALL BUNDLES ***************************************** -->
+
+    <target name="build.include.activator">
+        <!-- bnd.build => classes compiladas -->
+        <!-- bnd.file => descritor bundle -->
+        <fileset dir="${bnd.build}" id="classes">
+            <include name="**/*Activator.class"/>
+        </fileset>
+        <pathconvert dirsep="." refid="classes" property="activator.list" pathsep=", " setonempty="false">
+            <mapper type="regexp" from="${bnd.build}/(.*).class" to="\1" />
+        </pathconvert>
+        <if><isset property="activator.list"/>
+            <then>
+                <echo file="${bnd.file}" append="true"
+                    message="Bundle-Activator: ${activator.list}${line.separator}"/>
+            </then>
+        </if>
+    </target>
+
+    <target name="build.generic.bundle">
+
+        <!-- Parameters: type, bundle, classpath -->
+        <!--property name="bnd.src" value="${basedir}/${type}/${bundle}"/-->
+        <property name="bnd.build" value="${build.dir}/${type}/${bundle}"/>
+
+        <delete dir="${bnd.build}"/><!-- Ensures only new .class -->
+        <mkdir dir="${bnd.build}"/>
+
+        <!-- Mapeia todas as referências de classpath incorporadas -->
+        <for param="cp.refid">
+            <mappedresources>
+                <fileset dir="${bnd.root}" id="private.cp.set">
+                    <include name="private/*.cp"/>
+                </fileset>
+                <mapper type="flatten"/>
+            </mappedresources>
+            <sequential>
+                <mkdir dir="${bnd.build}/private/@{cp.refid}"/>
+                <copy todir="${bnd.build}/private/@{cp.refid}" overwrite="true">
+                    <path refid="@{cp.refid}"/>
+                </copy>
+            </sequential>
+        </for>
+
+        <!-- Inclui as bibliotecas privadas, se existirem -->
+        <path id="private.cp">
+            <fileset  dir="${bnd.build}">
+                <include name="private/**/*.jar"/>
+            </fileset>
+        </path>
+
+        <!-- Converte para o formato "path1:path2:...:pathN" -->
+        <property name="private.cp.literal" refid="private.cp"/>
+
+        <!-- Classpath para compilação do componente -->
+        <property name="bnd.classpath" value="${private.cp.literal}:${bnd.build}:${classpath}"/>
+        <!--echo message="bnd.classpath=${bnd.classpath}"/-->
+
+        <javac srcdir="${bnd.src}" destdir="${bnd.build}"
+            debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+            source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+            includeantruntime="false">
+            <classpath>
+                <pathelement path="${bnd.classpath}"/>
+            </classpath>
+        </javac>
+
+        <property name="bnd.file" value="${bnd.build}/bundle.bnd"/>
+
+        <!-- Trata o arquivo bundle.bnd, se existir -->
+        <available file="${bnd.root}/bundle.bnd" property="bundle.exists"/>
+        <if> <isset property="bundle.exists"/>
+            <then>
+                <copy file="${bnd.root}/bundle.bnd"
+                    tofile="${bnd.file}"
+                    overwrite="true"/>
+            </then>
+            <else>
+                <echo message="Bundle descriptor sera criado automaticamente"/>
+                <delete file="${bnd.file}"/>
+            </else>
+        </if>
+
+        <!-- Cria e/ou Customiza o arquivo bundle.bnd -->
+        <echo file="${bnd.file}" append="true"
+            message="### Conteudo criado automaticamente ###${line.separator}"/>
+        <echo file="${bnd.file}" append="true"
+            message="Bundle-Name: ${bundle}${line.separator}"/>
+        <echo file="${bnd.file}" append="true"
+            message="Bundle-SymbolicName: ${bundle}_${type}${line.separator}"/>
+
+        <!-- Informacoes do toolkit -->
+        <echo file="${bnd.file}" append="true"
+            message="Terawatt-Name: ${bundle}_${type}${line.separator}"/>
+        <echo file="${bnd.file}" append="true"
+            message="Terawatt-Type: ${type}${line.separator}"/>
+
+        <if><resourcecount refid="private.cp" when="greater" count="0"/>
+            <then>
+                <pathconvert refid="private.cp" property="private.cp.bnd" dirsep="/" pathsep=",">
+                    <map from="${bnd.build}/" to=""/>
+                </pathconvert>
+                <echo file="${bnd.file}" append="true"
+                    message="Bundle-ClassPath: .,${private.cp.bnd}${line.separator}"/>
+                <echo file="${bnd.file}" append="true"
+                      message="Include-Resource: private=private${line.separator}"/>
+                <copy todir="${bnd.build}" overwrite="true">
+                    <fileset dir="${bnd.src}">
+                        <include name="private/**/*.jar"/>
+                    </fileset>
+                </copy>
+            </then>
+        </if>
+
+        <!-- Complementa as informacoes do descritor conforme o tipo -->
+        <ant target="build.callback.${type}"/>
+
+        <concat destfile="${bnd.file}" append="true">
+            <fileset refid="private.cp.set"/>
+        </concat>
+
+        <if><available file="${bnd.root}/bundle.inc"/>
+            <then>
+                <concat destfile="${bnd.file}" append="true">
+                    <file name="${bnd.src}/bundle.inc"/>
+                </concat>
+            </then>
+        </if>
+
+        <property name="bnd.jar" value="${dist.dir}/${type}_${bundle}.jar"/>
+
+        <loadfile property="bnd.file.contents" srcFile="${bnd.file}"/>
+        <echo taskname="bnd.file" message="${bnd.file.contents}--//--"/>
+
+        <mkdir dir="${dist.dir}"/>
+        <bnd files="${bnd.file}" output="${bnd.jar}"
+            classpath="${bnd.build}:${private.cp.literal}"
+            eclipse="false" failok="false" exceptions="true"/>
+        <!--bnd files="${bnd.file}" output="${bnd.jar}"
+             classpath="${bnd.build}"
+             eclipse="false" failok="false" exceptions="true"/-->
+
+        <if><not><contains string="${bnd.file.contents}" substring="x-no-ipojo"/></not>
+            <then>
+                <ipojo input="${bnd.jar}">
+                    <classpath>
+                        <pathelement path="${bnd.classpath}"/>
+                        <path refid="ipojo.cp"/>
+                    </classpath>
+                </ipojo>
+            </then>
+        </if>
+
+        <!-- Add generic resource files -->
+        <jar destfile="${bnd.jar}" update="true" filesonly="true">
+            <fileset dir="${bnd.root}">
+                <include name="**/*"/>
+                <exclude name="**/*.jar"/>
+                <exclude name="**/*.java"/>
+                <exclude name="private/**/*"/>
+                <exclude name="resources/**/*"/>
+                <exclude name="src/**/*"/>
+                <exclude name="test/**/*"/>
+            </fileset>
+        </jar>
+
+        <!-- Add resource files from src/ -->
+        <jar destfile="${bnd.jar}" update="true" filesonly="true">
+            <fileset dir="${bnd.root}/src">
+                <include name="**/*"/>
+                <exclude name="**/*.jar"/>
+                <exclude name="**/*.java"/>
+            </fileset>
+        </jar>
+
+        <!-- Add full resources/ dir if it exists -->
+        <if><available file="${bnd.root}/resources" type="dir"/>
+            <then>
+                <jar destfile="${bnd.jar}" update="true">
+                    <fileset dir="${bnd.root}/resources" includes="**/*"/>
+                </jar>
+            </then>
+        </if>
+
+        <available file="${application.dir}" property="autodeploy.flag"/>
+        <if><isset property="autodeploy.flag"/>
+            <then>
+                <copy file="${bnd.jar}" todir="${application.dir}" overwrite="true"/>
+                <delete dir="${build.dir}/jars/${bundle}"/>
+                <mkdir dir="${build.dir}/jars/${bundle}"/>
+                <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>
+            </then>
+        </if>
+
+    </target>
+
+    <target name="make">
+        <if><isset property="libraries"/>
+            <then>
+                <echo message="Make: type=libraries module=${libraries}"/>
+                <ant target="build.libraries.bundle">
+                    <property name="bnd.path" value="${libraries.src.dir}/${libraries}/src"/>
+                    <property name="auto.deploy" value="true"/>
+                </ant>
+            </then>
+        </if>
+        <if><isset property="components"/>
+            <then>
+                <echo message="Make: type=components components=${components}"/>
+                <ant target="build.components.bundle">
+                    <property name="bnd.path" value="${components.src.dir}/${components}/src"/>
+                    <property name="auto.deploy" value="true"/>
+                </ant>
+            </then>
+        </if>
+    </target>
+
+</project>

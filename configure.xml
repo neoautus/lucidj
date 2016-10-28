@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<project name="lucidj" default="configure-reps" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
+
+<!-- **********************************************************************
+      DEFAULT PROPERTIES
+     ********************************************************************** -->
+
+    <property environment="env"/>
+    <include file="build.inc"/>
+    <!--property name="cache.dir" value="${basedir}/cache"/>
+    <property name="libcache.dir" value="${cache.dir}/lib"/>
+    <property name="configure.ok.file" value="${cache.dir}/configure.ok"/-->
+
+<!-- **********************************************************************
+      CONFIGURATION (./configure :)
+     ********************************************************************** -->
+
+    <!-- Fetch dependencies and place jars on cache/lib/[dependency-group] -->
+    <macrodef name="pathdep" >
+        <attribute name="group"/>
+        <attribute name="type" default="*"/>
+        <attribute name="offline" default="false"/>
+        <element name="dependency-list" implicit="true" optional="no"/>
+        <sequential>
+            <echo message="Resolving dependencies for @{group}"/>
+            <ivy:resolve resolveid="@{group}.resolve"
+                log="download-only" useCacheOnly="@{offline}">
+                <dependency-list/>
+            </ivy:resolve>
+            <mkdir dir="${libcache.dir}"/>
+            <delete dir="${libcache.dir}/@{group}"/>
+            <ivy:retrieve resolveid="@{group}.resolve"
+                pattern="${libcache.dir}/@{group}/[type]/[artifact]-[revision].[ext]"/>
+        </sequential>
+    </macrodef>
+
+    <target name="configure-reps" description="Configure all libraries needed to build this project.">
+
+        <!-- Guard against unfinished configures -->
+        <delete file="${configure.ok.file}"/>
+
+        <!-- Get Ivy if we don't have it yet -->
+        <mkdir dir="${cache.dir}/ivy-bin"/>
+        <get dest="${cache.dir}/ivy-bin/ivy.jar"
+             src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/2.4.0/ivy-2.4.0.jar"
+             skipexisting="true"/>
+
+        <!-- Activate Ivy. Yes, we use Ivy only here, inside this target. -->
+        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant">
+            <classpath>
+                <fileset dir="${cache.dir}/ivy-bin" includes="ivy.jar"/>
+            </classpath>
+        </taskdef>
+
+        <!-- ==================== -->
+        <!-- PROJECT DEPENDENCIES -->
+        <!-- ==================== -->
+
+        <pathdep group="bnd">
+            <ivy:dependency org="biz.aQute.bnd" name="bnd" rev="2.4.0" transitive="false"/>
+        </pathdep>
+
+        <pathdep group="tasks">
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.ant" rev="1.12.1" transitive="false"/>
+            <ivy:dependency org="ant-contrib"      name="ant-contrib"                rev="1.0b3" transitive="false"/>
+        </pathdep>
+
+        <pathdep group="slf4j">
+            <ivy:dependency org="org.slf4j" name="slf4j-api" rev="1.7.16" />
+        </pathdep>
+
+        <pathdep group="netty">
+            <ivy:dependency org="io.netty" name="netty-buffer"         rev="4.0.33.Final" transitive="false"/>
+            <ivy:dependency org="io.netty" name="netty-codec"          rev="4.0.33.Final" transitive="false"/>
+            <ivy:dependency org="io.netty" name="netty-codec-http"     rev="4.0.33.Final" transitive="false"/>
+            <ivy:dependency org="io.netty" name="netty-codec-socks"    rev="4.0.33.Final" transitive="false"/>
+            <ivy:dependency org="io.netty" name="netty-common"         rev="4.0.33.Final" transitive="false"/>
+            <ivy:dependency org="io.netty" name="netty-handler"        rev="4.0.33.Final" transitive="false"/>
+            <ivy:dependency org="io.netty" name="netty-transport"      rev="4.0.33.Final" transitive="false"/>
+            <ivy:dependency org="io.netty" name="netty-transport-sctp" rev="4.0.33.Final" transitive="false"/>
+        </pathdep>
+
+        <pathdep group="shiro">
+            <ivy:dependency org="org.apache.shiro" name="shiro-core" rev="1.2.4" transitive="false"/>
+        </pathdep>
+
+        <pathdep group="bouncycastle">
+            <ivy:dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.54"/>
+        </pathdep>
+
+        <property name="ipojo.rev" value="1.12.1"/>
+        <pathdep group="ipojo">
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo" rev="${ipojo.rev}" />
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.api" rev="${ipojo.rev}" />
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.annotations" rev="${ipojo.rev}"/>
+        </pathdep>
+
+        <pathdep group="tinkerpop">
+            <ivy:dependency org="org.apache.tinkerpop" name="gremlin-core" rev="3.0.2-incubating"/>
+            <ivy:dependency org="org.apache.tinkerpop" name="gremlin-groovy" rev="3.0.2-incubating"/>
+            <ivy:dependency org="org.apache.tinkerpop" name="tinkergraph-gremlin" rev="3.0.2-incubating"/>
+        </pathdep>
+
+        <property name="vaadin.rev" value="7.6.7"/>
+        <pathdep group="vaadin">
+            <ivy:dependency org="com.vaadin"       name="vaadin-server"          rev="${vaadin.rev}"/>
+            <ivy:dependency org="com.vaadin"       name="vaadin-client"          rev="${vaadin.rev}"/>
+            <ivy:dependency org="com.vaadin"       name="vaadin-client-compiled" rev="${vaadin.rev}"/>
+            <ivy:dependency org="com.vaadin"       name="vaadin-themes"          rev="${vaadin.rev}"/>
+        </pathdep>
+
+        <pathdep group="vaadin-client-compiler">
+            <ivy:dependency org="com.vaadin" name="vaadin-client-compiler" rev="${vaadin.rev}"/>
+        </pathdep>
+
+        <pathdep group="vaadin-widgets">
+            <ivy:dependency org="com.vaadin.addon" name="vaadin-context-menu" rev="0.7.3" transitive="false"/>
+            <ivy:dependency org="org.vaadin.alump.gridstack" name="gridstack-addon" rev="0.2.1"/>
+        </pathdep>
+
+        <pathdep group="osgi">
+            <ivy:dependency org="org.osgi" name="org.osgi.core"       rev="5.0.0" />
+            <ivy:dependency org="org.osgi" name="org.osgi.compendium" rev="5.0.0" />
+            <ivy:dependency org="org.osgi" name="org.osgi.enterprise" rev="5.0.0" />
+        </pathdep>
+
+        <pathdep group="karaf-runtime">
+            <ivy:dependency org="org.apache.karaf.shell" name="org.apache.karaf.shell.console"
+                rev="${karaf.release}" transitive="false"/>
+            <ivy:dependency org="org.apache.karaf.features" name="org.apache.karaf.features.core"
+                rev="${karaf.release}" transitive="false"/>
+        </pathdep>
+
+        <pathdep group="javaee-api">
+            <ivy:dependency org="javax" name="javaee-api" rev="7.0" />
+        </pathdep>
+
+        <!--property name="beanshell.rev" value="2.0b4"/>
+        <pathdep group="bsh">
+            <ivy:dependency org="org.beanshell" name="bsh-util"      rev="${beanshell.rev}"/>
+            <ivy:dependency org="org.beanshell" name="bsh-reflect"   rev="${beanshell.rev}"/>
+            <ivy:dependency org="org.beanshell" name="bsh-core"      rev="${beanshell.rev}"/>
+            <ivy:dependency org="org.beanshell" name="bsh-commands"  rev="${beanshell.rev}"/>
+            <ivy:dependency org="org.beanshell" name="bsh-classgen"  rev="${beanshell.rev}"/>
+            <ivy:dependency org="org.beanshell" name="bsh-classpath" rev="${beanshell.rev}"/>
+        </pathdep-->
+
+        <pathdep group="gson">
+            <ivy:dependency org="com.google.code.gson" name="gson" rev="2.4"/>
+        </pathdep>
+
+        <pathdep group="guava">
+            <ivy:dependency org="com.google.guava" name="guava" rev="18.0"/>
+        </pathdep>
+
+        <pathdep group="markdown">
+            <ivy:dependency org="com.atlassian.commonmark" name="commonmark" rev="0.5.1" />
+            <ivy:dependency org="com.atlassian.commonmark" name="commonmark-ext-gfm-tables" rev="0.5.1" />
+        </pathdep>
+
+        <pathdep group="apache-commons">
+            <ivy:dependency org="org.apache.commons" name="commons-lang3" rev="3.4"/>
+        </pathdep>
+
+        <pathdep group="apache-commons-exec">
+            <ivy:dependency org="org.apache.commons" name="commons-exec" rev="1.3" />
+        </pathdep>
+
+        <pathdep group="kryo">
+            <ivy:dependency org="com.esotericsoftware" name="kryo" rev="3.0.3"/>
+        </pathdep>
+
+        <!-- Ready to go! -->
+        <touch file="${configure.ok.file}"/>
+
+    </target>
+
+</project>

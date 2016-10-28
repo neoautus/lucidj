@@ -1,0 +1,12 @@
+
+NOTICE
+======
+
+This is rt.jar from Azul Zulu:
+
+Source       : zulu7.14.0.5-jdk7.0.101-linux_x64.tar.gz
+Download url : http://www.azul.com/downloads/zulu/zulu-linux/
+File         : <zulu-root>/jre/lib/rt.jar
+
+Be sure to check another great products on http://www.azul.com ;)
+

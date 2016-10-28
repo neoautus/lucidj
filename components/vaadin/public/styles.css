@@ -1,0 +1,41 @@
+
+.ui-header-area {
+    padding: 0;
+    height: auto;
+    background-color: #e8e8e8;
+    border-bottom: solid 1px #ccc;
+}
+
+.ui-header-logo {
+    height: 56px;
+    padding: 0 8px;
+    background: url(/VAADIN/base-ui/neoautus-rationalq.png) no-repeat 18px center;
+}
+
+.ui-header-search {
+    /* nothing */
+}
+
+.ui-header-user {
+    margin: 0 8px;
+}
+
+.ui-toolbar-area {
+    padding: 8px 0;
+    height: auto;
+    background-color: #fff;
+    border-bottom: solid 1px #ccc;
+}
+
+.ui-toolbar-area-home {
+    padding: 0 8px;
+}
+
+.ui-toolbar-spacer {
+    margin-right: 8px;
+}
+
+.panel-caption-only {
+    border: 0 !important;
+    border-radius: 0 !important;
+}

@@ -1,0 +1,120 @@
+<html><body>
+<img src="http://neoautus.com/images/logo.png"/>
+<h1>Default</h1>
+<p>This is a demo concept of blended HTML and Quark file.</p>
+<pre><code>
+#!/usr/bin/quark-handler
+Q-Quark-Version: "1.0.0"
+Q-Content-Type: "multipart/mixed"; boundary="-------THINK_BIG_BE_BOLD-------"
+Formulae-Version: "1.0.0"
+
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.smartbox.SmartBox"
+Q-Content-Type: "text/plain"
+Long-Value: 31415926535898L
+View-Mode: "default"
+output0: Embedded; refid=1
+
+for (int i = 0; i < 10; i++)
+{
+    Console.println ("Hello world! i=" + i);
+    Console.flush ();
+    Thread.sleep (500);
+}
+
+-------THINK_BIG_BE_BOLD-------
+Q-Content-Type: "text/plain"
+Q-Object: "org.rationalq.smartbox.SmartBox"
+output0: Embedded; refid=2
+View-Mode: "default"
+
+Vaadin.addComponent (new Image (null, new ExternalResource ("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png")));
+-------THINK_BIG_BE_BOLD-------
+Q-Content-Type: "text/plain"
+Q-Object: "org.rationalq.smartbox.SmartBox"
+View-Mode: "default"
+
+f = b.getClass().getSuperclass().getDeclaredFields();
+for (int i = 0; i < f.length; i++)
+{
+    print("field: " + f[i].getName());
+}
+cl = b.getClass().getDeclaredClasses();
+for (int i = 0; i < cl.length; i++)
+{
+    print("class " + cl[i].getName());
+}
+f2 = b.getClass().getSuperclass().getSuperclass().getDeclaredFields();
+for (int i = 0; i < f2.length; i++)
+{
+    print("field: " + f2[i].getName());
+}
+
+-------THINK_BIG_BE_BOLD-------
+Q-Content-Type: "text/plain"
+Q-Object: "org.rationalq.smartbox.SmartBox"
+
+b = new Button("Hello world!");
+
+-------THINK_BIG_BE_BOLD-------
+Q-Content-Type: "text/plain"
+Q-Object: "org.rationalq.smartbox.SmartBox"
+
+originalImage = javax.imageio.ImageIO.read(new File("/home/marcond/U-FL-RP-SMA-Female-10-Pigtail-Cable-Mini-PCI-UFL-RG178.jpg"));
+new Image ("Teste",  originalImage);
+-------THINK_BIG_BE_BOLD-------
+Q-Content-Type: "text/plain"
+Q-Object: "org.rationalq.smartbox.SmartBox"
+
+l = new HorizontalLayout();
+l.addComponent(new Label("Testando!"));
+l.addComponent(new Button("Botao 1"));
+l.addComponent(new Button("Botao 2"));
+l
+
+-------THINK_BIG_BE_BOLD-------
+Q-Content-Type: "text/plain"
+Q-Object: "org.rationalq.smartbox.SmartBox"
+
+for (int i = 0; i < 10; i++)
+{
+    print ("i = " + i + " sqrt(" + i + ") = " + sqrt(i));
+}
+
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.console.Console"; id=1; embedded
+Q-Content-Type: "text/plain"
+
+[OUT] Hello world! i=0
+[OUT] Hello world! i=1
+[OUT] Hello world! i=2
+[OUT] Hello world! i=3
+[OUT] Hello world! i=4
+[OUT] Hello world! i=5
+[OUT] Hello world! i=6
+[OUT] Hello world! i=7
+[OUT] Hello world! i=8
+[OUT] Hello world! i=9
+
+-------THINK_BIG_BE_BOLD-------
+Q-Object: "org.rationalq.vaadin.Vaadin"; id=2; embedded
+Q-Content-Type: "text/plain"
+
+<!doctype html>
+<html>
+    <head>
+        <meta name="package-mapping" content="org_rationalq_vaadin:org.rationalq.vaadin">
+    </head>
+    <body>
+        <org_rationalq_vaadin-vaadin>
+            <vaadin-image source="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"></vaadin-image>
+        </org_rationalq_vaadin-vaadin>
+    </body>
+</html>
+-------THINK_BIG_BE_BOLD---------
+</code></pre>
+<script>
+d=document.querySelector("pre code");
+d.innerHTML=d.innerHTML.replace(/</g,"&lt;").replace(/>/g,"&gt;");
+</script>
+</body></html>

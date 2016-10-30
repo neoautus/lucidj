@@ -16,13 +16,11 @@
 
 package org.lucidj.api;
 
-import com.vaadin.server.Resource;
-
 public interface MenuEntry
 {
     String getTitle (); // TODO: i18n
     int getWeight ();
-    Resource getIcon ();
+    Object getIcon ();
     String getNavId ();
     String getBadge ();
     String getOptions ();

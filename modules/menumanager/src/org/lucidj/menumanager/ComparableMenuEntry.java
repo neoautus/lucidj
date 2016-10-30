@@ -18,22 +18,19 @@ package org.lucidj.menumanager;
 
 import org.lucidj.api.MenuEntry;
 
-import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Resource;
-
 public class ComparableMenuEntry implements MenuEntry, Comparable<ComparableMenuEntry>
 {
     private String title;
     private int weight;
-    private Resource icon;
+    private Object icon;
     private String navid;
     private String options;
     private String badge;
 
-    public ComparableMenuEntry (String title, Resource icon, int weight, String navid)
+    public ComparableMenuEntry (String title, Object icon, int weight, String navid)
     {
         this.title = title;
-        this.icon = (icon == null)? FontAwesome.SQUARE_O: icon;
+        this.icon = icon;
         this.weight = weight;
         this.navid = navid;
 
@@ -66,7 +63,7 @@ public class ComparableMenuEntry implements MenuEntry, Comparable<ComparableMenu
     }
 
     @Override // MenuEntry
-    public Resource getIcon ()
+    public Object getIcon ()
     {
         return (icon);
     }

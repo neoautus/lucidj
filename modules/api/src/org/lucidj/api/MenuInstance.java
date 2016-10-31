@@ -16,16 +16,26 @@
 
 package org.lucidj.api;
 
-import com.vaadin.server.Resource;
+import java.util.Map;
+import java.util.TreeSet;
 
 public interface MenuInstance
 {
-    MenuEntry newMenuEntry (String title, Resource icon, int weight, String navid);
+    void setMenuManager (MenuManager menu_manager);
+    TreeSet<MenuEntry> getMenuEntries ();
+    Map<String, Object> properties ();
+    MenuEntry newMenuEntry (String title, Object icon, int weight, String navid);
     void addMenuEntry (MenuEntry menu_entry);
     void removeMenuEntry (MenuEntry menu_entry);
+    void menuChanged (MenuProvider menu_provider);
 
-    void addMenuProviderListener (MenuProvider menu_provider);
-    void removeMenuProviderListener (MenuProvider menu_provider);
+    void setEventListener (EventListener listener);
+    void fireEventEntrySelected (MenuEntry entry);
+
+    interface EventListener
+    {
+        void entrySelectedEvent (MenuEntry entry);
+    }
 }
 
 // EOF

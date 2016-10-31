@@ -16,9 +16,12 @@
 
 package org.lucidj.api;
 
+import java.util.Map;
+
 public interface MenuManager
 {
-    MenuInstance newMenuInstance ();
+    MenuInstance newMenuInstance (Map<String, Object> properties);
+    void buildMenu (MenuInstance menu_instance, Map<String, Object> properties);
 }
 
 // EOF

@@ -18,18 +18,46 @@ package org.lucidj.menumanager;
 
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
+import org.lucidj.api.MenuManager;
 import org.lucidj.api.MenuProvider;
 
-import com.vaadin.server.Resource;
-
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 public class DefaultMenuInstance implements MenuInstance
 {
     private TreeSet<MenuEntry> menu_entry_list = new TreeSet<>();
+    private MenuManager menu_manager;
+    private volatile boolean menu_changed;
+    private Map<String, Object> properties = new HashMap<> ();
+    private EventListener event_listener;
 
     @Override // MenuInstance
-    public MenuEntry newMenuEntry (String title, Resource icon, int weight, String navid)
+    public void setMenuManager (MenuManager menu_manager)
+    {
+        this.menu_manager = menu_manager;
+    }
+
+    @Override // MenuInstance
+    public TreeSet<MenuEntry> getMenuEntries ()
+    {
+        if (menu_changed)
+        {
+            menu_changed = false;
+            menu_manager.buildMenu (this, properties);
+        }
+        return (menu_entry_list);
+    }
+
+    @Override // MenuInstance
+    public Map<String, Object> properties ()
+    {
+        return (properties);
+    }
+
+    @Override // MenuInstance
+    public MenuEntry newMenuEntry (String title, Object icon, int weight, String navid)
     {
         return (new ComparableMenuEntry (title, icon, weight, navid));
     }
@@ -47,15 +75,24 @@ public class DefaultMenuInstance implements MenuInstance
     }
 
     @Override // MenuInstance
-    public void addMenuProviderListener (MenuProvider menu_provider)
+    public void menuChanged (MenuProvider menu_provider)
     {
-
+        menu_changed = true;
     }
 
     @Override // MenuInstance
-    public void removeMenuProviderListener (MenuProvider menu_provider)
+    public void setEventListener (EventListener listener)
     {
+        event_listener = listener;
+    }
 
+    @Override // MenuInstance
+    public void fireEventEntrySelected (MenuEntry entry)
+    {
+        if (event_listener != null)
+        {
+            event_listener.entrySelectedEvent (entry);
+        }
     }
 }
 

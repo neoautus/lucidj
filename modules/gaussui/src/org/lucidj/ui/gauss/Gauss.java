@@ -17,6 +17,10 @@
 package org.lucidj.ui.gauss;
 
 import org.lucidj.api.DesktopInterface;
+import org.lucidj.api.MenuEntry;
+import org.lucidj.api.MenuInstance;
+import org.lucidj.api.MenuManager;
+import org.lucidj.renderer.treemenu.TreeMenuRenderer;
 import org.lucidj.vaadinui.FancyEmptyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,13 +69,14 @@ import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.architecture.PropertyDescription;
 
 @Component (immediate = true)
 @Instantiate
 @Provides (specifications = DesktopInterface.class)
-public class Gauss implements DesktopInterface, ViewProvider
+public class Gauss implements DesktopInterface, ViewProvider, MenuInstance.EventListener
 {
     private final static transient Logger log = LoggerFactory.getLogger (Gauss.class);
 
@@ -117,6 +122,11 @@ public class Gauss implements DesktopInterface, ViewProvider
     private UI attached_ui;
     private Navigator navigator;
 
+    @Requires
+    private MenuManager menu_manager;
+    private MenuInstance main_menu;
+    private TreeMenuRenderer main_menu_renderer;
+
     //=========================================================================================
     // LAYOUTS
     //=========================================================================================
@@ -144,10 +154,20 @@ public class Gauss implements DesktopInterface, ViewProvider
             //navMenu.addStyleName ("valo-menu");
             navMenu.setWidth (default_sidebar_width_pixels, Sizeable.Unit.PIXELS);
             navMenu.setHeightUndefined ();
+
+            main_menu = menu_manager.newMenuInstance (null);
+            main_menu.setEventListener (this);
+            main_menu_renderer = new TreeMenuRenderer ();
+            main_menu_renderer.objectLinked (main_menu);
+            main_menu_renderer.objectUpdated ();
+            com.vaadin.ui.Component main_menu_component = main_menu_renderer.renderingComponent ();
+            main_menu_component.setWidth (100, Unit.PERCENTAGE);
+            main_menu_component.setHeightUndefined ();
+
             acMenu.addStyleName ("borderless");
+            acMenu.addTab (main_menu_component, "New Navigation");
             acMenu.addTab (navMenu, "Navigation"); // FontAwesome.COMPASS
             acMenu.setSizeFull ();
-            acMenu.addTab (new Label ("Hello world!"), "Configuration"); // FontAwesome.ADJUST
         }
 
         hsContentsSidebar.setFirstComponent (new FancyEmptyView ());
@@ -156,6 +176,12 @@ public class Gauss implements DesktopInterface, ViewProvider
         hsMenuContents.setFirstComponent (acMenu);
         hsMenuContents.setSecondComponent (hsContentsSidebar);
         hsMenuContents.setSplitPosition (default_sidebar_width_pixels, Sizeable.Unit.PIXELS);
+    }
+
+    @Override // MenuInstance.EventListener
+    public void entrySelectedEvent (MenuEntry entry)
+    {
+        navigator.navigateTo (entry.getNavId ());
     }
 
     private void initToolbarArea ()

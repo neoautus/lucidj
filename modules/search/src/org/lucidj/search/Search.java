@@ -21,6 +21,8 @@ import org.lucidj.api.MenuProvider;
 
 import com.vaadin.server.FontAwesome;
 
+import java.util.Map;
+
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -31,7 +33,13 @@ import org.apache.felix.ipojo.annotations.Provides;
 public class Search implements MenuProvider
 {
     @Override
-    public void buildMenu (MenuInstance menu)
+    public Map<String, Object> getProperties ()
+    {
+        return (null);
+    }
+
+    @Override
+    public void buildMenu (MenuInstance menu, Map<String, Object> properties)
     {
         menu.addMenuEntry (menu.newMenuEntry ("Search", FontAwesome.SEARCH, 250, "search"));
     }

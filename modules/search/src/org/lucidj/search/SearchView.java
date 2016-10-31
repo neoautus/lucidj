@@ -45,6 +45,9 @@ public class SearchView extends VerticalLayout implements View
     @Property public int weight = 250;
     @Property public Resource icon = FontAwesome.SEARCH;
 
+    // TODO: MOVE navid HANDLING OUTSIDE MENU LOGIC
+    @Property public String navid = "search";
+
     public SearchView ()
     {
         // Delay UI building

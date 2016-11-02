@@ -536,7 +536,11 @@ public class Gauss implements DesktopInterface, ViewProvider, MenuInstance.Event
             }
         });
 
-        navigator.addProvider(this);
+//////        navigator.addProvider(this);
+        if (main_menu instanceof ViewProvider)
+        {
+            navigator.addProvider ((ViewProvider)main_menu);
+        }
 
         // Start on default Home
         navigator.navigateTo ("home");

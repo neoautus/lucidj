@@ -16,12 +16,16 @@
 
 package org.lucidj.api;
 
+// TODO: MOVE REGISTRY AWAY FROM RUNTIME!!!!!!!!!!!!!
+import org.lucidj.runtime.Registry;
+
 import java.util.Map;
 import java.util.TreeSet;
 
 public interface MenuInstance
 {
     void setMenuManager (MenuManager menu_manager);
+    Registry registry ();
     TreeSet<MenuEntry> getMenuEntries ();
     Map<String, Object> properties ();
     MenuEntry newMenuEntry (String title, Object icon, int weight, String navid);

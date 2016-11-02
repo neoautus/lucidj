@@ -19,6 +19,8 @@ package org.lucidj.search;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
 
+import com.vaadin.navigator.View;
+import com.vaadin.navigator.ViewProvider;
 import com.vaadin.server.FontAwesome;
 
 import java.util.Map;
@@ -30,18 +32,42 @@ import org.apache.felix.ipojo.annotations.Provides;
 @Component
 @Instantiate
 @Provides (specifications = MenuProvider.class)
-public class Search implements MenuProvider
+public class Search implements MenuProvider, ViewProvider
 {
-    @Override
+    private final static String V_SEARCH = "search";
+
+    @Override // MenuProvider
     public Map<String, Object> getProperties ()
     {
         return (null);
     }
 
-    @Override
+    @Override // MenuProvider
     public void buildMenu (MenuInstance menu, Map<String, Object> properties)
     {
-        menu.addMenuEntry (menu.newMenuEntry ("Search", FontAwesome.SEARCH, 250, "search"));
+        menu.addMenuEntry (menu.newMenuEntry ("Search", FontAwesome.SEARCH, 250, V_SEARCH));
+        menu.registry ().register (this);
+    }
+
+    @Override // ViewProvider
+    public String getViewName (String s)
+    {
+        if (V_SEARCH.equals (s))
+        {
+            return (V_SEARCH);
+        }
+        return null;
+    }
+
+    @Override // ViewProvider
+    public View getView (String s)
+    {
+        if (V_SEARCH.equals (s))
+        {
+            // TODO: HANDLE PROPER IPOJO COMPONENT CREATION IF NEEDED
+            return (new SearchView ());
+        }
+        return null;
     }
 }
 

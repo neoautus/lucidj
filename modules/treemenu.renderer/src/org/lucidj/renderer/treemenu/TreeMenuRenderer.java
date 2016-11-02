@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Property;
+import com.vaadin.server.ClientConnector;
 import com.vaadin.server.Resource;
 import com.vaadin.ui.AbstractSelect;
 import com.vaadin.ui.Component;
@@ -40,6 +41,7 @@ public class TreeMenuRenderer implements Renderer, Property.ValueChangeListener
     private static String CP_NAVID   = "navid";
 
     private MenuInstance menu_instance;
+    private transient boolean menu_instance_updated;
     private Tree tree_menu;
 
     public TreeMenuRenderer ()
@@ -57,41 +59,49 @@ public class TreeMenuRenderer implements Renderer, Property.ValueChangeListener
 
         tree_menu.addValueChangeListener (this);
         tree_menu.setImmediate (true);
+
+        tree_menu.addAttachListener (new ClientConnector.AttachListener ()
+        {
+            @Override
+            public void attach (ClientConnector.AttachEvent attachEvent)
+            {
+                render_tree_menu ();
+            }
+        });
+
+        tree_menu.addDetachListener (new ClientConnector.DetachListener ()
+        {
+            @Override
+            public void detach (ClientConnector.DetachEvent detachEvent)
+            {
+                // Nothing for now
+            }
+        });
     }
 
-    @Override
-    public boolean compatibleObject (Object obj_to_check)
+    private void render_tree_menu ()
     {
-        return (obj_to_check instanceof MenuInstance);
-    }
+        log.info ("render_tree_menu");
 
-    @Override
-    public void objectLinked (Object obj)
-    {
-        menu_instance = (MenuInstance)obj;
-        //tree_items = new HierarchicalContainer ();
-    }
+        if (!tree_menu.isAttached ())
+        {
+            log.info ("render_tree_menu: not attached");
+            menu_instance_updated = true;
+            return;
+        }
+        else if (!menu_instance_updated)
+        {
+            log.info ("render_tree_menu: not updated");
+            return;
+        }
 
-    @Override
-    public void objectUnlinked ()
-    {
-        menu_instance = null;
-        //tree_items = null;
+        log.info ("render_tree_menu: will render");
 
-    }
+        menu_instance_updated = false;
 
-    @Override
-    public Component renderingComponent ()
-    {
-        return (tree_menu);
-    }
-
-    @Override
-    public void objectUpdated ()
-    {
         TreeSet<MenuEntry> menu_entries = menu_instance.getMenuEntries ();
 
-        //tree_items.removeAllItems ();
+        tree_menu.removeAllItems ();
 
         for (MenuEntry entry: menu_entries)
         {
@@ -107,6 +117,36 @@ public class TreeMenuRenderer implements Renderer, Property.ValueChangeListener
         }
 
         log.info ("Tree rendered.");
+    }
+
+    @Override
+    public boolean compatibleObject (Object obj_to_check)
+    {
+        return (obj_to_check instanceof MenuInstance);
+    }
+
+    @Override
+    public void objectLinked (Object obj)
+    {
+        menu_instance = (MenuInstance)obj;
+    }
+
+    @Override
+    public void objectUnlinked ()
+    {
+        menu_instance = null;
+    }
+
+    @Override
+    public Component renderingComponent ()
+    {
+        return (tree_menu);
+    }
+
+    @Override
+    public void objectUpdated ()
+    {
+        render_tree_menu ();
     }
 
     @Override // Property.ValueChangeListener

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.data.Property;
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.server.ClientConnector;
 import com.vaadin.server.Resource;
 import com.vaadin.ui.AbstractSelect;
@@ -31,7 +32,7 @@ import com.vaadin.ui.Tree;
 
 import java.util.TreeSet;
 
-public class TreeMenuRenderer implements Renderer, Property.ValueChangeListener
+public class TreeMenuRenderer implements Renderer, ItemClickEvent.ItemClickListener
 {
     private final static transient Logger log = LoggerFactory.getLogger (TreeMenuRenderer.class);
 
@@ -57,8 +58,9 @@ public class TreeMenuRenderer implements Renderer, Property.ValueChangeListener
         tree_menu.setItemCaptionMode (AbstractSelect.ItemCaptionMode.PROPERTY);
         tree_menu.setItemIconPropertyId (CP_ICON);
 
-        tree_menu.addValueChangeListener (this);
+        tree_menu.addItemClickListener (this);
         tree_menu.setImmediate (true);
+        tree_menu.setSelectable (false);
 
         tree_menu.addAttachListener (new ClientConnector.AttachListener ()
         {
@@ -149,10 +151,10 @@ public class TreeMenuRenderer implements Renderer, Property.ValueChangeListener
         render_tree_menu ();
     }
 
-    @Override // Property.ValueChangeListener
-    public void valueChange (Property.ValueChangeEvent valueChangeEvent)
+    @Override
+    public void itemClick (ItemClickEvent itemClickEvent)
     {
-        Object item_id = valueChangeEvent.getProperty().getValue();
+        Object item_id = itemClickEvent.getItemId ();
         Property item_entry = tree_menu.getContainerProperty (item_id, CP_ENTRY);
         MenuEntry entry = (item_entry != null)? (MenuEntry)item_entry.getValue (): null;
 

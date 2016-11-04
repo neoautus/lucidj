@@ -16,6 +16,7 @@
 
 package org.lucidj.ui.gauss;
 
+import org.lucidj.api.ApplicationInterface;
 import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
@@ -497,9 +498,24 @@ public class Gauss implements DesktopInterface, ViewProvider, MenuInstance.Event
 
                 highlight_menu_item(navid);
 
-                AbstractComponent sidebar = getComponentSidebar (navid);
+                View new_view = event.getNewView ();
+                AbstractComponent sidebar = null;
+                AbstractComponent toolbar = null;
 
-                log.info ("*** Sidebar navid:{} = {}", navid, sidebar);
+                if (new_view instanceof ApplicationInterface)
+                {
+                    ApplicationInterface app_view = (ApplicationInterface)new_view;
+
+                    sidebar = app_view.getSidebar ();
+                    toolbar = app_view.getToolbar ();
+                }
+
+                log.info ("Sidebar navid:{} = {}", navid, sidebar);
+                log.info ("Toolbar navid:{} = {}", navid, toolbar);
+
+                //---------------
+                // Place sidebar
+                //---------------
 
                 if (sidebar != null)
                 {
@@ -520,9 +536,9 @@ public class Gauss implements DesktopInterface, ViewProvider, MenuInstance.Event
                     hsContentsSidebar.setLocked (true);
                 }
 
-                AbstractComponent toolbar = getComponentToolbar(navid);
-
-                log.info("Toolbar navid:{} = {}", navid, toolbar);
+                //---------------
+                // Place toolbar
+                //---------------
 
                 hToolbarPlaceholder.removeAllComponents();
 
@@ -532,6 +548,8 @@ public class Gauss implements DesktopInterface, ViewProvider, MenuInstance.Event
                     hToolbarPlaceholder.addComponent(toolbar);
                 }
 
+                // TODO: FIGURE OUT THE DESTINY OF THIS
+                // This exists to autohide responsive sandwich menu.
                 //menu.removeStyleName ("valo-menu-visible");
             }
         });

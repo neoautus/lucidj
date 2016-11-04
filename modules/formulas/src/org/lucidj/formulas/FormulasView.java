@@ -27,6 +27,7 @@ import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Resource;
 import com.vaadin.shared.ui.MarginInfo;
 import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.AbstractLayout;
 import com.vaadin.ui.Accordion;
@@ -35,8 +36,6 @@ import com.vaadin.ui.Component;
 
 import org.apache.felix.ipojo.ConfigurationException;
 import org.apache.felix.ipojo.annotations.Context;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 
@@ -52,6 +51,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import org.osgi.framework.BundleContext;
 
+import org.lucidj.api.ApplicationInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.TaskContext;
 import org.lucidj.runtime.Kernel;
@@ -66,9 +66,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @StyleSheet ("vaadin://formulas/styles.css")
 @org.apache.felix.ipojo.annotations.Component
-////@Instantiate
 @Provides (specifications = com.vaadin.navigator.View.class)
-public class FormulasView extends VerticalLayout implements View
+public class FormulasView extends VerticalLayout implements View, ApplicationInterface
 {
     //==============================
     //==============================
@@ -76,13 +75,8 @@ public class FormulasView extends VerticalLayout implements View
     //==============================
     //==============================
 
-//    @Property public String title = "Formulas";
-//    @Property public int weight = 500;
-//    @Property public Resource icon = FontAwesome.FILE_CODE_O;
-//    @Property
+    // TODO: CREATE A PROPER NAVIGATION AID
     private String navid = "formulas";
-//    @Property private String options = "header";
-//    @Property private String badge = "7";
 
     @Context transient BundleContext ctx;
 
@@ -95,13 +89,8 @@ public class FormulasView extends VerticalLayout implements View
 
     private static final String PROP_FORMULAE_VERSION = "Formulae-Version";
 
-//    @Property(name="View-Caption")
-//    private String caption = "Formulas";
-
-//    @Property(name="View-Toolbar")
+    private String caption = "Formulas";
     private CssLayout current_toolbar = null;
-
-//    @Property(name="View-Sidebar")
     private Accordion acSidebar = null;
     private ComponentPalette sidebar = null;
 
@@ -125,6 +114,24 @@ public class FormulasView extends VerticalLayout implements View
     public FormulasView () throws ConfigurationException
     {
 
+    }
+
+    @Override // ApplicationInterface
+    public AbstractComponent getToolbar ()
+    {
+        return (current_toolbar);
+    }
+
+    @Override // ApplicationInterface
+    public AbstractComponent getSidebar ()
+    {
+        return (acSidebar);
+    }
+
+    @Override // ApplicationInterface
+    public String getCaption ()
+    {
+        return (caption);
     }
 
     class Cell extends AbstractCell
@@ -849,7 +856,7 @@ public class FormulasView extends VerticalLayout implements View
 
         log.info ("Enter viewName={} parameters={}", view_name, parameters);
 
-        if (parameters != null)
+        if (!parameters.isEmpty ())
         {
             task_source = parameters;
         }
@@ -860,7 +867,7 @@ public class FormulasView extends VerticalLayout implements View
 
         if (getComponentCount() == 0)
         {
-            if (parameters != null)
+            if (!parameters.isEmpty ())
             {
                 build_formula_view (parameters);
             }

@@ -173,7 +173,7 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
         final Button toggle_menu = new Button ();
         toggle_menu.setIcon (FontAwesome.BARS);
         toggle_menu.addStyleName("tiny");
-        toggle_menu.addStyleName ("quiet");
+        toggle_menu.addStyleName ("link");
         toggle_menu.addStyleName("ui-toolbar-spacer");
         toggle_menu.setId("_toggle_menu");
         home_buttons.addComponent (toggle_menu);
@@ -236,7 +236,7 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
         final Button eject_view = new Button ();
         eject_view.setIcon (FontAwesome.EXTERNAL_LINK);
         eject_view.addStyleName("tiny");
-        eject_view.addStyleName ("quiet");
+        eject_view.addStyleName ("link");
         //eject_view.addStyleName("ui-toolbar-spacer");
         eject_view.setId("_eject_view");
         hToolbarArea.addComponent (eject_view);
@@ -261,7 +261,7 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
         final Button toggle_sidebar = new Button ();
         toggle_sidebar.setIcon (FontAwesome.BARS);
         toggle_sidebar.addStyleName("tiny");
-        toggle_sidebar.addStyleName ("quiet");
+        toggle_sidebar.addStyleName ("link");
         toggle_sidebar.addStyleName("ui-toolbar-spacer");
         toggle_sidebar.setId("_toggle_sidebar");
         hToolbarArea.addComponent (toggle_sidebar);

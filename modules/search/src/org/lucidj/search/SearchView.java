@@ -26,12 +26,10 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.handlers.event.Subscriber;
 
 @Component
-@Instantiate
 @Provides (specifications = com.vaadin.navigator.View.class)
 public class SearchView extends VerticalLayout implements View
 {

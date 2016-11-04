@@ -18,6 +18,7 @@ package org.lucidj.search;
 
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
+import org.lucidj.runtime.Kernel;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
@@ -64,8 +65,7 @@ public class Search implements MenuProvider, ViewProvider
     {
         if (V_SEARCH.equals (s))
         {
-            // TODO: HANDLE PROPER IPOJO COMPONENT CREATION IF NEEDED
-            return (new SearchView ());
+            return (Kernel.newComponent (SearchView.class));
         }
         return null;
     }

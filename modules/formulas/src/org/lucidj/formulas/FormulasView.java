@@ -66,9 +66,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @StyleSheet ("vaadin://formulas/styles.css")
 @org.apache.felix.ipojo.annotations.Component
-@Instantiate
+////@Instantiate
 @Provides (specifications = com.vaadin.navigator.View.class)
-public class Formulas extends VerticalLayout implements View
+public class FormulasView extends VerticalLayout implements View
 {
     //==============================
     //==============================
@@ -76,16 +76,17 @@ public class Formulas extends VerticalLayout implements View
     //==============================
     //==============================
 
-    @Property public String title = "Formulas";
-    @Property public int weight = 500;
-    @Property public Resource icon = FontAwesome.FILE_CODE_O;
-    @Property private String navid = "formulas";
-    @Property private String options = "header";
-    @Property private String badge = "7";
+//    @Property public String title = "Formulas";
+//    @Property public int weight = 500;
+//    @Property public Resource icon = FontAwesome.FILE_CODE_O;
+//    @Property
+    private String navid = "formulas";
+//    @Property private String options = "header";
+//    @Property private String badge = "7";
 
     @Context transient BundleContext ctx;
 
-    private final transient static Logger log = LoggerFactory.getLogger (Formulas.class);
+    private final transient static Logger log = LoggerFactory.getLogger (FormulasView.class);
 
     private static final String VM_NOTEBOOK = "view-mode-notebook";
     private static final String VM_SINGLE = "view-mode-single";
@@ -94,13 +95,13 @@ public class Formulas extends VerticalLayout implements View
 
     private static final String PROP_FORMULAE_VERSION = "Formulae-Version";
 
-    @Property(name="View-Caption")
-    private String caption = "Formulas";
+//    @Property(name="View-Caption")
+//    private String caption = "Formulas";
 
-    @Property(name="View-Toolbar")
+//    @Property(name="View-Toolbar")
     private CssLayout current_toolbar = null;
 
-    @Property(name="View-Sidebar")
+//    @Property(name="View-Sidebar")
     private Accordion acSidebar = null;
     private ComponentPalette sidebar = null;
 
@@ -121,7 +122,7 @@ public class Formulas extends VerticalLayout implements View
     private VerticalLayout content;
     private Cell insert_here_cell;
 
-    public Formulas () throws ConfigurationException
+    public FormulasView () throws ConfigurationException
     {
 
     }
@@ -750,7 +751,7 @@ public class Formulas extends VerticalLayout implements View
     private void build_formula_view (String view_mode)
     {
         // TODO: VERIFICAR SE É MELHOR CHECAR A EXISTÊNCIA DA FORMULA AQUI OU NA CRIAÇÃO DO COMPONENTE
-        caption = "Formula: <b>" + task_source + "</b>";
+//////        caption = "Formula: <b>" + task_source + "</b>";   +++++++++++++++
 
         setMargin (new MarginInfo (true, false, true, false));
 

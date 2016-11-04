@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.formulas;
+package org.lucidj.explorer;
 
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
@@ -33,9 +33,9 @@ import org.apache.felix.ipojo.annotations.Provides;
 @Component
 @Instantiate
 @Provides (specifications = MenuProvider.class)
-public class Formulas implements MenuProvider, ViewProvider
+public class Explorer implements MenuProvider, ViewProvider
 {
-    private final static String NAVID = "formulas";
+    private final static String NAVID = "home";
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -46,19 +46,13 @@ public class Formulas implements MenuProvider, ViewProvider
     @Override // MenuProvider
     public void buildMenu (MenuInstance menu, Map<String, Object> properties)
     {
-        menu.addMenuEntry (menu.newMenuEntry ("Formulas", FontAwesome.FILE_CODE_O, 500, NAVID));
+        menu.addMenuEntry (menu.newMenuEntry ("Explorer", FontAwesome.FOLDER_OPEN_O, 100, NAVID));
         menu.registry ().register (this);
     }
 
     @Override // ViewProvider
     public String getViewName (String s)
     {
-        // Split NAVID:ARGS
-        if (s.contains (":"))
-        {
-            s = s.substring (0, s.indexOf (":"));
-        }
-
         if (NAVID.equals (s))
         {
             return (NAVID);
@@ -71,7 +65,7 @@ public class Formulas implements MenuProvider, ViewProvider
     {
         if (NAVID.equals (s))
         {
-            return (Kernel.newComponent (FormulasView.class));
+            return (Kernel.newComponent (ExplorerView.class));
         }
         return null;
     }

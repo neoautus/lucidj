@@ -26,8 +26,6 @@ import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Resource;
 import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
@@ -42,28 +40,15 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 
-import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Context;
-import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 
 @Component
-@Instantiate
 @Provides (specifications = com.vaadin.navigator.View.class)
 public class ExplorerView extends VerticalLayout implements View, ItemClickEvent.ItemClickListener
 {
-    @Property public String title = "Explorer";
-    @Property public int weight = 100;
-    @Property public Resource icon = FontAwesome.FOLDER_OPEN_O;
-    @Property private String navid = "home";
-    //@Property private String options = "header";
-
-    @Context
-    transient BundleContext ctx;
-
     @Requires
     private Shiro shiro;
 
@@ -292,23 +277,18 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
         addComponent (treetable);
     }
 
-    @Override
+    @Override // ItemClickEvent.ItemClickListener
     public void itemClick (ItemClickEvent itemClickEvent)
     {
         String item_name = (String)itemClickEvent.getItem ().getItemProperty ("Name").getValue ();
         log.info ("itemClickEvent: {}", item_name);
-
-        if (item_name.endsWith (".quark"))
-        {
-            item_name = item_name.substring (0, item_name.lastIndexOf ('.'));
-        }
 
         treetable.unselect (itemClickEvent.getItem ().getItemPropertyIds ());
 
         UI.getCurrent().getNavigator().navigateTo ("formulas:" + item_name);
     }
 
-    @Override
+    @Override // View
     public void enter (ViewChangeListener.ViewChangeEvent event)
     {
         log.info ("Enter viewName=" + event.getViewName() + " parameters=" + event.getParameters());

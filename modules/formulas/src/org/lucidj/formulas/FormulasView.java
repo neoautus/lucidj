@@ -678,7 +678,7 @@ public class FormulasView extends VerticalLayout implements View
             return (false);
         }
 
-        Path formulae_path = userdir.resolve (formulae_name + ".quark");
+        Path formulae_path = userdir.resolve (formulae_name);
 
         if (!tctx.save (formulae_path))
         {
@@ -700,7 +700,7 @@ public class FormulasView extends VerticalLayout implements View
             return (false);
         }
 
-        Path formulae_path = userdir.resolve (formulae_name + ".quark");
+        Path formulae_path = userdir.resolve (formulae_name);
 
         formulae_changed = false;
 
@@ -844,13 +844,14 @@ public class FormulasView extends VerticalLayout implements View
     @Override
     public void enter(ViewChangeListener.ViewChangeEvent event)
     {
+        String parameters = event.getParameters ();
         view_name = event.getViewName ();
 
-        log.info ("Enter viewName={} parameters={}", view_name, event.getParameters());
+        log.info ("Enter viewName={} parameters={}", view_name, parameters);
 
-        if (view_name.contains (":"))
+        if (parameters != null)
         {
-            task_source = view_name.substring (view_name.indexOf (":") + 1);
+            task_source = parameters;
         }
         else
         {
@@ -859,9 +860,9 @@ public class FormulasView extends VerticalLayout implements View
 
         if (getComponentCount() == 0)
         {
-            if (event.getViewName().contains(":"))
+            if (parameters != null)
             {
-                build_formula_view (event.getParameters());
+                build_formula_view (parameters);
             }
             else
             {

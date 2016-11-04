@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.rationalq.explorer;
+package org.lucidj.explorer;
 
 import org.lucidj.shiro.Shiro;
 import org.slf4j.Logger;
@@ -53,7 +53,7 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Component
 @Instantiate
 @Provides (specifications = com.vaadin.navigator.View.class)
-public class Explorer extends VerticalLayout implements View, ItemClickEvent.ItemClickListener
+public class ExplorerView extends VerticalLayout implements View, ItemClickEvent.ItemClickListener
 {
     @Property public String title = "Explorer";
     @Property public int weight = 100;
@@ -67,7 +67,7 @@ public class Explorer extends VerticalLayout implements View, ItemClickEvent.Ite
     @Requires
     private Shiro shiro;
 
-    private final transient Logger log = LoggerFactory.getLogger (Explorer.class);
+    private final transient Logger log = LoggerFactory.getLogger (ExplorerView.class);
 
     @Property(name="View-Toolbar")
     private CssLayout toolbar = null;
@@ -79,7 +79,7 @@ public class Explorer extends VerticalLayout implements View, ItemClickEvent.Ite
     private Object[] treetable_visible_columns;
     private transient WatchService watch_service;
 
-    public Explorer ()
+    public ExplorerView ()
     {
 
     }

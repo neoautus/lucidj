@@ -3,9 +3,7 @@
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/modules/classtracker/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/dygraphs/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/editor/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/plotchart/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/quark/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/shiro/src" isTestSource="false" />
@@ -13,23 +11,15 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/timeseries/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/uiaccess/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/themes/kuori" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/vaadin-kernel/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/components/buttons_and_links/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/components/common_parts/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/components/dygraph_charts/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/components/resources/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/components/security/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/components/vaadin/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/aceeditor/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/components/formulas/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/formulas/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/librarian/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/beanshell/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/console/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/vaadin/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/exception/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/extras/launcher/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/system/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/components/executive/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/components/top/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/components/explorer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/html/src" isTestSource="false" />
@@ -39,7 +29,6 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/test_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/test_component/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/smartbox_renderer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/task/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/objectmanager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/html_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/markdown_renderer/src" isTestSource="false" />

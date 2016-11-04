@@ -88,7 +88,7 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
     private HorizontalLayout hToolbarArea = new HorizontalLayout();
     private CssLayout hToolbarPlaceholder = new CssLayout ();
     private CssLayout emptySidebar = new FancyEmptyView ("Sidebar empty");
-    private CssLayout navMenu = new CssLayout();
+    private Button toggle_sidebar;
     private Accordion acMenu = new Accordion ();
     private int default_sidebar_width_pixels = 250;
 
@@ -125,11 +125,6 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
 
         // Accordion menu
         {
-            navMenu.setPrimaryStyleName ("valo-menuitems");
-            navMenu.addStyleName ("valo-menu-part");
-            navMenu.setWidth (default_sidebar_width_pixels, Sizeable.Unit.PIXELS);
-            navMenu.setHeightUndefined ();
-
             main_menu = menu_manager.newMenuInstance (null);
             main_menu.setEventListener (this);
             main_menu_renderer = new TreeMenuRenderer ();
@@ -140,8 +135,7 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
             main_menu_component.setHeightUndefined ();
 
             acMenu.addStyleName ("borderless");
-            acMenu.addTab (main_menu_component, "New Navigation");
-            acMenu.addTab (navMenu, "Navigation"); // FontAwesome.COMPASS
+            acMenu.addTab (main_menu_component, "Navigation");
             acMenu.setSizeFull ();
         }
 
@@ -258,13 +252,14 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
             }
         });
 
-        final Button toggle_sidebar = new Button ();
+        toggle_sidebar = new Button ();
         toggle_sidebar.setIcon (FontAwesome.BARS);
-        toggle_sidebar.addStyleName("tiny");
+        toggle_sidebar.addStyleName ("tiny");
         toggle_sidebar.addStyleName ("link");
-        toggle_sidebar.addStyleName("ui-toolbar-spacer");
-        toggle_sidebar.setId("_toggle_sidebar");
+        toggle_sidebar.addStyleName ("ui-toolbar-spacer");
+        toggle_sidebar.setId ("_toggle_sidebar");
         hToolbarArea.addComponent (toggle_sidebar);
+
         toggle_sidebar.addClickListener (new Button.ClickListener ()
         {
             @Override
@@ -366,6 +361,9 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
                     // Sidebar visible at default position
                     hsContentsSidebar.setSplitPosition (default_sidebar_width_pixels, Unit.PIXELS, true);
                     hsContentsSidebar.setLocked (false);
+
+                    // Enable toggle sidebar button
+                    toggle_sidebar.setEnabled (true);
                 }
                 else
                 {
@@ -375,6 +373,9 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
                     // Sidebar is hidden
                     hsContentsSidebar.setSplitPosition (0, Unit.PIXELS, true);
                     hsContentsSidebar.setLocked (true);
+
+                    // Disable toggle sidebar button
+                    toggle_sidebar.setEnabled (false);
                 }
 
                 //---------------

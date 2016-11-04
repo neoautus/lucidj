@@ -34,6 +34,7 @@ import com.vaadin.ui.TreeTable;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -63,11 +64,6 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
     private TreeTable treetable;
     private Object[] treetable_visible_columns;
     private transient WatchService watch_service;
-
-    public ExplorerView ()
-    {
-
-    }
 
     private void build_toolbar ()
     {
@@ -256,11 +252,11 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
 
     private void build_explorer_view ()
     {
-        setMargin(true);
+        setMargin (true);
 
         Label private_caption = new Label ("Home");
-        private_caption.addStyleName("h2");
-        addComponent(private_caption);
+        private_caption.addStyleName ("h2");
+        addComponent (private_caption);
 
         FilesystemContainer fc = new FilesystemContainer (userdir.toFile ());
 
@@ -268,7 +264,7 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
         treetable.setContainerDataSource (fc);
         treetable.setItemIconPropertyId ("Icon");
         treetable.setWidth ("100%");
-        treetable.setSelectable (true);
+        treetable.setSelectable (false);
         treetable.setImmediate (true);
         treetable.setPageLength (0);
         treetable.setHeightUndefined ();
@@ -280,12 +276,23 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
     @Override // ItemClickEvent.ItemClickListener
     public void itemClick (ItemClickEvent itemClickEvent)
     {
-        String item_name = (String)itemClickEvent.getItem ().getItemProperty ("Name").getValue ();
-        log.info ("itemClickEvent: {}", item_name);
+        // FilesystemContainer uses File as item id
+        File item_id = ((File)itemClickEvent.getItemId ());
 
-        treetable.unselect (itemClickEvent.getItem ().getItemPropertyIds ());
+        if (item_id.isDirectory ())
+        {
+            // Open/close directory
+            treetable.setCollapsed (item_id, !treetable.isCollapsed (item_id));
+        }
+        else
+        {
+            // Get item relative path
+            String item_path = userdir.relativize (item_id.toPath ()).toString ();
 
-        UI.getCurrent().getNavigator().navigateTo ("formulas:" + item_name);
+            log.info ("OPEN item_path={}", item_path);
+
+            UI.getCurrent().getNavigator().navigateTo ("formulas:" + item_path);
+        }
     }
 
     @Override // View

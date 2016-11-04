@@ -1,4 +1,6 @@
 
+/* TODO: MOVE SMARTBOX CSS TO ITS OWN MODULE */
+
 .o-toolbar {
     padding: 8px;
     height: auto;
@@ -9,8 +11,16 @@
     margin-right: 8px;
 }
 
+.smartbox-code {
+    border: none !important;
+}
+
 div.ace_gutter-cell {
     color: #800000;
+}
+
+.ace_editor, .AceEditorWidget.ace_editor {
+    font-size: 14px !important;
 }
 
 .component-cell {

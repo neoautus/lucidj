@@ -19,6 +19,7 @@ package org.lucidj.renderer.treemenu;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.Renderer;
+import org.lucidj.uiaccess.UIAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,7 @@ public class TreeMenuRenderer implements Renderer, ItemClickEvent.ItemClickListe
     private static String CP_NAVID   = "navid";
 
     private MenuInstance menu_instance;
-    private transient boolean menu_instance_updated;
+    private transient boolean update_on_attach;
     private Tree tree_menu;
 
     public TreeMenuRenderer ()
@@ -73,7 +74,11 @@ public class TreeMenuRenderer implements Renderer, ItemClickEvent.ItemClickListe
             @Override
             public void attach (ClientConnector.AttachEvent attachEvent)
             {
-                render_tree_menu ();
+                if (update_on_attach)
+                {
+                    render_tree_menu ();
+                    update_on_attach = false;
+                }
             }
         });
 
@@ -89,42 +94,47 @@ public class TreeMenuRenderer implements Renderer, ItemClickEvent.ItemClickListe
 
     private void render_tree_menu ()
     {
-        log.info ("render_tree_menu");
+        log.debug ("render_tree_menu");
 
         if (!tree_menu.isAttached ())
         {
-            log.info ("render_tree_menu: not attached");
-            menu_instance_updated = true;
-            return;
-        }
-        else if (!menu_instance_updated)
-        {
-            log.info ("render_tree_menu: not updated");
+            log.debug ("render_tree_menu: update on attach");
+            update_on_attach = true;
             return;
         }
 
-        log.info ("render_tree_menu: will render");
+        log.debug ("render_tree_menu: will render");
 
-        menu_instance_updated = false;
-
-        TreeSet<MenuEntry> menu_entries = menu_instance.getMenuEntries ();
-
-        tree_menu.removeAllItems ();
-
-        for (MenuEntry entry: menu_entries)
+        new UIAccess (tree_menu)
         {
-            Object item_id = tree_menu.addItem ();
+            @Override
+            public void updateUI ()
+            {
+                log.debug ("render_tree_menu: updateUI rendering start");
 
-            tree_menu.getContainerProperty (item_id, CP_ENTRY).setValue (entry);
-            tree_menu.getContainerProperty (item_id, CP_CAPTION).setValue (entry.getTitle ());
-            tree_menu.getContainerProperty (item_id, CP_NAVID).setValue (entry.getNavId ());
-            tree_menu.getContainerProperty (item_id, CP_ICON).setValue (entry.getIcon ());
+                // Get the logical menu representation...
+                TreeSet<MenuEntry> menu_entries = menu_instance.getMenuEntries ();
 
-            // By default no one has children
-            tree_menu.setChildrenAllowed (item_id, false);
-        }
+                // ...and start building the visible UI menu
+                tree_menu.removeAllItems ();
 
-        log.info ("Tree rendered.");
+                // TODO: EXPAND THIS TO BUILD MENU SUBITEMS
+                for (MenuEntry entry: menu_entries)
+                {
+                    Object item_id = tree_menu.addItem ();
+
+                    tree_menu.getContainerProperty (item_id, CP_ENTRY).setValue (entry);
+                    tree_menu.getContainerProperty (item_id, CP_CAPTION).setValue (entry.getTitle ());
+                    tree_menu.getContainerProperty (item_id, CP_NAVID).setValue (entry.getNavId ());
+                    tree_menu.getContainerProperty (item_id, CP_ICON).setValue (entry.getIcon ());
+
+                    // By default no one has children
+                    tree_menu.setChildrenAllowed (item_id, false);
+                }
+
+                log.debug ("render_tree_menu: updateUI rendering finished");
+            }
+        };
     }
 
     @Override

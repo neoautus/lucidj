@@ -20,6 +20,8 @@ import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.MenuProvider;
+import org.lucidj.api.Renderer;
+import org.lucidj.renderer.SimpleObservable;
 import org.lucidj.runtime.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,14 +32,16 @@ import com.vaadin.navigator.ViewProvider;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observer;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class DefaultMenuInstance implements MenuInstance, ViewProvider
+public class DefaultMenuInstance implements MenuInstance, ViewProvider, Renderer.Observable
 {
     private final static transient Logger log = LoggerFactory.getLogger (DefaultMenuInstance.class);
 
     private TreeSet<MenuEntry> menu_entry_list = new TreeSet<>();
+    private SimpleObservable observers = new SimpleObservable ();
     private MenuManager menu_manager;
     private volatile boolean menu_changed;
     private Map<String, Object> properties = new HashMap<> ();
@@ -64,6 +68,10 @@ public class DefaultMenuInstance implements MenuInstance, ViewProvider
         if (menu_changed)
         {
             menu_changed = false;
+
+            // Rebuild the LOGICAL menu representation --
+            // The representation will later be used by some renderer
+            menu_entry_list.clear ();
             menu_manager.buildMenu (this, properties);
         }
         return (menu_entry_list);
@@ -97,6 +105,7 @@ public class DefaultMenuInstance implements MenuInstance, ViewProvider
     public void menuChanged (MenuProvider menu_provider)
     {
         menu_changed = true;
+        observers.notifyNow ();
     }
 
     @Override // MenuInstance
@@ -114,7 +123,7 @@ public class DefaultMenuInstance implements MenuInstance, ViewProvider
         }
     }
 
-    @Override
+    @Override // ViewProvider
     public String getViewName (String s)
     {
         log.debug ("getViewName: {}", s);
@@ -137,7 +146,7 @@ public class DefaultMenuInstance implements MenuInstance, ViewProvider
         return (null);
     }
 
-    @Override
+    @Override // ViewProvider
     public View getView (String s)
     {
         log.debug ("getView: {}", s);
@@ -151,6 +160,18 @@ public class DefaultMenuInstance implements MenuInstance, ViewProvider
         }
 
         return (null);
+    }
+
+    @Override // Renderer.Observable
+    public void addObserver (Observer observer)
+    {
+        observers.addObserver (observer);
+    }
+
+    @Override // Renderer.Observable
+    public void deleteObserver (Observer observer)
+    {
+        observers.deleteObserver (observer);
     }
 }
 

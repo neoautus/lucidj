@@ -21,6 +21,7 @@ import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
+import org.lucidj.renderer.ObjectRenderer;
 import org.lucidj.renderer.treemenu.TreeMenuRenderer;
 import org.lucidj.vaadinui.FancyEmptyView;
 import org.slf4j.Logger;
@@ -49,7 +50,9 @@ import com.vaadin.ui.VerticalLayout;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -92,16 +95,20 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
     private Accordion acMenu = new Accordion ();
     private int default_sidebar_width_pixels = 250;
 
+
     private String DAMN = "damage.report";
     private ErrorView damage_report_view = new ErrorView ();
 
     private Navigator navigator;
 
+    @Context
+    private BundleContext context;
+
     @Requires
     private MenuManager menu_manager;
 
     private MenuInstance main_menu;
-    private TreeMenuRenderer main_menu_renderer;
+    private ObjectRenderer object_renderer;
 
     //=========================================================================================
     // LAYOUTS
@@ -125,15 +132,17 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
 
         // Accordion menu
         {
+            // Create the logical menu
             main_menu = menu_manager.newMenuInstance (null);
             main_menu.setEventListener (this);
-            main_menu_renderer = new TreeMenuRenderer ();
-            main_menu_renderer.objectLinked (main_menu);
-            main_menu_renderer.objectUpdated ();
-            com.vaadin.ui.Component main_menu_component = main_menu_renderer.renderingComponent ();
+
+            // Create the menu renderer
+            object_renderer = new ObjectRenderer (context);
+            com.vaadin.ui.Component main_menu_component = object_renderer.link (main_menu);
             main_menu_component.setWidth (100, Unit.PERCENTAGE);
             main_menu_component.setHeightUndefined ();
 
+            // Add the rendered component into navigation panel
             acMenu.addStyleName ("borderless");
             acMenu.addTab (main_menu_component, "Navigation");
             acMenu.setSizeFull ();

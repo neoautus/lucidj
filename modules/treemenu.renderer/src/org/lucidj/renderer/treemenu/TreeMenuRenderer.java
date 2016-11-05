@@ -32,6 +32,12 @@ import com.vaadin.ui.Tree;
 
 import java.util.TreeSet;
 
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Provides;
+
+@org.apache.felix.ipojo.annotations.Component (immediate = true)
+@Instantiate
+@Provides
 public class TreeMenuRenderer implements Renderer, ItemClickEvent.ItemClickListener
 {
     private final static transient Logger log = LoggerFactory.getLogger (TreeMenuRenderer.class);

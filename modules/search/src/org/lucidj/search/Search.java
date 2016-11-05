@@ -44,7 +44,7 @@ public class Search implements MenuProvider, ViewProvider
     }
 
     @Override // MenuProvider
-    public void buildMenu (MenuInstance menu, Map<String, Object> properties)
+    public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
         menu.addMenuEntry (menu.newMenuEntry ("Search", FontAwesome.SEARCH, 250, V_SEARCH));
         menu.registry ().register (this);

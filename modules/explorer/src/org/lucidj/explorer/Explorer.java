@@ -44,7 +44,7 @@ public class Explorer implements MenuProvider, ViewProvider
     }
 
     @Override // MenuProvider
-    public void buildMenu (MenuInstance menu, Map<String, Object> properties)
+    public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
         menu.addMenuEntry (menu.newMenuEntry ("Explorer", FontAwesome.FOLDER_OPEN_O, 100, NAVID));
         menu.registry ().register (this);

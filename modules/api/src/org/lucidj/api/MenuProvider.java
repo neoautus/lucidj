@@ -21,7 +21,7 @@ import java.util.Map;
 public interface MenuProvider
 {
     Map<String, Object> getProperties ();
-    void buildMenu (MenuInstance menu, Map<String, Object> properties);
+    void buildMenuEntries (MenuInstance menu, Map<String, Object> properties);
 }
 
 // EOF

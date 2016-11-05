@@ -67,10 +67,15 @@ public class DefaultMenuManager implements MenuManager
     @Override // MenuManager
     public void buildMenu (MenuInstance menu_instance, Map<String, Object> properties)
     {
+        log.debug ("buildMenu: menu_instance={} properties={}", menu_instance, properties);
+
         for (MenuProvider provider: menu_provider_list)
         {
-            provider.buildMenu (menu_instance, properties);
+            log.debug ("buildMenuEntries: provider={}", provider);
+            provider.buildMenuEntries (menu_instance, properties);
         }
+
+        log.debug ("buildMenu: finished.");
     }
 
     @Override // MenuManager
@@ -85,6 +90,10 @@ public class DefaultMenuManager implements MenuManager
             // Fill menu
             buildMenu (new_menu, properties);
         }
+
+        // Keep all created menus listening changes
+        new_menu.setMenuManager (this);
+        menu_instance_listeners.add (new WeakReference<MenuInstance> (new_menu));
 
         return (new_menu);
     }

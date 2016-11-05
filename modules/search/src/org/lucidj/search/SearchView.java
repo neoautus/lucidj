@@ -22,28 +22,19 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Resource;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.handlers.event.Subscriber;
 
 @Component
-@Instantiate
 @Provides (specifications = com.vaadin.navigator.View.class)
 public class SearchView extends VerticalLayout implements View
 {
     private final static transient Logger log = LoggerFactory.getLogger (SearchView.class);
     private SearchView self = this;
-
-    @Property public String title = "Search";
-    @Property public int weight = 250;
-    @Property public Resource icon = FontAwesome.SEARCH;
 
     public SearchView ()
     {

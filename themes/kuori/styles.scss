@@ -4,89 +4,19 @@ $v-font-family: sans-serif; */
 
 $v-background-color: hsl(210deg, 0%, 97%);
 /*$v-focus-color: #006B52;*/
-$v-focus-color: #4285F4;
-$valo-menu-background-color: hsl(218, 20%, 98%);
+/*$v-focus-color: #4285F4;*/
+/*$valo-menu-background-color: hsl(218, 20%, 98%);*/
+$v-focus-style: none;
 
 @import "../valo/valo";
 @import "addons.scss";
 
-/* Dear God: don't let anyone else see this awful mess. I promisse someday I will fix it :[ */
 .kuori {
   @include valo;
   @include addons;
 
-  .v-button-view-control {
-    @include valo-button-static-style();
-    @include valo-button-style($unit-size: $v-font-size, $padding: 0, $border: 0);
-    @include valo-button-borderless-style();
-    width: $v-font-size;
-  }
-
-  .custom-menu-subtitle {
-    color: valo-font-color($valo-menu-background-color, 0.33);
-  }
-
-  .custom-menu-subtitle::after {
-    content: '';
-    display: block;
-    position: absolute;
-    bottom: 0;
-    width: 120%;
-    border-bottom: valo-border($color: $valo-menu-background-color, $strength: 0.5, $border: first-number($v-border) solid v-tone);
-  }
-
   .toolbar-area {
     border-bottom: valo-border($color: $v-background-color, $strength: 0.4, $border: first-number($v-border) solid v-tone);
-  }
-
-  .v-button.v-button-toolbar:focus,
-  .v-button.v-button-cell-shortcut:focus,
-  .v-button.v-button-toolbar:focus:after,
-  .v-button.v-button-cell-shortcut:focus:after {
-    /* TODO: Figure out a better way to get rid of the focus highlight */
-    border-color: valo-font-color($v-background-color, 0.2);
-    box-shadow: none;
-  }
-
-  .cell-shortcut-panel {
-    padding: 0px 8px 0px 8px !important;
-  }
-
-  .cell-shortcut-button {
-    color: valo-font-color($v-background-color, 0.05);
-    border: 1px solid $v-background-color;
-    border-radius: 0;
-    padding: 0 14px;
-  }
-
-  .cell-shortcut-button:hover {
-    background-color: #f0f0f0;
-    color: valo-font-color($v-background-color, 0.9);
-    border: 1px solid #c3c3c3;
-    border-radius: 4px;
-  }
-
-  .cell-shortcut-button:active {
-    background-color: #dddddd;
-    color: valo-font-color($v-background-color, 0.9) !important;
-  }
-
-  .cell-shortcut-button:before {
-    vertical-align: top;
-  }
-
-  .v-label-view-caption {
-    @include valo-label();
-    text-align: center;
-
-    h1, .v-label-h1,
-    h2, .v-label-h2,
-    h3, .v-label-h3,
-    h4, .v-label-h4 {
-      margin-top: 0;
-      margin-bottom: 0;
-      color: inherit;
-    }
   }
 
   .v-csslayout-custom-empty-view {
@@ -107,67 +37,4 @@ $valo-menu-background-color: hsl(218, 20%, 98%);
     border: 1px solid #c00;
     color: #c00;
   }
-  
-/*  .component-cell {
-    padding: 4px;
-    border: valo-border($border: first-number($v-border) transparent solid);
-  }
-
-  .component-cell-selected {
-    border: first-number($v-border) solid transparent;
-    border-right: first-number($v-border) solid $v-focus-color;
-  }
-*/
-  .smartbox {
-    padding: 4px;
-    border: valo-border($border: first-number($v-border) transparent solid);
-  }
-
-  .smartbox-selected {
-    border: first-number($v-border) solid transparent;
-    border-right: first-number($v-border) solid $v-focus-color;
-  }
-
-  .smartbox-results {
-    margin-top: 4px;
-  }
-
-  .smartbox-results pre {
-    margin: 0px;
-    font-size: 0.9em;
-    white-space: pre-wrap;
-    white-space: -moz-pre-wrap;
-    white-space: -pre-wrap;
-    white-space: -o-pre-wrap;
-    word-wrap: break-word;
-  }
-
-  .toolbar.v-filterselect-small {
-    height: $v-unit-size--small - 3;
-  }
-
-  .grid-stack.my-gridstacklayout {
-    @include gridstacklayout-columns(8);
-  }
-}
-
-.ace_editor, .AceEditorWidget.ace_editor {
-  font-size: 14px !important;
-}
-
-.smartbox-code {
-  border: none !important;
-}
-
-/* This font-face declaration must be outside your theme mixin. */
-@font-face {
-  font-family: 'Vaadin-Icons';
-  src: url('fonts/Vaadin-Icons.eot');
-  src: url('fonts/Vaadin-Icons.eot?#iefix') format('embedded-opentype'),
-  url('fonts/Vaadin-Icons.woff') format('woff'),
-  url('fonts/Vaadin-Icons.ttf') format('truetype'),
-  url('fonts/Vaadin-Icons.svg#icomoon') format('svg');
-}
-.Vaadin-Icons {
-  font-family: 'Vaadin-Icons';
 }

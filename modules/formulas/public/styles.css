@@ -1,0 +1,148 @@
+
+/* TODO: MOVE SMARTBOX CSS TO ITS OWN MODULE */
+
+.o-toolbar {
+    padding: 8px;
+    height: auto;
+    background-image: linear-gradient(to bottom, #f0f0f0 2%, #e0e0e0 98%);
+
+}
+.o-toolbar > div {
+    margin-right: 8px;
+}
+
+.smartbox-code {
+    border: none !important;
+}
+
+div.ace_gutter-cell {
+    color: #800000;
+}
+
+.ace_editor, .AceEditorWidget.ace_editor {
+    font-size: 14px !important;
+}
+
+.component-cell {
+    padding: 4px;
+}
+
+.component-cell-wrapper {
+    border: 1px transparent solid;
+    border-right: 4px transparent solid;
+    padding: 4px;
+}
+
+.component-cell-wrapper-selected {
+    border: 1px solid transparent;
+    border-right: 4px solid #C3D6E8;
+    padding: 4px;
+}
+
+.component-icon {
+    width: 22px;
+    height: 22px;
+    margin: 5px;
+    opacity: 0.0;
+    filter: alpha(opacity=0);
+}
+
+.component-task-state {
+    text-align: center;
+    opacity: 0.0;
+    filter: alpha(opacity=0);
+}
+
+.component-task-runnable:hover span {
+    display: none;
+}
+
+.component-task-runnable:hover:after {
+    content: "\f04b";
+    font-family: FontAwesome;
+    color: green;
+}
+
+.component-task-state-visible,
+.cell-panel-selected .component-task-state,
+.cell-panel-right:hover .component-task-state {
+    opacity: 1;
+    filter: alpha(opacity=100);
+}
+
+.renderer-layout {
+    margin-top: 4px;
+}
+
+.cell-panel-selected .component-icon {
+    opacity: 1;
+    filter: alpha(opacity=100);
+}
+
+.cell-panel-left:hover .component-icon {
+    opacity: 0.2;
+    filter: alpha(opacity=20);
+}
+
+.cell-panel-left.cell-panel-selected:hover .component-icon,
+.cell-panel-left .component-icon:hover,
+.v-drag-element .component-icon {
+    opacity: 1;
+    filter: alpha(opacity=100);
+}
+
+.cell-panel-left {
+    cursor: move;
+    /*width: 30px;*/
+    margin: 0 0 0 4px;
+    /*height: 100%;*/
+    /*background-color: yellow;*/
+    /*border: 1px solid red;*/
+}
+
+.cell-panel-right, .cell-panel-right.cell-panel-selected:hover {
+    border-left: 1px solid transparent;
+    margin: 0 4px 0 0;
+}
+
+.cell-panel-right:hover {
+    border-left: 1px solid #C3D6E8;
+}
+
+.formula-header {
+    margin-bottom: 16px;
+    /*margin: 0 40px 16px 40px;*/
+    border-bottom: 1px #e0e0e0 solid;
+}
+
+.formula-icon {
+    display: inline-block;
+    width: 48px;
+    height: auto;
+    margin: 0;
+    padding: 0;
+}
+
+.formula-header .v-textfield {
+    font-size: 30px;
+    font-weight: bold;
+    padding: 0;
+    text-overflow: ellipsis;
+}
+
+.formula-header .v-textfield:not(.v-textfield-focus) {
+    border-color: transparent;
+    background-color: #f8f8f8;
+}
+
+.formula-info {
+    font-size: 14px;
+    margin: 0 0 4px 10px !important;
+}
+
+.formula-insert-here {
+    border: 1px dashed #454545;
+    background-color: #FFFFDD;
+    text-align: center;
+    line-height: 60px;
+}

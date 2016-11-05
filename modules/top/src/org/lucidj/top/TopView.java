@@ -27,8 +27,6 @@ import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Resource;
 import com.vaadin.ui.*;
 
 import java.util.HashSet;
@@ -37,20 +35,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Property;
 import org.apache.felix.ipojo.annotations.Provides;
 
-@StyleSheet ("vaadin://top_components/styles.css")
 @Component
 @Provides (specifications = com.vaadin.navigator.View.class)
 public class TopView extends VerticalLayout implements View
 {
     final Logger log = LoggerFactory.getLogger (TopView.class);
-
-    @Property public String title = "Top tasks";
-    @Property public int weight = 200;
-    @Property public Resource icon = FontAwesome.TASKS;
 
     private IndexedContainer container;
     private Grid grid;
@@ -62,9 +53,8 @@ public class TopView extends VerticalLayout implements View
         Set<String> valid_ctxids = new HashSet<> ();
         TaskContext[] ctx_list = Kernel.taskManager ().getTaskContexts ();
 
-        for (int i = 0; i < ctx_list.length; i++)
+        for (TaskContext sc: ctx_list)
         {
-            TaskContext sc = ctx_list [i];
             String ctx_id = sc.toString (); // ...getContextId ();
             Item item = container.getItem (ctx_id);
 
@@ -72,11 +62,11 @@ public class TopView extends VerticalLayout implements View
 
             if (item == null)
             {
-                item = container.addItem(ctx_id);
+                item = container.addItem (ctx_id);
             }
 
             item.getItemProperty ("context_id").setValue (ctx_id);
-            item.getItemProperty ("components").setValue (sc /*.getQuarkContext ()*/ .toString ());
+            item.getItemProperty ("components").setValue (sc /*.getQuarkContext ()*/.toString ());
         }
 
         for (int i = 0; i < container.size (); i++)
@@ -122,7 +112,7 @@ public class TopView extends VerticalLayout implements View
 
     private void buildView()
     {
-        setMargin(false);
+        setMargin (true);
         setHeight (100, Unit.PERCENTAGE);
 
         // Create a container of some type

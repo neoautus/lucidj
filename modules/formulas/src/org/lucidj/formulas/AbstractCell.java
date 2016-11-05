@@ -50,7 +50,7 @@ import org.osgi.framework.FrameworkUtil;
 
 public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutClickListener, ComponentState.ChangeListener
 {
-    private final transient static Logger log = LoggerFactory.getLogger (ObjectRenderer.class);
+    private final transient static Logger log = LoggerFactory.getLogger (AbstractCell.class);
 
     private String bundle_symbolic_name;
     private Object source_object;

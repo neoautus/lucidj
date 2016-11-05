@@ -20,7 +20,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/vaadin/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/exception/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/extras/launcher/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/components/top/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/top/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/explorer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/html/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/markdown/src" isTestSource="false" />

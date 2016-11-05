@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.rationalq.top;
+package org.lucidj.top;
 
 import org.lucidj.api.TaskContext;
 import org.lucidj.runtime.Kernel;
@@ -43,11 +43,10 @@ import org.apache.felix.ipojo.annotations.Provides;
 
 @StyleSheet ("vaadin://top_components/styles.css")
 @Component
-@Instantiate
 @Provides (specifications = com.vaadin.navigator.View.class)
-public class Top extends VerticalLayout implements View
+public class TopView extends VerticalLayout implements View
 {
-    final Logger log = LoggerFactory.getLogger (Top.class);
+    final Logger log = LoggerFactory.getLogger (TopView.class);
 
     @Property public String title = "Top tasks";
     @Property public int weight = 200;
@@ -57,12 +56,6 @@ public class Top extends VerticalLayout implements View
     private Grid grid;
     private Timer update_timer = new Timer ();
     private TimerTask update_task = null;
-
-
-    public Top ()
-    {
-        // Delay UI building
-    }
 
     private void updateView ()
     {

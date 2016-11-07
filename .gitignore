@@ -2,11 +2,21 @@ build/*
 dist/*
 cache/*
 stage/*
-.idea/workspace.xml
-.idea/tasks.xml
 extras/AntInstaller/ant.install.log
 extras/AntInstaller/AntInstaller-beta0.8/artifacts/prepare/*
 extras/AntInstaller/AntInstaller-beta0.8/lib/ant-installer-ext.jar
 extras/AntInstaller/AntInstaller-beta0.8/lib/ant-installer.jar
 extras/AceEditor/ace-builds/*
 extras/AceEditor/ace/*
+
+# IntelliJ IDEA
+.ant-targets-build.xml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/watcherTasks.xml
+.idea/dataSources.ids
+.idea/dataSources.xml
+.idea/dataSources.local.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/uiDesigner.xml

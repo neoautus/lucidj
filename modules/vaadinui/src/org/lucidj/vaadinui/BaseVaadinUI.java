@@ -53,7 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -223,6 +222,7 @@ public class BaseVaadinUI extends UI
         {
             Factory factory = ((Pojo)base_desktop).getComponentInstance ().getFactory ();
 
+            // TODO: MOVE COMPONENT HANDLING TO KERNEL
             try
             {
                 final ComponentInstance new_comp = factory.createComponentInstance (null);
@@ -308,91 +308,64 @@ public class BaseVaadinUI extends UI
     // SMARTPUSH
     //=========================================================================================
 
-    private AtomicInteger calls = new AtomicInteger (0);
-
-    // TODO: REMOVE THIS AFTER SOME TESTING
-    @Override
-    public void push ()
-    {
-        int current = calls.incrementAndGet ();
-        log.info ("===>>> UI PUSH level = {}", current);
-        super.push ();
-        log.info ("<<<=== UI PUSH level = {}", current);
-        calls.decrementAndGet ();
-    }
-
     class ObservingConnectorTracker extends ConnectorTracker
     {
+        final static int SP_RESTING    = 0;    // Nothing to update
+        final static int SP_PREPARED   = 1;    // At least one markDirty() pending
+        final static int SP_ACCESS_SET = 2;    // Push is scheduled using ui.access()
+        final static int SP_PUSHING    = 3;    // Pushing NOW
+
         private Timer push_timer = new Timer ();
-        private transient TimerTask push_task = null;
         private UI ui;
+        private volatile long last_push;
+        private volatile long prepare_push;
+        private AtomicInteger push_status;
 
         public ObservingConnectorTracker (UI ui)
         {
             super (ui);
             this.ui = ui;
+
+            push_status = new AtomicInteger (SP_RESTING);
+            push_timer = new Timer ();
+            push_timer.scheduleAtFixedRate (new TimerTask ()
+            {
+                @Override
+                public void run ()
+                {
+                    timer_poll ();
+                }
+            }, 50, 50);
         }
 
-        // By returning a copy of dirty_list, we avoid getting spurious ConcurrentModificationException
-        // on AtmospherePushConnection.java:168. It happens when we are receiving websocket data from
-        // navigator at the same time that we are building components, and websocket+push is enabled.
-        //
-        // java.lang.RuntimeException: Push failed
-        //    at com.vaadin.server.communication.AtmospherePushConnection.push(AtmospherePushConnection.java:171)[118:com.vaadin.server:7.6.7]
-        //    at com.vaadin.server.communication.PushHandler$2.run(PushHandler.java:150)[118:com.vaadin.server:7.6.7]
-        //    at com.vaadin.server.communication.PushHandler.callWithUi(PushHandler.java:243)[118:com.vaadin.server:7.6.7]
-        //    at com.vaadin.server.communication.PushHandler.onMessage(PushHandler.java:503)[118:com.vaadin.server:7.6.7]
-        //    at com.vaadin.server.communication.PushAtmosphereHandler.onMessage(PushAtmosphereHandler.java:88)[118:com.vaadin.server:7.6.7]
-        //    at com.vaadin.server.communication.PushAtmosphereHandler.onRequest(PushAtmosphereHandler.java:78)[118:com.vaadin.server:7.6.7]
-        //    at org.atmosphere.cpr.AsynchronousProcessor.action(AsynchronousProcessor.java:199)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.cpr.AsynchronousProcessor.suspended(AsynchronousProcessor.java:107)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.container.Jetty9AsyncSupportWithWebSocket.service(Jetty9AsyncSupportWithWebSocket.java:180)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.cpr.AtmosphereFramework.doCometSupport(AtmosphereFramework.java:2075)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.websocket.DefaultWebSocketProcessor.dispatch(DefaultWebSocketProcessor.java:571)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.websocket.DefaultWebSocketProcessor$3.run(DefaultWebSocketProcessor.java:333)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.util.VoidExecutorService.execute(VoidExecutorService.java:101)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.websocket.DefaultWebSocketProcessor.dispatch(DefaultWebSocketProcessor.java:328)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.websocket.DefaultWebSocketProcessor.invokeWebSocketProtocol(DefaultWebSocketProcessor.java:425)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.atmosphere.container.Jetty9WebSocketHandler.onWebSocketText(Jetty9WebSocketHandler.java:92)[144:com.vaadin.external.atmosphere.runtime:2.2.7.vaadin1]
-        //    at org.eclipse.jetty.websocket.common.events.JettyListenerEventDriver.onTextMessage(JettyListenerEventDriver.java:128)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.message.SimpleTextMessage.messageComplete(SimpleTextMessage.java:69)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.events.AbstractEventDriver.appendMessage(AbstractEventDriver.java:65)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.events.JettyListenerEventDriver.onTextFrame(JettyListenerEventDriver.java:122)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.events.AbstractEventDriver.incomingFrame(AbstractEventDriver.java:161)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.WebSocketSession.incomingFrame(WebSocketSession.java:309)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.extensions.ExtensionStack.incomingFrame(ExtensionStack.java:214)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.Parser.notifyFrame(Parser.java:220)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.Parser.parse(Parser.java:258)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.io.AbstractWebSocketConnection.readParse(AbstractWebSocketConnection.java:632)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.websocket.common.io.AbstractWebSocketConnection.onFillable(AbstractWebSocketConnection.java:480)[89:org.eclipse.jetty.websocket.common:9.2.15.v20160210]
-        //    at org.eclipse.jetty.io.AbstractConnection$2.run(AbstractConnection.java:544)[73:org.eclipse.jetty.io:9.2.15.v20160210]
-        //    at org.eclipse.jetty.util.thread.QueuedThreadPool.runJob(QueuedThreadPool.java:635)[84:org.eclipse.jetty.util:9.2.15.v20160210]
-        //    at org.eclipse.jetty.util.thread.QueuedThreadPool$3.run(QueuedThreadPool.java:555)[84:org.eclipse.jetty.util:9.2.15.v20160210]
-        //    at java.lang.Thread.run(Thread.java:745)[:1.8.0_51]
-        // Caused by: java.util.ConcurrentModificationException
-        //    at java.util.HashMap$HashIterator.nextNode(HashMap.java:1429)[:1.8.0_51]
-        //    at java.util.HashMap$KeyIterator.next(HashMap.java:1453)[:1.8.0_51]
-        //    at com.vaadin.server.communication.UidlWriter.write(UidlWriter.java:94)[118:com.vaadin.server:7.6.7]
-        //    at com.vaadin.server.communication.AtmospherePushConnection.push(AtmospherePushConnection.java:168)[118:com.vaadin.server:7.6.7]
-        //    ... 30 more
         @Override
         public Collection<ClientConnector> getDirtyConnectors()
         {
             return (new HashSet<ClientConnector> (super.getDirtyConnectors ()));
         }
 
-        private synchronized void setup_timer (int delay_ms)
+        private void timer_poll ()
         {
-            if (push_task != null)
+            if (push_status.get () != SP_PREPARED ||
+                !ui.isAttached ())
             {
-                log.info ("push_task {} cancel()", push_task);
-                push_task.cancel ();
+                // When resting, pushing or detached, do nothing here
+                return;
             }
 
-            push_task = new TimerTask ()
+            if (ui.isClosing ())
             {
-                @Override
-                public void run ()
+                log.info (">>>>> UI IS CLOSING");
+                push_timer.cancel ();
+
+                // TODO: DO WE NEED TO FORCE A FINAL push()?
+                return;
+            }
+
+            if ((last_push - prepare_push) > 100 ||                 // Time between updates > 100ms
+                (last_push + 200) < System.currentTimeMillis ())    // Last update more than 100ms ago
+            {
+                if (push_status.compareAndSet (SP_PREPARED, SP_ACCESS_SET))
                 {
                     try
                     {
@@ -401,36 +374,30 @@ public class BaseVaadinUI extends UI
                             @Override
                             public void run()
                             {
-                                // Push changes NOW
-                                log.info ("*** PUSH CHANGES *** push_task = {}", push_task);
-
-                                synchronized (push_timer)
+                                if (push_status.getAndSet (SP_PUSHING) == SP_PUSHING)
                                 {
-                                    if (push_task != null)
-                                    {
-                                        log.info ("*** VALID PUSH ***");
-                                        ui.push ();
-                                        push_timer.purge ();
-                                        push_task = null;
-                                    }
-                                    else
-                                    {
-                                        log.info ("*** NULL PUSH ***");
-                                    }
+                                    // Already pushing, ignore this one
+                                    log.info (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PUSH: Already pushing");
+                                    return;
+                                }
+
+                                try
+                                {
+                                    ui.push ();
+                                }
+                                finally
+                                {
+                                    push_status.set (SP_RESTING);
                                 }
                             }
                         });
                     }
                     catch (UIDetachedException never_mind)
                     {
-                        log.error ("Exception: {}", never_mind);
+                        log.error ("Automatic push: ui.access exception", never_mind);
                     };
                 }
-            };
-
-            log.info ("push_task {} schedule", push_task);
-
-            push_timer.schedule (push_task, delay_ms);
+            }
         }
 
         @Override
@@ -438,14 +405,21 @@ public class BaseVaadinUI extends UI
         {
             super.markDirty (connector);
 
-            // The sole purpose of this timer is to make a controlled push scheduling.
-            // Usually, with automatic push, ALL changes are directed towards the browser,
-            // something that may saturate the comm link if too many changes need to be
-            // rendered. With this class AND _manual_ PushMode.MANUAL, the pending changes
-            // are synchronized using synchronized batches, minimizing the network load.
+            // We use markDirty to check if we need to push. With automatic push, within every
+            // session.unlock() a push() is issued. This way, with BeanShell and automatic push,
+            // ALL changes are directed towards the browser, something that may saturate the
+            // comm link if too many changes need to be rendered. With this class AND _manual_
+            // PushMode.MANUAL, the pending changes are synchronized using synchronized batches,
+            // minimizing the network load.
             //
-            log.debug ("markDirty (connector = {})", connector);
-            setup_timer (100);
+            if (push_status.compareAndSet (SP_RESTING, SP_PREPARED))
+            {
+                prepare_push = last_push = System.currentTimeMillis ();
+            }
+            else if (push_status.get () == SP_PREPARED)
+            {
+                last_push = System.currentTimeMillis ();
+            }
         }
     }
 

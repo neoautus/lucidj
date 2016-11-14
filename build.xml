@@ -378,7 +378,7 @@
             <jvmarg value="-Djava.awt.headless=true" />
             <jvmarg value="-Dcom.sun.management.jmxremote" />
             <sysproperty key="rq.home" value="${rq.home}" />
-            <sysproperty key="rq.deploy" value="${rq.home}/runtime/application-dev" />
+            <sysproperty key="rq.deploy" value="${system.dir}" />
             <sysproperty key="java.endorsed.dirs" value="${jdk.home}/jre/lib/endorsed:${jdk.home}/lib/endorsed:${karaf.home}/lib/endorsed" />
             <sysproperty key="java.ext.dirs" value="${jdk.home}/jre/lib/ext:${jdk.home}/lib/ext:${karaf.home}/lib/ext" />
             <sysproperty key="karaf.instances" value="${karaf.home}/instances" />
@@ -606,10 +606,10 @@
             </mappedresources>
         </jar>
 
-        <available file="${application.dir}" property="autodeploy.flag"/>
+        <available file="${system.dir}" property="autodeploy.flag"/>
         <if><isset property="autodeploy.flag"/>
             <then>
-                <copy file="${bnd.jar}" todir="${application.dir}" overwrite="true"/>
+                <copy file="${bnd.jar}" todir="${system.dir}" overwrite="true"/>
                 <delete dir="${build.dir}/jars/${bundle}"/>
                 <mkdir dir="${build.dir}/jars/${bundle}"/>
                 <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>
@@ -937,10 +937,10 @@
             </mappedresources>
         </jar>
 
-        <available file="${application.dir}" property="autodeploy.flag"/>
+        <available file="${system.dir}" property="autodeploy.flag"/>
         <if><isset property="autodeploy.flag"/>
             <then>
-                <copy file="${vaadin.static.jar}" todir="${application.dir}" overwrite="true"/>
+                <copy file="${vaadin.static.jar}" todir="${system.dir}" overwrite="true"/>
                 <delete dir="${build.dir}/jars/${bundle}"/>
                 <mkdir dir="${build.dir}/jars/${bundle}"/>
                 <unjar src="${vaadin.static.jar}" dest="${build.dir}/jars/${bundle}"/>
@@ -961,7 +961,8 @@
         <delete dir="${stage.dir}"/><!-- needed? -->
         <mkdir dir="${stage.dir}"/>
         <mkdir dir="${runtime.dir}"/>
-        <mkdir dir="${application.dir}"/>
+        <mkdir dir="${system.dir}"/>
+        <mkdir dir="${applications.dir}"/>
 
         <property name="karaf.dist.dir" value="${cache.dir}/karaf"/>
         <mkdir dir="${karaf.dist.dir}"/>
@@ -1031,7 +1032,7 @@
 
         <!-- Copy support libraries directly to deploy dir,
              should figure out better placement -->
-        <copy todir="${application.dir}" flatten="true">
+        <copy todir="${system.dir}" flatten="true">
             <fileset dir="${libcache.dir}">
                 <!-- Vaadin -->
                 <include name="vaadin/jar/vaadin-server-*.jar"/>
@@ -1363,10 +1364,10 @@
             </then>
         </if>
 
-        <available file="${application.dir}" property="autodeploy.flag"/>
+        <available file="${system.dir}" property="autodeploy.flag"/>
         <if><isset property="autodeploy.flag"/>
             <then>
-                <copy file="${bnd.jar}" todir="${application.dir}" overwrite="true"/>
+                <copy file="${bnd.jar}" todir="${system.dir}" overwrite="true"/>
                 <delete dir="${build.dir}/jars/${bundle}"/>
                 <mkdir dir="${build.dir}/jars/${bundle}"/>
                 <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>
@@ -1566,10 +1567,10 @@
             </then>
         </if>
 
-        <available file="${application.dir}" property="autodeploy.flag"/>
+        <available file="${system.dir}" property="autodeploy.flag"/>
         <if><isset property="autodeploy.flag"/>
             <then>
-                <copy file="${bnd.jar}" todir="${application.dir}" overwrite="true"/>
+                <copy file="${bnd.jar}" todir="${system.dir}" overwrite="true"/>
                 <delete dir="${build.dir}/jars/${bundle}"/>
                 <mkdir dir="${build.dir}/jars/${bundle}"/>
                 <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>

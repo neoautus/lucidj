@@ -368,7 +368,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     @Override
     public void run ()
     {
-        while (!Thread.interrupted ())
+        while (!poll_thread.isInterrupted ())
         {
             try
             {
@@ -382,7 +382,8 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
             }
             catch (InterruptedException e)
             {
-                // Nothing, will check stop_thread
+                // Interrupt status is clear, we should break loop
+                break;
             }
             catch (Throwable t)
             {

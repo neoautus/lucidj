@@ -132,7 +132,7 @@ public class PkgDeployer implements Runnable
     @Override // Runnable
     public void run ()
     {
-        while (!Thread.interrupted ())
+        while (!poll_thread.isInterrupted ())
         {
             try
             {
@@ -146,7 +146,8 @@ public class PkgDeployer implements Runnable
             }
             catch (InterruptedException e)
             {
-                // Nothing, will check stop_thread
+                // Interrupt status is clear, we should break loop
+                break;
             }
             catch (Throwable t)
             {

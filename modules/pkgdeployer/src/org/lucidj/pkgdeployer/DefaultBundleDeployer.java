@@ -25,9 +25,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -50,25 +50,49 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     @Context
     private BundleContext context;
 
+    private final static String DBD_LOCATION = "location";
     private final static String DBD_LAST_MODIFIED = "last-modified";
     private final static String DBD_BUNDLE_STATE = "bundle-status";
+    private final static String DBD_BUNDLE_STATE_HUMAN = "bundle-status-human";
 
-    private Map<String, Properties> bundle_prop_repository = new HashMap<> ();
+    private String cache_dir;
+
+    private Map<String, Properties> bundle_prop_cache = new ConcurrentHashMap<> ();
     private Thread poll_thread;
     private int thread_poll_ms = 1000;
+
+    public DefaultBundleDeployer ()
+    {
+        cache_dir = System.getProperty ("rq.home") + "/cache/" + this.getClass ().getSimpleName ();
+
+        File check_cache_dir = new File (cache_dir);
+
+        if (!check_cache_dir.exists ())
+        {
+            if (check_cache_dir.mkdir ())
+            {
+                log.info ("Creating cache {}", cache_dir);
+            }
+            else
+            {
+                log.error ("Error creating cache {}", cache_dir);
+            }
+        }
+    }
 
     private File get_bundle_data_file (String location)
     {
         // <Sanitized location>.properties
-        return (context.getDataFile (location.replaceAll("\\p{P}", "_") + ".properties"));
+        return (new File (cache_dir + "/" + location.replaceAll("\\p{P}", "_") + ".properties"));
     }
 
-    private Properties load_properties (String location)
+    private Properties load_properties (File properties_file)
     {
         try
         {
             Properties properties = new Properties ();
-            properties.load (new FileInputStream (get_bundle_data_file (location)));
+            properties.load (new FileInputStream (properties_file));
+            bundle_prop_cache.put (properties.getProperty (DBD_LOCATION), properties);
             return (properties);
         }
         catch (Exception e)
@@ -77,31 +101,31 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
         }
     }
 
-    private Properties get_properties (String location)
+    private void populate_cache ()
     {
-        Properties properties = bundle_prop_repository.get (location);
+        File[] bundle_list = new File (cache_dir).listFiles ();
 
-        if (properties == null)
+        if (bundle_list == null)
         {
-            properties = load_properties (location);
+            log.error ("Error reading cache {}", cache_dir);
+            return;
         }
 
-        if (properties != null)
+        for (File bundle_data_file: bundle_list)
         {
-            bundle_prop_repository.put (location, properties);
+            load_properties (bundle_data_file);
         }
-
-        return (properties);
     }
 
     private boolean store_properties (String location, Properties properties)
     {
-
-        bundle_prop_repository.put (location, properties);
+        bundle_prop_cache.put (location, properties);
 
         try
         {
-            properties.store (new FileOutputStream (get_bundle_data_file (location)), "Automatically generated.");
+            // Always store location so we can populate the bundle cache properly
+            properties.setProperty (DBD_LOCATION, location);
+            properties.store (new FileOutputStream (get_bundle_data_file (location)), null);
             return (true);
         }
         catch (Exception e)
@@ -131,17 +155,18 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
         String msg = "Peace";
         Bundle bnd = bundleEvent.getBundle ();
         String location = bnd.getLocation ();
-        Properties properties = get_properties (location);
 
         // Is this bundle managed by us?
-        if (properties == null)
+        if (!bundle_prop_cache.containsKey (location))
         {
             // Nope
             return;
         }
 
         // Keep bundle state
+        Properties properties = bundle_prop_cache.get (location);
         properties.setProperty (DBD_BUNDLE_STATE, Integer.toString (bnd.getState ()));
+        properties.setProperty (DBD_BUNDLE_STATE_HUMAN, get_state_string (bnd.getState ()));
         store_properties (location, properties);
 
         switch (bundleEvent.getType ())
@@ -285,13 +310,13 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
         }
         catch (Exception ignore) {};
 
-        if (bundle_file == null)
+        if (bundle_file == null || !bundle_prop_cache.containsKey (location))
         {
             // The origin is not available, probably was deleted
             return (false);
         }
 
-        Properties properties = get_properties (location);
+        Properties properties = bundle_prop_cache.get (location);
         long bundle_lastmodified = Long.parseLong (properties.getProperty (DBD_LAST_MODIFIED));
 
         if (bundle_lastmodified != bundle_file.lastModified ())
@@ -301,7 +326,6 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
 
             if (updateBundle (bnd))
             {
-                properties = get_properties (location);
                 properties.setProperty (DBD_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
                 store_properties (location, properties);
                 return (true);
@@ -318,10 +342,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
         {
             // TODO: PROP FILE CLEANUP
             log.info ("Uninstalling bundle {}", bnd);
-
-            String location = bnd.getLocation ();
             bnd.uninstall ();
-            bundle_prop_repository.remove (location);
             return (true);
         }
         catch (Exception e)
@@ -334,18 +355,28 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     @Override // BundleDeployer
     public Bundle getDeployedBundle (String location)
     {
-        Bundle bnd = context.getBundle (location);
+        if (bundle_prop_cache.containsKey (location))
+        {
+            return (context.getBundle (location));
+        }
 
-        return ((bnd != null && get_properties (location) != null)? bnd: null);
+        // Either the bundle doesn't exists or it's uninstalled
+        return (null);
     }
 
     private void poll_repository_for_updates_and_removals ()
     {
-        for (Map.Entry<String, Properties> bnd_entry: bundle_prop_repository.entrySet())
+        for (Map.Entry<String, Properties> bnd_entry: bundle_prop_cache.entrySet())
         {
             String location = bnd_entry.getKey ();
             Bundle bnd = getDeployedBundle (location);
             File bundle_file = null;
+
+            if (bnd == null)
+            {
+                // Bundle already uninstalled
+                continue;
+            }
 
             try
             {
@@ -358,9 +389,13 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
                 // The bundle probably was removed
                 uninstallBundle (bnd);
             }
-            else // All ok, check for changes
+            else if (bundle_file.exists ()) // All ok, check for changes
             {
-                refreshBundle (bnd);
+                // We only refresh if the bundle is active
+                if (bnd.getState () == Bundle.ACTIVE)
+                {
+                    refreshBundle (bnd);
+                }
             }
         }
     }
@@ -407,6 +442,9 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     @Validate
     private void validate ()
     {
+        // Load references to all bundles we manage
+        populate_cache ();
+
         // Start listening to bundle events
         context.addBundleListener (this);
 

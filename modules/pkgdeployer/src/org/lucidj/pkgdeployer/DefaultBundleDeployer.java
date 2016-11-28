@@ -253,6 +253,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     {
         Bundle new_bundle = null;
 
+        // TODO: CHECK BUNDLE SYMBOLIC NAME AND VERSION
         try
         {
             File bundle_file = new File (new URI (location));

@@ -62,7 +62,7 @@ public class PkgDeployer implements Runnable
                 JarInputStream jar = new JarInputStream (new FileInputStream (f));
                 Manifest mf = jar.getManifest ();
                 Attributes attrs = mf.getMainAttributes ();
-                String package_version = attrs.getValue ("X-Package-Version");
+                String package_version = attrs.getValue ("X-Package");
 
                 if (package_version != null)
                 {

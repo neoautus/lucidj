@@ -16,14 +16,23 @@
 
 package org.lucidj.search;
 
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.html.HtmlRenderer;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
 import org.lucidj.uiaccess.UIAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
+
+import java.util.Arrays;
+import java.util.List;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -36,8 +45,19 @@ public class SearchView extends VerticalLayout implements View
     private final static transient Logger log = LoggerFactory.getLogger (SearchView.class);
     private SearchView self = this;
 
+    private Parser parser;
+    private HtmlRenderer renderer;
+
+    private String content = "";
+    private String html = "";
+
     public SearchView ()
     {
+        List<Extension> extensions = Arrays.asList (TablesExtension.create ());
+
+        parser = Parser.builder ().extensions (extensions).build ();
+        renderer = HtmlRenderer.builder ().extensions (extensions).build ();
+
         // Delay UI building
         log.info ("Search is visible now");
     }
@@ -45,6 +65,8 @@ public class SearchView extends VerticalLayout implements View
     private void buildView()
     {
         setMargin(true);
+        Node document = parser.parse ("## This is *Markdown*!");
+        addComponent (new Label (renderer.render (document), ContentMode.HTML));
         addComponent (new Label ("No results to show."));
     }
 

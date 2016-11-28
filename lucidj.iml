@@ -41,7 +41,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/api/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/layoutmanager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/runtime/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/search/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/search/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/menumanager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/treemenu.renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/pkgdeployer/src" isTestSource="false" />

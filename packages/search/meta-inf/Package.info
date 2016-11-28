@@ -1,0 +1,17 @@
+X-Package-Icon: zoom-seach-icon.png
+X-Package-FullName: Search Plugin
+X-Package-FullName-ptBR: Extensão para Busca
+X-Package-ShortName: Search
+X-Package-ShortName-ptBR: Busca
+X-Package-ShortDescription: Search inside your projects, data and more.
+X-Package-ShortDescription.ptBR: Buscas dentro de seus projetos, dados e mais.
+X-Package-Release: 0.9.0
+X-Package-ReleaseDate: ${currenttime} ${now}
+X-Package-Licencing: free, Apache-2.0
+X-Package-Tags: utility, plugins
+X-Package-Languages: en, ptBR
+X-Package-StoreIcon: zoom-search-store.png
+X-Package-StoreIcon-ptBR: zoom-search-store-ptbr.png
+X-Package-Origin: https://neoautus.com/downloads/lucidj-0.9.0/package
+X-Package-Social: g+/zoomsearch, fb,zoomsearch
+

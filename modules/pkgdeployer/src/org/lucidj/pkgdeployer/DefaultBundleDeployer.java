@@ -23,16 +23,21 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.Attributes;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Version;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -242,10 +247,76 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
         log.debug ("bundleChanged: {} eventType={} state={}", bnd, msg, get_state_string (bnd.getState ()));
     }
 
-    private boolean valid_file (File f)
+    @Override // BundleDeployer
+    public Manifest getManifest (File jar_file)
     {
-        // Basic check
-        return (f != null && f.exists () && f.isFile () && f.canRead ());
+        FileInputStream jar_stream = null;
+
+        try
+        {
+            jar_stream = new FileInputStream (jar_file);
+            JarInputStream jarStream = new JarInputStream (jar_stream);
+            return (jarStream.getManifest ());
+        }
+        catch (IOException e)
+        {
+            return (null);
+        }
+        finally
+        {
+            if (jar_stream != null)
+            {
+                try
+                {
+                    jar_stream.close ();
+                }
+                catch (Exception ignore) {};
+            }
+        }
+    }
+
+    @Override // BundleDeployer
+    public Manifest getManifest (String location)
+    {
+        try
+        {
+            return (getManifest (new File (new URI (location))));
+        }
+        catch (URISyntaxException e)
+        {
+            return (null);
+        }
+    }
+
+    @Override // BundleDeployer
+    public Bundle getBundleByDescription (String symbolic_name, Version version)
+    {
+        Bundle[] bundles = context.getBundles ();
+
+        for (int i = 0; i < bundles.length; i++)
+        {
+            if (symbolic_name.equals (bundles [i].getSymbolicName()) &&
+                version.equals (bundles[i].getVersion()))
+            {
+                return (bundles [i]);
+            }
+        }
+        return (null);
+    }
+
+    private File get_valid_file (String location)
+    {
+        try
+        {
+            File f = new File (new URI (location));
+
+            if (f != null && f.exists () && f.isFile () && f.canRead ())
+            {
+                return (f);
+            }
+        }
+        catch (Exception ignore) {};
+        return (null);
     }
 
     @Override // BundleDeployer
@@ -253,14 +324,33 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     {
         Bundle new_bundle = null;
 
-        // TODO: CHECK BUNDLE SYMBOLIC NAME AND VERSION
         try
         {
-            File bundle_file = new File (new URI (location));
+            File bundle_file = get_valid_file (location);
 
-            if (!valid_file (bundle_file))
+            if (bundle_file == null)
             {
                 return (null);
+            }
+
+            // Fetch base bundle description
+            Manifest mf = getManifest (bundle_file);
+            Attributes attrs = mf.getMainAttributes ();
+            String symbolic_name = attrs.getValue ("Bundle-SymbolicName");
+            Version version = new Version (attrs.getValue ("Bundle-Version"));
+
+            if ((new_bundle = getBundleByDescription (symbolic_name, version)) != null)
+            {
+                if (location.equals (new_bundle.getLocation ()))
+                {
+                    log.info ("Bundle {} already installed (location: {})", new_bundle, location);
+                }
+                else
+                {
+                    log.info ("Bundle {} installed from other location (proposed: {}, original: {})",
+                        new_bundle, location, new_bundle.getLocation ());
+                }
+                return (new_bundle);
             }
 
             // Add bundle properties to repository, so we can manage it
@@ -303,13 +393,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     public boolean refreshBundle (Bundle bnd)
     {
         String location = bnd.getLocation ();
-        File bundle_file = null;
-
-        try
-        {
-            bundle_file = new File (new URI (location));
-        }
-        catch (Exception ignore) {};
+        File bundle_file = get_valid_file (location);
 
         if (bundle_file == null || !bundle_prop_cache.containsKey (location))
         {
@@ -354,7 +438,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     }
 
     @Override // BundleDeployer
-    public Bundle getDeployedBundle (String location)
+    public Bundle getBundleByLocation (String location)
     {
         if (bundle_prop_cache.containsKey (location))
         {
@@ -370,8 +454,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
         for (Map.Entry<String, Properties> bnd_entry: bundle_prop_cache.entrySet())
         {
             String location = bnd_entry.getKey ();
-            Bundle bnd = getDeployedBundle (location);
-            File bundle_file = null;
+            Bundle bnd = getBundleByLocation (location);
 
             if (bnd == null)
             {
@@ -379,18 +462,12 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
                 continue;
             }
 
-            try
-            {
-                bundle_file = new File (new URI (location));
-            }
-            catch (URISyntaxException ignore) {};
-
-            if (bundle_file == null || !valid_file (bundle_file))
+            if (get_valid_file (location) == null)
             {
                 // The bundle probably was removed
                 uninstallBundle (bnd);
             }
-            else if (bundle_file.exists ()) // All ok, check for changes
+            else // Bundle file exists, check for changes
             {
                 // We only refresh if the bundle is active
                 if (bnd.getState () == Bundle.ACTIVE)

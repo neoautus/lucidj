@@ -21,29 +21,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.jar.Attributes;
-import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Version;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -88,33 +77,6 @@ public class PkgDeployer implements Runnable
         }
     }
 
-    private Manifest get_manifest (File package_file)
-    {
-        FileInputStream jar = null;
-
-        try
-        {
-            jar = new FileInputStream (package_file);
-            JarInputStream jarStream = new JarInputStream (jar);
-            return (jarStream.getManifest ());
-        }
-        catch (IOException e)
-        {
-            return (null);
-        }
-        finally
-        {
-            if (jar != null)
-            {
-                try
-                {
-                    jar.close ();
-                }
-                catch (Exception ignore) {};
-            }
-        }
-    }
-
     private boolean valid_file (File f)
     {
         // Basic check
@@ -123,7 +85,7 @@ public class PkgDeployer implements Runnable
             // Now check if we have X-Package-Version stated on MANIFEST.MF
             try
             {
-                Manifest mf = get_manifest (f);
+                Manifest mf = bnd_deployer.getManifest (f);
                 Attributes attrs = mf.getMainAttributes ();
                 String package_version = attrs.getValue ("X-Package");
 
@@ -198,26 +160,9 @@ public class PkgDeployer implements Runnable
         }
     }
 
-    private Bundle get_installed_bundle (String symbolic_name, String version)
-    {
-        Bundle[] installed_bundles = context.getBundles ();
-
-        for (Bundle bnd: installed_bundles)
-        {
-            // This takes into account possible version qualifiers. Is that right??
-            if (symbolic_name.equals (bnd.getSymbolicName ()) &&
-                version.equals (bnd.getVersion ().toString ()))
-            {
-                return (bnd);
-            }
-        }
-
-        return (null);
-    }
-
     private boolean install_package (File package_file)
     {
-        Manifest mf = get_manifest (package_file);
+        Manifest mf = bnd_deployer.getManifest (package_file);
 
         if (mf == null)
         {
@@ -225,23 +170,15 @@ public class PkgDeployer implements Runnable
         }
 
         Attributes attrs = mf.getMainAttributes ();
-
         String bundle_symbolic_name = attrs.getValue ("Bundle-SymbolicName");
-        String bundle_version = attrs.getValue ("Bundle-Version");
+        Version bundle_version = new Version (attrs.getValue ("Bundle-Version"));
 
-        if (bundle_version == null ||
-            bundle_version.equals ("0") ||
-            bundle_version.equals ("0.0"))
-        {
-            bundle_version = "0.0.0";
-        }
-
-        Bundle installed_bundle = get_installed_bundle (bundle_symbolic_name, bundle_version);
+        Bundle installed_bundle = bnd_deployer.getBundleByDescription (bundle_symbolic_name, bundle_version);
 
         // TODO: HANDLE UPDATE
         if (installed_bundle != null && installed_bundle.getState () == Bundle.ACTIVE)
         {
-            log.info ("Already installed!");
+            log.info ("Package {} already installed", installed_bundle);
             return (true);
         }
 
@@ -298,7 +235,7 @@ public class PkgDeployer implements Runnable
 
             if (valid_file (package_file))
             {
-                Bundle bnd = bnd_deployer.getDeployedBundle (package_uri);
+                Bundle bnd = bnd_deployer.getBundleByLocation (package_uri);
 
                 if (bnd == null) // The bundle isn't installed yet
                 {

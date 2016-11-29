@@ -34,7 +34,6 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/markdown_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/plotly/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/plotly_renderer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/shadowmap/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/gaussui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/vaadinui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/test/src" isTestSource="false" />

@@ -46,10 +46,6 @@
         <fileset dir="${libcache.dir}" includes="shiro/bundle/**/*.jar"/>
     </path>
 
-    <path id="bouncycastle.cp">
-        <fileset dir="${libcache.dir}" includes="bouncycastle/jar/**/*.jar"/>
-    </path>
-
     <path id="ipojo.cp">
         <fileset dir="${libcache.dir}">
             <include name="ipojo/jar/**/*.jar"/>
@@ -145,7 +141,6 @@
         <path refid="slf4j.cp"/>
         <path refid="netty.cp"/>
         <path refid="shiro.cp"/>
-        <path refid="bouncycastle.cp"/>
         <path refid="gson.cp"/>
         <path refid="guava.cp"/>
         <!--path refid="bsh.cp"/-->
@@ -162,11 +157,6 @@
         <!-- javassist -->
         <!--fileset dir="${lib.dir}/static/javassist-3.x">
             <include name="javassist.jar"/>
-        </fileset-->
-
-        <!-- Bouncy Castle -->
-        <!--fileset dir="${lib.dir}/static/bouncy-castle-1.x">
-            <include name="bcprov-jdk15on-1*.jar"/>
         </fileset-->
 
         <!-- Logback -->
@@ -1072,7 +1062,6 @@
                 <include name="gson/jar/gson-*.jar"/>
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
-                <include name="bouncycastle/jar/*.jar"/>
                 <include name="jansi/jar/*.jar"/>
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>
             </fileset>

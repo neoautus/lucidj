@@ -16,6 +16,8 @@
 
 package org.lucidj.search;
 
+import org.bouncycastle.crypto.digests.SHA3Digest;
+import org.bouncycastle.crypto.prng.DigestRandomGenerator;
 import org.commonmark.Extension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.html.HtmlRenderer;
@@ -47,6 +49,7 @@ public class SearchView extends VerticalLayout implements View
 
     private Parser parser;
     private HtmlRenderer renderer;
+    private final DigestRandomGenerator generator = new DigestRandomGenerator (new SHA3Digest (512));
 
     private String content = "";
     private String html = "";
@@ -67,6 +70,7 @@ public class SearchView extends VerticalLayout implements View
         setMargin(true);
         Node document = parser.parse ("## This is *Markdown*!");
         addComponent (new Label (renderer.render (document), ContentMode.HTML));
+        addComponent (new Label ("DigestRandomGenerator: " + generator.toString ()));
         addComponent (new Label ("No results to show."));
     }
 

@@ -17,6 +17,7 @@
 package org.lucidj.pkgdeployer;
 
 import org.lucidj.api.BundleDeployer;
+import org.lucidj.api.DeploymentEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,11 +39,13 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Version;
+import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true)
@@ -55,6 +58,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     @Context
     private BundleContext context;
 
+    private final static String DBD_DEPLOYMENT_ENGINE = "deployment-engine";
     private final static String DBD_LOCATION = "location";
     private final static String DBD_LAST_MODIFIED = "last-modified";
     private final static String DBD_BUNDLE_STATE = "bundle-status";
@@ -62,6 +66,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
 
     private String cache_dir;
 
+    private Map<String, DeploymentEngine> deployment_engines = new ConcurrentHashMap<> ();
     private Map<String, Properties> bundle_prop_cache = new ConcurrentHashMap<> ();
     private Thread poll_thread;
     private int thread_poll_ms = 1000;
@@ -116,6 +121,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
             return;
         }
 
+        // TODO: PROP FILE CLEANUP FOR UNUSED BUNDLES (LastModified > N minutes)
         for (File bundle_data_file: bundle_list)
         {
             load_properties (bundle_data_file);
@@ -319,6 +325,44 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
         return (null);
     }
 
+    private DeploymentEngine get_deployment_engine (String location)
+    {
+        DeploymentEngine found_engine = null;
+        int level, found_level = 0;
+
+        for (DeploymentEngine engine: deployment_engines.values ())
+        {
+            if ((level = engine.compatibleArtifact (location)) > found_level)
+            {
+                found_engine = engine;
+                found_level = level;
+            }
+        }
+
+        return (found_engine);
+    }
+
+    private DeploymentEngine get_deployment_engine (Bundle bnd)
+        throws IllegalStateException
+    {
+        DeploymentEngine engine = null;
+
+        try
+        {
+            Properties properties = bundle_prop_cache.get (bnd.getLocation ());
+            String deployment_engine_name = properties.getProperty (DBD_DEPLOYMENT_ENGINE);
+            engine = deployment_engines.get (deployment_engine_name);
+        }
+        catch (Exception ignore) {};
+
+        if (engine == null)
+        {
+            throw (new IllegalStateException ("DeploymentEngine invalid or not found"));
+        }
+
+        return (engine);
+    }
+
     @Override // BundleDeployer
     public Bundle installBundle (String location)
     {
@@ -329,6 +373,13 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
             File bundle_file = get_valid_file (location);
 
             if (bundle_file == null)
+            {
+                return (null);
+            }
+
+            DeploymentEngine deployment_engine = get_deployment_engine (location);
+
+            if (deployment_engine == null)
             {
                 return (null);
             }
@@ -355,12 +406,13 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
 
             // Add bundle properties to repository, so we can manage it
             Properties properties = new Properties ();
+            properties.setProperty (DBD_DEPLOYMENT_ENGINE, deployment_engine.getEngineName ());
             properties.setProperty (DBD_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
             properties.setProperty (DBD_BUNDLE_STATE, Integer.toString (Bundle.UNINSTALLED));
             store_properties (location, properties);
 
             // Install bundle
-            new_bundle = context.installBundle (location);
+            new_bundle = deployment_engine.installBundle (location);
             log.info ("Installing package {} from {}", new_bundle, location);
         }
         catch (Exception e)
@@ -375,18 +427,13 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     {
         try
         {
-            log.info ("Updating package {}", bnd);
-            bnd.stop (Bundle.STOP_TRANSIENT);
-            bnd.update ();
-            return (true);
+            return (get_deployment_engine (bnd).updateBundle (bnd));
         }
-        catch (Exception e)
+        catch (IllegalStateException e)
         {
-            log.error ("Error updating {}", bnd, e);
-            // TODO: CHECK STALE managed_bundles ENTRY
-            uninstallBundle (bnd);
+            log.error ("Exception updating bundle {}", e);
+            return (false);
         }
-        return (false);
     }
 
     @Override // BundleDeployer
@@ -425,16 +472,13 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     {
         try
         {
-            // TODO: PROP FILE CLEANUP
-            log.info ("Uninstalling bundle {}", bnd);
-            bnd.uninstall ();
-            return (true);
+            return (get_deployment_engine (bnd).uninstallBundle (bnd));
         }
-        catch (Exception e)
+        catch (IllegalStateException e)
         {
-            log.error ("Exception uninstalling {}", bnd, e);
+            log.error ("Exception updating bundle {}", e);
+            return (false);
         }
-        return (false);
     }
 
     @Override // BundleDeployer
@@ -451,6 +495,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
 
     private void poll_repository_for_updates_and_removals ()
     {
+        // TODO: CHECK STALE bundle_prop_cache ENTRY
         for (Map.Entry<String, Properties> bnd_entry: bundle_prop_cache.entrySet())
         {
             String location = bnd_entry.getKey ();
@@ -515,6 +560,20 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
                 log.error ("Package deployment exception", t);
             }
         }
+    }
+
+    @Bind (aggregate=true, optional=true, specification = DeploymentEngine.class)
+    private void bindDeploymentEngine (DeploymentEngine engine)
+    {
+        log.info ("bindDeploymentEngine: Adding {}", engine.getEngineName ());
+        deployment_engines.put (engine.getEngineName (), engine);
+    }
+
+    @Unbind
+    private void unbindDeploymentEngine (DeploymentEngine engine)
+    {
+        log.info ("unbindDeploymentEngine: Removing {}", engine.getEngineName ());
+        deployment_engines.remove (engine.getEngineName ());
     }
 
     @Validate

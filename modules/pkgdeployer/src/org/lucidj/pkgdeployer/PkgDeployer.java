@@ -183,6 +183,9 @@ public class PkgDeployer implements Runnable
         }
 
         // TODO: ALLOW MULTIPLE PACKAGES WITH DIFFERENT VERSIONS WHEN CONFIG SET
+        // TODO: AVOID UPDATE BUNDLE __WHILE EXTRACTING__
+        // TODO: DELETE EXTRACTED PACKAGE CONTENTS WHEN UNINSTALLING
+        // TODO: BUILD AN EMBEDDED Bundles/ DIRECTORY FOR SHARED EMBEDDED BUNDLES USED BY MANY PACKAGES
         String extracted_package_dir = packages_dir + "/" + bundle_symbolic_name + "/" + bundle_version;
         extractAll (package_file, extracted_package_dir);
 

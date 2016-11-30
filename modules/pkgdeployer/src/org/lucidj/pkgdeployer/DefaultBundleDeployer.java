@@ -345,19 +345,25 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     private DeploymentEngine get_deployment_engine (Bundle bnd)
         throws IllegalStateException
     {
-        DeploymentEngine engine = null;
+        Properties properties = bundle_prop_cache.get (bnd.getLocation ());
 
-        try
+        if (properties == null)
         {
-            Properties properties = bundle_prop_cache.get (bnd.getLocation ());
-            String deployment_engine_name = properties.getProperty (DBD_DEPLOYMENT_ENGINE);
-            engine = deployment_engines.get (deployment_engine_name);
+            throw (new IllegalStateException ("Bundle is unmanaged: " + bnd.getLocation ()));
         }
-        catch (Exception ignore) {};
+
+        String deployment_engine_name = properties.getProperty (DBD_DEPLOYMENT_ENGINE);
+
+        if (deployment_engine_name == null)
+        {
+            throw (new IllegalStateException ("Internal error: Missing directive: " + DBD_DEPLOYMENT_ENGINE));
+        }
+
+        DeploymentEngine engine = deployment_engines.get (deployment_engine_name);
 
         if (engine == null)
         {
-            throw (new IllegalStateException ("DeploymentEngine invalid or not found"));
+            throw (new IllegalStateException ("Deployment Engine not found: " + deployment_engine_name));
         }
 
         return (engine);
@@ -476,7 +482,7 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
         }
         catch (IllegalStateException e)
         {
-            log.error ("Exception updating bundle {}", e);
+            log.error ("Exception updating bundle: {}", bnd, e);
             return (false);
         }
     }

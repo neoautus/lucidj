@@ -42,6 +42,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 public class DefaultDeploymentEngine implements DeploymentEngine
 {
     private final static transient Logger log = LoggerFactory.getLogger (DefaultDeploymentEngine.class);
+    private final static int ENGINE_LEVEL = 1;
 
     @Context
     private BundleContext context;
@@ -81,7 +82,7 @@ public class DefaultDeploymentEngine implements DeploymentEngine
     @Override
     public String getEngineName ()
     {
-        return (getClass ().getCanonicalName ());
+        return (getClass ().getCanonicalName () + "(" + ENGINE_LEVEL + ")");
     }
 
     @Override

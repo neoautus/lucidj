@@ -22,11 +22,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -85,30 +90,61 @@ public class PackageDeploymentEngine implements DeploymentEngine
     @Override
     public int compatibleArtifact (String location)
     {
-        Manifest mf = bnd_deployer.getManifest (location);
+        Manifest mf;
+        Attributes attrs;
 
-        if (mf == null)
+        // Check compatibility looking for X-Package attribute on manifest
+        if ((mf = bnd_deployer.getManifest (location)) != null &&
+            (attrs = mf.getMainAttributes ()) != null &&
+            attrs.getValue ("X-Package") != null)
         {
-            // No manifest no glory
-            return (0);
+            return (ENGINE_LEVEL);
         }
 
-        // We need at very least Bundle-SymbolicName on the manifest...
-        Attributes attrs = mf.getMainAttributes ();
+        // Not compatible
+        return (0);
+    }
 
-        // ...then we return the lowest compatibility, as fallback, to deploy any generic OSGi bundle
-        return ((attrs != null && attrs.getValue ("X-Package") != null)? 50: 0);
+    private List<String> list_existing_files (List<String> file_list, Path root_path)
+    {
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream (root_path))
+        {
+            for (Path path: stream)
+            {
+                if (path.toFile ().isDirectory ())
+                {
+                    list_existing_files (file_list, path);
+                }
+                else
+                {
+                    file_list.add (path.toAbsolutePath ().toString ());
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            log.error ("Exception listing package files: {}", root_path, e);
+        }
+        return (file_list);
+    }
+
+    private List<String> list_existing_files (File root_dir)
+    {
+        return (list_existing_files (new ArrayList<String> (), root_dir.toPath ()));
     }
 
     private boolean extract_all (String package_dist, final String dest_package_dir)
     {
         File dest_dir = new File (dest_package_dir);
 
-        // TODO: IF IT EXISTS, WIPE OUT
-        if (!dest_dir.exists ())
+        if (!dest_dir.exists () && !dest_dir.mkdirs ())
         {
-            dest_dir.mkdirs ();
+            log.error ("Unable create directory: {}", dest_package_dir);
+            return (false);
         }
+
+        // We'll compare what exists with what will be extracted so we can delete excess files later
+        List<String> files_to_delete = list_existing_files (dest_dir);
 
         try
         {
@@ -117,31 +153,47 @@ public class PackageDeploymentEngine implements DeploymentEngine
 
             while (entries.hasMoreElements ())
             {
+                // Get file or dir from zip entry
                 ZipEntry entry = entries.nextElement();
-                log.info ("entry: {} isDirectory={}", entry, entry.isDirectory ());
+                File file_entry = new File (dest_package_dir, entry.getName ());
 
-                if (entry.isDirectory ())
+                if (entry.isDirectory ()) // Ensure the needed dirs are available
                 {
-                    File new_directory = new File (dest_package_dir, entry.getName ());
-
-                    if (!new_directory.exists ())
+                    if (!file_entry.exists () && !file_entry.mkdirs ())
                     {
-                        new_directory.mkdirs ();
+                        log.error ("Unable create directory: {}", entry.getName ());
+                        return (false);
                     }
                 }
-                else
+                else // Extract and/or replace changed files
                 {
-                    File new_file = new File (dest_package_dir, entry.getName ());
-                    InputStream stream = zipFile.getInputStream(entry);
-                    Files.copy (stream, new_file.toPath (), StandardCopyOption.REPLACE_EXISTING);
-                }
+                    if (!file_entry.exists () || entry.getTime () != file_entry.lastModified ())
+                    {
+                        InputStream stream = zipFile.getInputStream(entry);
+                        Files.copy (stream, file_entry.toPath (), StandardCopyOption.REPLACE_EXISTING);
+                        stream.close ();
+                        file_entry.setLastModified (entry.getTime());
+                    }
 
+                    // Remove the existing file from the deletion list
+                    files_to_delete.remove (dest_package_dir + "/" + entry.getName ());
+                }
+            }
+
+            // Delete all excess files
+            for (String file: files_to_delete)
+            {
+                if (!new File (file).delete ())
+                {
+                    log.error ("Unable delete file: {}", file);
+                    return (false);
+                }
             }
             return (true);
         }
         catch (Exception e)
         {
-            log.error ("Error extracting package", e);
+            log.error ("Exception extracting package: {}", package_dist, e);
             return (false);
         }
     }
@@ -160,15 +212,6 @@ public class PackageDeploymentEngine implements DeploymentEngine
         String bundle_symbolic_name = attrs.getValue ("Bundle-SymbolicName");
         Version bundle_version = new Version (attrs.getValue ("Bundle-Version"));
 
-//        Bundle installed_bundle = bnd_deployer.getBundleByDescription (bundle_symbolic_name, bundle_version);
-//
-//        // TODO: HANDLE UPDATE
-//        if (installed_bundle != null && installed_bundle.getState () == Bundle.ACTIVE)
-//        {
-//            log.info ("Package {} already installed", installed_bundle);
-//            return (installed_bundle);
-//        }
-//
         // TODO: ALLOW MULTIPLE PACKAGES WITH DIFFERENT VERSIONS WHEN CONFIG SET
         // TODO: AVOID UPDATE BUNDLE __WHILE EXTRACTING__
         // TODO: DELETE EXTRACTED PACKAGE CONTENTS WHEN UNINSTALLING

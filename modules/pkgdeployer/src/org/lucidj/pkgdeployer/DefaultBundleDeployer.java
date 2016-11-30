@@ -571,14 +571,14 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     @Bind (aggregate=true, optional=true, specification = DeploymentEngine.class)
     private void bindDeploymentEngine (DeploymentEngine engine)
     {
-        log.info ("bindDeploymentEngine: Adding {}", engine.getEngineName ());
+        log.info ("Adding deployment engine: {}", engine.getEngineName ());
         deployment_engines.put (engine.getEngineName (), engine);
     }
 
     @Unbind
     private void unbindDeploymentEngine (DeploymentEngine engine)
     {
-        log.info ("unbindDeploymentEngine: Removing {}", engine.getEngineName ());
+        log.info ("Removing deployment engine: {}", engine.getEngineName ());
         deployment_engines.remove (engine.getEngineName ());
     }
 

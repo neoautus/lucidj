@@ -297,17 +297,38 @@ public class DefaultBundleDeployer implements BundleDeployer, BundleListener, Ru
     @Override // BundleDeployer
     public Bundle getBundleByDescription (String symbolic_name, Version version)
     {
+        // TODO: ADD CACHE
+        Bundle latest_bundle = null;
+        Version latest_version = null;
         Bundle[] bundles = context.getBundles ();
 
-        for (int i = 0; i < bundles.length; i++)
+        for (Bundle bundle: bundles)
         {
-            if (symbolic_name.equals (bundles [i].getSymbolicName()) &&
-                version.equals (bundles[i].getVersion()))
+            if (symbolic_name.equals (bundle.getSymbolicName ()))
             {
-                return (bundles [i]);
+                Version bundle_version = bundle.getVersion ();
+
+                if (version != null)
+                {
+                    if (version.equals (bundle_version))
+                    {
+                        return (bundle);
+                    }
+                }
+                else // version == null, find the latest bundle
+                {
+                    if (latest_version == null ||
+                        latest_version.compareTo (bundle_version) == -1)
+                    {
+                        // A newer version was found
+                        latest_bundle = bundle;
+                        latest_version = bundle_version;
+                    }
+                }
             }
         }
-        return (null);
+
+        return (latest_bundle);
     }
 
     private File get_valid_file (String location)

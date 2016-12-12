@@ -29,7 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.server.ExternalResource;
 import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Image;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
@@ -70,6 +72,7 @@ public class SearchView extends VerticalLayout implements View
         setMargin(true);
         Node document = parser.parse ("## This is *Markdown*!");
         addComponent (new Label (renderer.render (document), ContentMode.HTML));
+        addComponent (new Image (null, new ExternalResource ("vaadin://~/search/cool-image.jpg")));
         addComponent (new Label ("DigestRandomGenerator: " + generator.toString ()));
         addComponent (new Label ("No results to show."));
     }

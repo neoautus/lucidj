@@ -9,7 +9,7 @@
 .ui-header-logo {
     height: 56px;
     padding: 0 8px;
-    background: url(/VAADIN/base-ui/neoautus-rationalq.png) no-repeat 18px center;
+    background: url(/VAADIN/~/vaadinui_libraries/lucidj-logo.png) no-repeat 18px center;
 }
 
 .ui-header-search {

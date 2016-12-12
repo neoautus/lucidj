@@ -64,7 +64,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@StyleSheet ("vaadin://formulas/styles.css")
+@StyleSheet ("vaadin://~/formulas_libraries/styles.css")
 @org.apache.felix.ipojo.annotations.Component
 @Provides (specifications = com.vaadin.navigator.View.class)
 public class FormulasView extends VerticalLayout implements View, ApplicationInterface
@@ -562,10 +562,10 @@ public class FormulasView extends VerticalLayout implements View, ApplicationInt
         view_controls.addStyleName("v-component-group");
         view_controls.addStyleName("ui-toolbar-spacer");
         createButton (view_controls, VM_NOTEBOOK,
-            new ExternalResource ("vaadin://formulas/notebook-view.png"));
+            new ExternalResource ("vaadin://~/formulas_libraries/notebook-view.png"));
         createButton (view_controls, VM_SINGLE,
-            new ExternalResource("vaadin://formulas/single-view.png"), null,
-                ShortcutAction.KeyCode.INSERT, ShortcutAction.ModifierKey.CTRL);
+            new ExternalResource("vaadin://~/formulas_libraries/single-view.png"), null,
+            ShortcutAction.KeyCode.INSERT, ShortcutAction.ModifierKey.CTRL);
         local_toolbar.addComponent(view_controls);
 
         // TODO: CTRL+ENTER => RUN AND SKIP TO NEXT

@@ -273,7 +273,7 @@
         <ant target="build.theme"/>
         <ant target="build.all.libraries"/>
         <ant target="build.all.packages"/>
-        <ant target="build.all.components"/>
+        <!--ant target="build.all.components"/-->
     </target>
 
     <target name="install">
@@ -284,7 +284,7 @@
         <ant target="build.theme"/>
         <ant target="build.all.libraries"/>
         <ant target="build.all.packages"/>
-        <ant target="build.all.components"/>
+        <!--ant target="build.all.components"/-->
         <!-- TODO: BUILD MAVEN PRELOAD CACHE -->
         <ant target="installer"/>
     </target>
@@ -594,7 +594,7 @@
                     <exclude name="**/*.scss"/>
                     <exclude name="**/*.bnd"/>
                 </fileset>
-                <globmapper from="*" to="resources/*"/>
+                <globmapper from="*" to="Public/*"/>
             </mappedresources>
         </jar>
 

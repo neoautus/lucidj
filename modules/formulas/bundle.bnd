@@ -1,3 +1,0 @@
-Resource-Mapping: vaadin://formulas;/public
-#Require-Bundle: com.vaadin.shared, com.vaadin.server, dygraphs_library, plotchart_library
-#DynamicImport-Package: *

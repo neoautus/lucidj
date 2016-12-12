@@ -205,6 +205,35 @@
 
     <property name="classpath.build.literal" refid="classpath.build"/>
 
+    <path id="classpath.packages">
+
+        <!-- JavaEE API 7.x -->
+        <path refid="javaee-api.cp"/>
+
+        <!-- OSGi -->
+        <path refid="osgi.ext"/>
+        <path refid="ipojo.cp"/>
+        <path refid="karaf-runtime.cp"/>
+
+        <!-- Built-in utilities -->
+        <path refid="slf4j.cp"/>
+
+        <!-- Vaadin -->
+        <path refid="classpath.vaadin.server"/>
+
+        <!-- THE LUCIDJ API -->
+        <fileset dir="${dist.dir}">
+            <include name="libraries_api.jar"/>
+            <include name="libraries_runtime.jar"/>
+
+            <!-- TODO: REFACTOR -->
+            <include name="libraries_uiaccess.jar"/>
+        </fileset>
+
+    </path>
+
+    <property name="classpath.packages.literal" refid="classpath.packages"/>
+
 <!-- **********************************************************************
       TASKS
      ********************************************************************** -->
@@ -1796,7 +1825,7 @@
             <sequential>
                 <local name="package.basedir"/>
                 <dirname property="package.basedir" file="@{package.dir}"/>
-                <build.package packageDir="${package.basedir}" classpath="${classpath.build.literal}"/>
+                <build.package packageDir="${package.basedir}" classpath="${classpath.packages.literal}"/>
             </sequential>
         </for>
     </target>
@@ -1814,7 +1843,7 @@
         <if><isset property="package"/>
             <then>
                 <property name="package.dir" value="${packages.src.dir}/${package}"/>
-                <build.package packageDir="${package.dir}" classpath="${classpath.build.literal}"/>
+                <build.package packageDir="${package.dir}" classpath="${classpath.packages.literal}"/>
             </then>
         </if>
         <if><isset property="components"/>

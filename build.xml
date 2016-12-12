@@ -270,7 +270,7 @@
                 <ant target="build.vaadin.static"/>
             </then>
         </if>
-        <ant target="build.theme"/>
+        <!--ant target="build.theme"/-->
         <ant target="build.all.libraries"/>
         <ant target="build.all.packages"/>
         <!--ant target="build.all.components"/-->
@@ -281,7 +281,7 @@
         <ant target="clean"/>
         <ant target="build.stage"/>
         <ant target="build.vaadin.static"/>
-        <ant target="build.theme"/>
+        <!--ant target="build.theme"/-->
         <ant target="build.all.libraries"/>
         <ant target="build.all.packages"/>
         <!--ant target="build.all.components"/-->

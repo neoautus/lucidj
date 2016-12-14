@@ -221,13 +221,14 @@
         <!-- Vaadin -->
         <path refid="classpath.vaadin.server"/>
 
+        <!-- TODO: SPLIT CORE LIBRARIES FROM COMMON LIBRARIES! -->
         <!-- THE LUCIDJ API -->
-        <fileset dir="${dist.dir}">
-            <include name="libraries_api.jar"/>
-            <include name="libraries_runtime.jar"/>
+        <fileset dir="${basedir}">
+            <include name="dist/libraries_api.jar"/>
+            <include name="dist/libraries_runtime.jar"/>
 
             <!-- TODO: REFACTOR -->
-            <include name="libraries_uiaccess.jar"/>
+            <include name="dist/libraries_uiaccess.jar"/>
         </fileset>
 
     </path>

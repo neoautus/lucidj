@@ -22,7 +22,6 @@ import org.lucidj.api.MenuManager;
 import org.lucidj.api.MenuProvider;
 import org.lucidj.api.Renderer;
 import org.lucidj.renderer.SimpleObservable;
-import org.lucidj.runtime.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,19 +41,10 @@ public class DefaultMenuInstance implements MenuInstance, Renderer.Observable
     private Map<String, Object> properties = new HashMap<> ();
     private EventListener event_listener;
 
-    // TODO: GET RID OF REGISTRY
-    private Registry menu_registry = new Registry ();
-
     @Override // MenuInstance
     public void setMenuManager (MenuManager menu_manager)
     {
         this.menu_manager = menu_manager;
-    }
-
-    @Override // MenuInstance
-    public Registry registry ()
-    {
-        return (menu_registry);
     }
 
     @Override // MenuInstance

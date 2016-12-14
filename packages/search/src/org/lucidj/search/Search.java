@@ -197,7 +197,6 @@ public class Search implements MenuProvider, ViewProvider
     {
         Resource icon = new BundleResource (context.getBundle (), "Resources/icons/zoom-seach-icon-16x16.png");
         menu.addMenuEntry (menu.newMenuEntry ("Search", icon, 250, V_SEARCH));
-        menu.registry ().register (this);
     }
 
     @Override // ViewProvider

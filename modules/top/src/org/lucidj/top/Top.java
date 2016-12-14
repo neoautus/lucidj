@@ -47,7 +47,6 @@ public class Top implements MenuProvider, ViewProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
         menu.addMenuEntry (menu.newMenuEntry ("Top tasks", FontAwesome.TASKS, 200, NAVID));
-        menu.registry ().register (this);
     }
 
     @Override // ViewProvider

@@ -32,7 +32,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 
 @Component
 @Instantiate
-@Provides (specifications = MenuProvider.class)
+@Provides
 public class Explorer implements MenuProvider, ViewProvider
 {
     private final static String NAVID = "home";

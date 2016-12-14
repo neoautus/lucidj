@@ -43,7 +43,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 
 @Component
 @Instantiate
-@Provides (specifications = MenuProvider.class)
+@Provides
 public class Search implements MenuProvider, ViewProvider
 {
     private final static transient Logger log = LoggerFactory.getLogger (Search.class);

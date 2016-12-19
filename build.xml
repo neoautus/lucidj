@@ -933,8 +933,8 @@
 
         <!-- Make resources available through APP/PUBLISHED -->
         <!-- TODO: Is there a better way to make them visible to APP/PUBLISHED??? -->
-        <echo file="${bnd.file}" append="true"
-            message="Fragment-Host: com.vaadin.server;bundle-version=&quot;[7.1.0,8.0.0)&quot;${line.separator}"/>
+        <!--echo file="${bnd.file}" append="true"
+            message="Fragment-Host: com.vaadin.server;bundle-version=&quot;[7.1.0,8.0.0)&quot;${line.separator}"/-->
 
         <!-- Create an OSGi-compliant MANIFEST.MF with empty jar -->
         <bnd files="${bnd.file}" output="${vaadin.static.jar}"

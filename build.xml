@@ -70,6 +70,9 @@
             <include name="vaadin/jar/guava-*.jar"/>
             <include name="vaadin/jar/jsoup-*.jar"/>
         </fileset>
+        <fileset dir="${wrapped-jars.dir}">
+            <include name="gwt-user-*.jar"/>
+        </fileset>
     </path>
 
     <path id="vaadin-sass-compiler.cp">
@@ -1064,7 +1067,6 @@
                 <include name="vaadin/jar/streamhtmlparser-jsilver-*.jar"/>
                 <include name="vaadin/jar/guava-*.jar"/>
                 <include name="vaadin/jar/flute-*.jar"/>
-                <!--include name="vaadin/jar/javax.servlet-*.jar"/-->
                 <include name="vaadin/bundle/atmosphere-runtime-*.jar"/>
                 <include name="vaadin/jar/vaadin-shared-*.jar"/>
                 <exclude name="vaadin/jar/vaadin-shared-deps-*.jar"/>
@@ -1094,6 +1096,11 @@
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
                 <include name="jansi/jar/*.jar"/>
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>
+            </fileset>
+
+            <!-- Include the non-osgi bastards -->
+            <fileset dir="${wrapped-jars.dir}">
+                <include name="gwt-user-*.jar"/>
             </fileset>
         </copy>
 

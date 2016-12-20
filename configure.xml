@@ -96,12 +96,12 @@
             <ivy:dependency org="org.apache.tinkerpop" name="tinkergraph-gremlin" rev="3.0.2-incubating"/>
         </pathdep>
 
-        <property name="vaadin.rev" value="7.6.7"/>
+        <property name="vaadin.rev" value="7.7.6"/>
         <pathdep group="vaadin">
             <ivy:dependency org="com.vaadin"       name="vaadin-server"          rev="${vaadin.rev}"/>
             <ivy:dependency org="com.vaadin"       name="vaadin-client"          rev="${vaadin.rev}"/>
-            <ivy:dependency org="com.vaadin"       name="vaadin-client-compiled" rev="${vaadin.rev}"/>
-            <ivy:dependency org="com.vaadin"       name="vaadin-themes"          rev="${vaadin.rev}"/>
+            <ivy:dependency org="com.vaadin"       name="vaadin-client-compiled" rev="${vaadin.rev}" transitive="false"/>
+            <ivy:dependency org="com.vaadin"       name="vaadin-themes"          rev="${vaadin.rev}" transitive="false"/>
         </pathdep>
 
         <pathdep group="vaadin-client-compiler">
@@ -186,6 +186,64 @@
         <pathdep group="jansi">
             <ivy:dependency org="org.fusesource.jansi" name="jansi" rev="1.14" />
         </pathdep>
+
+        <!-- For <propertyregex/> -->
+        <taskdef resource="net/sf/antcontrib/antlib.xml">
+            <classpath>
+                <fileset dir="${libcache.dir}" includes="tasks/**/*.jar"/>
+            </classpath>
+        </taskdef>
+
+        <!-- For <bnd/> -->
+        <taskdef resource="aQute/bnd/ant/taskdef.properties">
+            <classpath id="bnd.cp">
+                <fileset dir="${libcache.dir}" includes="bnd/jar/*.jar"/>
+            </classpath>
+        </taskdef>
+
+        <echo message="Wrapping jars into ${wrapped-jars.dir}"/>
+        <delete dir="${wrapped-jars.dir}"/>
+        <mkdir dir="${wrapped-jars.dir}"/>
+
+        <!-- Wrap any jar more or less like wrap: protocol -->
+        <!-- src: full path for source jar -->
+        <!-- dest: destination directory OR full path of wrapped jar -->
+        <macrodef name="wrapjar">
+            <attribute name="src"/>
+            <attribute name="dest"/>
+            <sequential>
+                <basename property="src.basename" file="@{src}" suffix=".jar"/>
+                <propertyregex property="bsn" input="${src.basename}"
+                    regexp="(.*)-(\d+\..*)" select="\1" defaultValue="${src.basename}"/>
+                <propertyregex property="version" input="${src.basename}"
+                    regexp="(.*)-(\d+\..*)" select="\2" defaultValue="0.0.0"/>
+                <condition property="output.jar" value="@{dest}/${src.basename}.jar" else="@{dest}">
+                    <available file="@{dest}" type="dir"/>
+                </condition>
+                <property name="output.bnd" value="${output.jar}.bnd"/>
+                <echo file="${output.bnd}">
+                    Bundle-SymbolicName: ${bsn}
+                    Bundle-Name: wrapped-${bsn}
+                    Bundle-Version: ${version}
+                    Import-Package: *;resolution:=optional
+                    Export-Package: *;version=${version}
+                </echo>
+                <bnd files="${output.bnd}" output="${output.jar}"
+                     eclipse="false" failok="false" exceptions="true">
+                    <classpath location="@{src}"/>
+                </bnd>
+                <jar destfile="${output.jar}" update="true" filesonly="true">
+                    <zipfileset src="@{src}">
+                        <include name="**/*"/>
+                        <exclude name="**/*.class"/>
+                    </zipfileset>
+                </jar>
+            </sequential>
+        </macrodef>
+
+        <!-- And action! -->
+        <wrapjar src="${libcache.dir}/vaadin/jar/gwt-user-2.7.0.vaadin4.jar"
+            dest="${wrapped-jars.dir}"/>
 
         <!-- Ready to go! -->
         <touch file="${configure.ok.file}"/>

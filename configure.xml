@@ -200,6 +200,10 @@
                 <fileset dir="${libcache.dir}" includes="bnd/jar/*.jar"/>
             </classpath>
         </taskdef>
+	
+	<echo>
+	    ==================================================================
+	</echo>
 
         <echo message="Wrapping jars into ${wrapped-jars.dir}"/>
         <delete dir="${wrapped-jars.dir}"/>
@@ -245,6 +249,21 @@
         <wrapjar src="${libcache.dir}/vaadin/jar/gwt-user-2.7.0.vaadin4.jar"
             dest="${wrapped-jars.dir}"/>
 
+	<echo>
+	    ==================================================================
+	</echo>
+	
+	<!-- Base Apache Karaf distribution in use -->
+	<echo message="Downloading Apache Karaf distribution: ${karaf.dist.zip}"/>
+        <mkdir dir="${karaf.dist.dir}"/>
+        <if><not><available file="${karaf.dist.dir}/${karaf.dist.zip}"/></not>
+            <then>
+                <get src="${karaf.dist.url}" dest="${karaf.dist.dir}/download.tmp" verbose="true"/>
+                <move file="${karaf.dist.dir}/download.tmp"
+                    tofile="${karaf.dist.dir}/${karaf.dist.zip}"/>
+            </then>
+        </if>
+	
         <!-- Ready to go! -->
         <touch file="${configure.ok.file}"/>
 

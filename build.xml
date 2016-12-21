@@ -989,17 +989,7 @@
         <mkdir dir="${system.dir}"/>
         <mkdir dir="${applications.dir}"/>
 
-        <property name="karaf.dist.dir" value="${cache.dir}/karaf"/>
-        <mkdir dir="${karaf.dist.dir}"/>
-
-        <if><not><available file="${karaf.dist.dir}/${karaf.dist.zip}"/></not>
-            <then>
-                <get src="${karaf.dist.url}" dest="${karaf.dist.dir}/download.tmp" verbose="true"/>
-                <move file="${karaf.dist.dir}/download.tmp"
-                    tofile="${karaf.dist.dir}/${karaf.dist.zip}"/>
-            </then>
-        </if>
-
+	<!-- Apache Karaf is unziped first so it can be overwritten if needed -->
         <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${runtime.dir}"/>
 
         <copy todir="${stage.dir}" overwrite="true">

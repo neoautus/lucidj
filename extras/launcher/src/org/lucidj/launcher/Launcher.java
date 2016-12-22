@@ -23,6 +23,8 @@ import org.apache.commons.exec.ExecuteResultHandler;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Launcher implements ExecuteResultHandler
@@ -41,15 +43,46 @@ public class Launcher implements ExecuteResultHandler
 
     private LauncherWatchdog watchdog;
 
+    private static String find_apache_karaf (String runtime_dir)
+    {
+        File[] file_array = new File (runtime_dir).listFiles();
+
+        if (file_array == null)
+        {
+            return (null);
+        }
+
+        // Not yet. Lets search inside runtime dir
+        List<File> file_list = Arrays.asList (file_array);
+
+        Collections.sort (file_list, Collections.reverseOrder (new AlphanumComparator()));
+
+        for (File file: file_list)
+        {
+            if (file.isDirectory() && file.getName ().startsWith ("apache-karaf-"))
+            {
+                // Embedded jdk_home
+                return (file.getName ());
+            }
+        }
+
+        return (null);
+    }
+
+
     public static void configure (String app_home_path, String jdk_home_path)
     {
         rq_home = app_home_path;
         jdk_home = jdk_home_path;
 
+        // TODO: CHECK NULL
+        String karaf_dirname = find_apache_karaf (rq_home + "/runtime");
+
         // Init Karaf dirs
-        String karaf_dirname = "apache-karaf-4.0.5";
         String karaf_home = rq_home + "/runtime/" + karaf_dirname;
         String karaf_data = rq_home + "/cache/" + karaf_dirname;
+
+        System.out.println ("Karaf Home: '" + karaf_home + "'");
 
         System.setProperty ("rq.home", rq_home);
         System.setProperty ("rq.conf", rq_home + "/conf");

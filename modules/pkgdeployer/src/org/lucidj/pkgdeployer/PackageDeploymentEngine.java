@@ -16,7 +16,7 @@
 
 package org.lucidj.pkgdeployer;
 
-import org.lucidj.api.BundleDeployer;
+import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +32,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
@@ -58,7 +59,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
     private BundleContext context;
 
     @Requires
-    private BundleDeployer bnd_deployer;
+    private BundleManager bundle_manager;
 
     private String packages_dir;
 
@@ -94,7 +95,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
         Attributes attrs;
 
         // Check compatibility looking for X-Package attribute on manifest
-        if ((mf = bnd_deployer.getManifest (location)) != null &&
+        if ((mf = bundle_manager.getManifest (location)) != null &&
             (attrs = mf.getMainAttributes ()) != null &&
             attrs.getValue ("X-Package") != null)
         {
@@ -144,7 +145,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
         }
 
         // We'll compare what exists with what will be extracted so we can delete excess files later
-        List<String> files_to_delete = list_existing_files (dest_dir);
+        List<String> files_to_remove = list_existing_files (dest_dir);
 
         try
         {
@@ -176,12 +177,12 @@ public class PackageDeploymentEngine implements DeploymentEngine
                     }
 
                     // Remove the existing file from the deletion list
-                    files_to_delete.remove (dest_package_dir + "/" + entry.getName ());
+                    files_to_remove.remove (dest_package_dir + "/" + entry.getName ());
                 }
             }
 
             // Delete all excess files
-            for (String file: files_to_delete)
+            for (String file: files_to_remove)
             {
                 if (!new File (file).delete ())
                 {
@@ -199,9 +200,9 @@ public class PackageDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public Bundle installBundle (String location)
+    public Bundle installBundle (String location, Properties properties)
     {
-        Manifest mf = bnd_deployer.getManifest (location);
+        Manifest mf = bundle_manager.getManifest (location);
 
         if (mf == null)
         {
@@ -230,7 +231,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
                 {
                     String bundle_uri = bundle_file.toURI ().toString ();
 
-                    if (bnd_deployer.installBundle (bundle_uri) == null)
+                    if (bundle_manager.installBundle (bundle_uri, properties) == null)
                     {
                         got_errors = true;
                     }
@@ -243,7 +244,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
             try
             {
                 // Here the native OSGi bundle install
-                return (context.installBundle (location));
+                return (bundle_manager.installBundle (location, properties));
             }
             catch (Exception e)
             {
@@ -258,35 +259,23 @@ public class PackageDeploymentEngine implements DeploymentEngine
     @Override
     public boolean updateBundle (Bundle bnd)
     {
-        try
-        {
-            log.info ("Updating package {}", bnd);
-            bnd.stop (Bundle.STOP_TRANSIENT);
-            bnd.update ();
-            return (true);
-        }
-        catch (Exception e)
-        {
-            log.error ("Error updating {}", bnd, e);
-            uninstallBundle (bnd);
-            return (false);
-        }
+        // TODO: HANDLE Bundles/ AND Resources/
+        return (bundle_manager.updateBundle (bnd));
+    }
+
+    @Override
+    public boolean refreshBundle (Bundle bnd)
+    {
+        return (false);
+        // TODO: HANDLE Bundles/ AND Resources/
+        //return (bundle_manager.refreshBundle (bnd));
     }
 
     @Override
     public boolean uninstallBundle (Bundle bnd)
     {
-        try
-        {
-            log.info ("Uninstalling bundle {}", bnd);
-            bnd.uninstall ();
-            return (true);
-        }
-        catch (Exception e)
-        {
-            log.error ("Exception uninstalling {}", bnd, e);
-            return (false);
-        }
+        // TODO: HANDLE Bundles/ AND Resources/
+        return (bundle_manager.uninstallBundle (bnd));
     }
 }
 

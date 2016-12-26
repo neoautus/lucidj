@@ -48,9 +48,6 @@ class VaadinMapper implements HttpContext
     @Requires
     private HttpService http_service;
 
-    @Requires
-    private BundleDeployer bundle_deployer;
-
     @Context
     private BundleContext context;
 

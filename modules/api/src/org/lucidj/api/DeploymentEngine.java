@@ -16,15 +16,18 @@
 
 package org.lucidj.api;
 
+import java.util.Properties;
+
 import org.osgi.framework.Bundle;
 
 public interface DeploymentEngine
 {
-    String getEngineName ();
-    int compatibleArtifact (String location);
-    Bundle installBundle (String location);
-    boolean updateBundle (Bundle bnd);
-    boolean uninstallBundle (Bundle bnd);
+    String  getEngineName      ();
+    int     compatibleArtifact (String location);
+    Bundle  installBundle      (String location, Properties properties);
+    boolean updateBundle       (Bundle bnd);
+    boolean refreshBundle      (Bundle bnd);
+    boolean uninstallBundle    (Bundle bnd);
 }
 
 // EOF

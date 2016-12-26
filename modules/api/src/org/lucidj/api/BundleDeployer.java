@@ -16,16 +16,11 @@
 
 package org.lucidj.api;
 
-import java.io.File;
-import java.util.jar.Manifest;
-
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
 public interface BundleDeployer
 {
-    Manifest getManifest (String location);
-    Manifest getManifest (File jar);
     Bundle getBundleByDescription (String symbolic_name, Version version);
     Bundle installBundle (String location);
     boolean updateBundle (Bundle bnd);

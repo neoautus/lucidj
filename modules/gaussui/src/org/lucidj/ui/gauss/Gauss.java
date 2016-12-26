@@ -21,8 +21,8 @@ import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
+import org.lucidj.api.NavigatorManager;
 import org.lucidj.renderer.ObjectRenderer;
-import org.lucidj.renderer.treemenu.TreeMenuRenderer;
 import org.lucidj.vaadinui.FancyEmptyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,6 @@ import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.navigator.ViewDisplay;
-import com.vaadin.navigator.ViewProvider;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Sizeable;
 import com.vaadin.server.Sizeable.Unit;
@@ -106,6 +105,9 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
 
     @Requires
     private MenuManager menu_manager;
+
+    @Requires
+    private NavigatorManager nav_manager;
 
     private MenuInstance main_menu;
     private ObjectRenderer object_renderer;
@@ -319,6 +321,7 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
 
         navigator.setErrorView (FancyEmptyView.class);
         navigator.addView (DAMN, damage_report_view);
+        nav_manager.configureNavigator (navigator, null);
 
         navigator.addViewChangeListener(new ViewChangeListener ()
         {
@@ -404,12 +407,6 @@ public class Gauss implements DesktopInterface, MenuInstance.EventListener
                 //menu.removeStyleName ("valo-menu-visible");
             }
         });
-
-//////        navigator.addProvider(this);
-        if (main_menu instanceof ViewProvider)
-        {
-            navigator.addProvider ((ViewProvider)main_menu);
-        }
 
         // Start on default Home
         navigator.navigateTo ("home");

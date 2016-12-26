@@ -32,7 +32,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 
 @Component
 @Instantiate
-@Provides (specifications = MenuProvider.class)
+@Provides
 public class Formulas implements MenuProvider, ViewProvider
 {
     private final static String NAVID = "formulas";
@@ -47,7 +47,6 @@ public class Formulas implements MenuProvider, ViewProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
         menu.addMenuEntry (menu.newMenuEntry ("Formulas", FontAwesome.FILE_CODE_O, 500, NAVID));
-        menu.registry ().register (this);
     }
 
     @Override // ViewProvider

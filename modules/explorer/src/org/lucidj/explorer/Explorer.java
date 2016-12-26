@@ -32,7 +32,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 
 @Component
 @Instantiate
-@Provides (specifications = MenuProvider.class)
+@Provides
 public class Explorer implements MenuProvider, ViewProvider
 {
     private final static String NAVID = "home";
@@ -47,7 +47,6 @@ public class Explorer implements MenuProvider, ViewProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
         menu.addMenuEntry (menu.newMenuEntry ("Explorer", FontAwesome.FOLDER_OPEN_O, 100, NAVID));
-        menu.registry ().register (this);
     }
 
     @Override // ViewProvider

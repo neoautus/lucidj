@@ -10,8 +10,6 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/smartbox/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/timeseries/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/uiaccess/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/themes/kuori" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/components/resources/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/aceeditor/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/formulas/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/librarian/src" isTestSource="false" />
@@ -34,16 +32,17 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/markdown_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/plotly/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/plotly_renderer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/shadowmap/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/gaussui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/vaadinui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/test/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/api/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/layoutmanager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/runtime/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/search/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/search/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/menumanager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/treemenu.renderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/pkgdeployer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/navigatormanager/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/stage" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />

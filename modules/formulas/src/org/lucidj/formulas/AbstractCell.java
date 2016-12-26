@@ -136,7 +136,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         left_panel.addStyleName ("cell-panel-left");
         left_panel.setHeight (100, Sizeable.Unit.PERCENTAGE);
 
-        String icon_url = "/VAADIN/formulas/impossible.png";
+        String icon_url = "/VAADIN/~/formulas/impossible.png";
         String icon_title = "The Unknown";
 
         if (source_object instanceof ComponentInterface)
@@ -147,7 +147,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
 
             if (bnd != null)
             {
-                icon_url = "/VAADIN/" + bnd.getSymbolicName () + "/component-icon.png";
+                icon_url = "/VAADIN/~/" + bnd.getSymbolicName () + "/component-icon.png";
                 icon_title = ci.getIconTitle ();
             }
         }

@@ -46,10 +46,6 @@
         <fileset dir="${libcache.dir}" includes="shiro/bundle/**/*.jar"/>
     </path>
 
-    <path id="bouncycastle.cp">
-        <fileset dir="${libcache.dir}" includes="bouncycastle/jar/**/*.jar"/>
-    </path>
-
     <path id="ipojo.cp">
         <fileset dir="${libcache.dir}">
             <include name="ipojo/jar/**/*.jar"/>
@@ -73,6 +69,9 @@
             <include name="vaadin/jar/vaadin-icons-*.jar"/>
             <include name="vaadin/jar/guava-*.jar"/>
             <include name="vaadin/jar/jsoup-*.jar"/>
+        </fileset>
+        <fileset dir="${wrapped-jars.dir}">
+            <include name="gwt-user-*.jar"/>
         </fileset>
     </path>
 
@@ -145,7 +144,6 @@
         <path refid="slf4j.cp"/>
         <path refid="netty.cp"/>
         <path refid="shiro.cp"/>
-        <path refid="bouncycastle.cp"/>
         <path refid="gson.cp"/>
         <path refid="guava.cp"/>
         <!--path refid="bsh.cp"/-->
@@ -162,11 +160,6 @@
         <!-- javassist -->
         <!--fileset dir="${lib.dir}/static/javassist-3.x">
             <include name="javassist.jar"/>
-        </fileset-->
-
-        <!-- Bouncy Castle -->
-        <!--fileset dir="${lib.dir}/static/bouncy-castle-1.x">
-            <include name="bcprov-jdk15on-1*.jar"/>
         </fileset-->
 
         <!-- Logback -->
@@ -214,6 +207,36 @@
     </path>
 
     <property name="classpath.build.literal" refid="classpath.build"/>
+
+    <path id="classpath.packages">
+
+        <!-- JavaEE API 7.x -->
+        <path refid="javaee-api.cp"/>
+
+        <!-- OSGi -->
+        <path refid="osgi.ext"/>
+        <path refid="ipojo.cp"/>
+        <path refid="karaf-runtime.cp"/>
+
+        <!-- Built-in utilities -->
+        <path refid="slf4j.cp"/>
+
+        <!-- Vaadin -->
+        <path refid="classpath.vaadin.server"/>
+
+        <!-- TODO: SPLIT CORE LIBRARIES FROM COMMON LIBRARIES! -->
+        <!-- THE LUCIDJ API -->
+        <fileset dir="${basedir}">
+            <include name="dist/libraries_api.jar"/>
+            <include name="dist/libraries_runtime.jar"/>
+
+            <!-- TODO: REFACTOR -->
+            <include name="dist/libraries_uiaccess.jar"/>
+        </fileset>
+
+    </path>
+
+    <property name="classpath.packages.literal" refid="classpath.packages"/>
 
 <!-- **********************************************************************
       TASKS
@@ -280,9 +303,10 @@
                 <ant target="build.vaadin.static"/>
             </then>
         </if>
-        <ant target="build.theme"/>
+        <!--ant target="build.theme"/-->
         <ant target="build.all.libraries"/>
-        <ant target="build.all.components"/>
+        <ant target="build.all.packages"/>
+        <!--ant target="build.all.components"/-->
     </target>
 
     <target name="install">
@@ -290,9 +314,10 @@
         <ant target="clean"/>
         <ant target="build.stage"/>
         <ant target="build.vaadin.static"/>
-        <ant target="build.theme"/>
+        <!--ant target="build.theme"/-->
         <ant target="build.all.libraries"/>
-        <ant target="build.all.components"/>
+        <ant target="build.all.packages"/>
+        <!--ant target="build.all.components"/-->
         <!-- TODO: BUILD MAVEN PRELOAD CACHE -->
         <ant target="installer"/>
     </target>
@@ -378,7 +403,7 @@
             <jvmarg value="-Djava.awt.headless=true" />
             <jvmarg value="-Dcom.sun.management.jmxremote" />
             <sysproperty key="rq.home" value="${rq.home}" />
-            <sysproperty key="rq.deploy" value="${rq.home}/runtime/application-dev" />
+            <sysproperty key="rq.deploy" value="${system.dir}" />
             <sysproperty key="java.endorsed.dirs" value="${jdk.home}/jre/lib/endorsed:${jdk.home}/lib/endorsed:${karaf.home}/lib/endorsed" />
             <sysproperty key="java.ext.dirs" value="${jdk.home}/jre/lib/ext:${jdk.home}/lib/ext:${karaf.home}/lib/ext" />
             <sysproperty key="karaf.instances" value="${karaf.home}/instances" />
@@ -602,14 +627,14 @@
                     <exclude name="**/*.scss"/>
                     <exclude name="**/*.bnd"/>
                 </fileset>
-                <globmapper from="*" to="resources/*"/>
+                <globmapper from="*" to="Public/*"/>
             </mappedresources>
         </jar>
 
-        <available file="${application.dir}" property="autodeploy.flag"/>
+        <available file="${system.dir}" property="autodeploy.flag"/>
         <if><isset property="autodeploy.flag"/>
             <then>
-                <copy file="${bnd.jar}" todir="${application.dir}" overwrite="true"/>
+                <copy file="${bnd.jar}" todir="${system.dir}" overwrite="true"/>
                 <delete dir="${build.dir}/jars/${bundle}"/>
                 <mkdir dir="${build.dir}/jars/${bundle}"/>
                 <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>
@@ -911,8 +936,8 @@
 
         <!-- Make resources available through APP/PUBLISHED -->
         <!-- TODO: Is there a better way to make them visible to APP/PUBLISHED??? -->
-        <echo file="${bnd.file}" append="true"
-            message="Fragment-Host: com.vaadin.server;bundle-version=&quot;[7.1.0,8.0.0)&quot;${line.separator}"/>
+        <!--echo file="${bnd.file}" append="true"
+            message="Fragment-Host: com.vaadin.server;bundle-version=&quot;[7.1.0,8.0.0)&quot;${line.separator}"/-->
 
         <!-- Create an OSGi-compliant MANIFEST.MF with empty jar -->
         <bnd files="${bnd.file}" output="${vaadin.static.jar}"
@@ -937,10 +962,10 @@
             </mappedresources>
         </jar>
 
-        <available file="${application.dir}" property="autodeploy.flag"/>
+        <available file="${system.dir}" property="autodeploy.flag"/>
         <if><isset property="autodeploy.flag"/>
             <then>
-                <copy file="${vaadin.static.jar}" todir="${application.dir}" overwrite="true"/>
+                <copy file="${vaadin.static.jar}" todir="${system.dir}" overwrite="true"/>
                 <delete dir="${build.dir}/jars/${bundle}"/>
                 <mkdir dir="${build.dir}/jars/${bundle}"/>
                 <unjar src="${vaadin.static.jar}" dest="${build.dir}/jars/${bundle}"/>
@@ -961,19 +986,10 @@
         <delete dir="${stage.dir}"/><!-- needed? -->
         <mkdir dir="${stage.dir}"/>
         <mkdir dir="${runtime.dir}"/>
-        <mkdir dir="${application.dir}"/>
+        <mkdir dir="${system.dir}"/>
+        <mkdir dir="${applications.dir}"/>
 
-        <property name="karaf.dist.dir" value="${cache.dir}/karaf"/>
-        <mkdir dir="${karaf.dist.dir}"/>
-
-        <if><not><available file="${karaf.dist.dir}/${karaf.dist.zip}"/></not>
-            <then>
-                <get src="${karaf.dist.url}" dest="${karaf.dist.dir}/download.tmp" verbose="true"/>
-                <move file="${karaf.dist.dir}/download.tmp"
-                    tofile="${karaf.dist.dir}/${karaf.dist.zip}"/>
-            </then>
-        </if>
-
+	<!-- Apache Karaf is unziped first so it can be overwritten if needed -->
         <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${runtime.dir}"/>
 
         <copy todir="${stage.dir}" overwrite="true">
@@ -1031,7 +1047,7 @@
 
         <!-- Copy support libraries directly to deploy dir,
              should figure out better placement -->
-        <copy todir="${application.dir}" flatten="true">
+        <copy todir="${system.dir}" flatten="true">
             <fileset dir="${libcache.dir}">
                 <!-- Vaadin -->
                 <include name="vaadin/jar/vaadin-server-*.jar"/>
@@ -1041,7 +1057,6 @@
                 <include name="vaadin/jar/streamhtmlparser-jsilver-*.jar"/>
                 <include name="vaadin/jar/guava-*.jar"/>
                 <include name="vaadin/jar/flute-*.jar"/>
-                <!--include name="vaadin/jar/javax.servlet-*.jar"/-->
                 <include name="vaadin/bundle/atmosphere-runtime-*.jar"/>
                 <include name="vaadin/jar/vaadin-shared-*.jar"/>
                 <exclude name="vaadin/jar/vaadin-shared-deps-*.jar"/>
@@ -1069,9 +1084,13 @@
                 <include name="gson/jar/gson-*.jar"/>
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
-                <include name="bouncycastle/jar/*.jar"/>
                 <include name="jansi/jar/*.jar"/>
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>
+            </fileset>
+
+            <!-- Include the non-osgi bastards -->
+            <fileset dir="${wrapped-jars.dir}">
+                <include name="gwt-user-*.jar"/>
             </fileset>
         </copy>
 
@@ -1363,10 +1382,10 @@
             </then>
         </if>
 
-        <available file="${application.dir}" property="autodeploy.flag"/>
+        <available file="${system.dir}" property="autodeploy.flag"/>
         <if><isset property="autodeploy.flag"/>
             <then>
-                <copy file="${bnd.jar}" todir="${application.dir}" overwrite="true"/>
+                <copy file="${bnd.jar}" todir="${system.dir}" overwrite="true"/>
                 <delete dir="${build.dir}/jars/${bundle}"/>
                 <mkdir dir="${build.dir}/jars/${bundle}"/>
                 <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>
@@ -1566,16 +1585,247 @@
             </then>
         </if>
 
-        <available file="${application.dir}" property="autodeploy.flag"/>
+        <available file="${system.dir}" property="autodeploy.flag"/>
         <if><isset property="autodeploy.flag"/>
             <then>
-                <copy file="${bnd.jar}" todir="${application.dir}" overwrite="true"/>
+                <copy file="${bnd.jar}" todir="${system.dir}" overwrite="true"/>
                 <delete dir="${build.dir}/jars/${bundle}"/>
                 <mkdir dir="${build.dir}/jars/${bundle}"/>
                 <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>
             </then>
         </if>
 
+    </target>
+
+    <macrodef name="autodeploy">
+        <attribute name="bundleFile"/>
+        <attribute name="bundleType"/>
+        <sequential>
+
+            <basename property="bundle.name" file="@{bundleFile}"/>
+            <property name="deploy.dir" value="${runtime.dir}/@{bundleType}"/>
+            <if><available file="${deploy.dir}" type="dir"/>
+                <then>
+                    <copy file="@{bundleFile}" todir="${deploy.dir}" overwrite="true" taskname="autodeploy"/>
+                </then>
+            </if>
+
+        </sequential>
+    </macrodef>
+
+    <macrodef name="build.package">
+        <attribute name="packageDir"/>
+        <attribute name="classpath"/>
+        <sequential>
+
+            <echo message="Building package @{packageDir}"/>
+
+            <!-- Build time properties -->
+            <basename property="bnd.name" file="@{packageDir}"/>
+            <property name="bnd.src.dir" value="@{packageDir}/src"/>
+            <property name="bnd.meta-inf.dir" value="@{packageDir}/meta-inf"/>
+            <property name="bnd.build.dir" value="${build.dir}/app/${bnd.name}"/>
+            <property name="bnd.file" value="${bnd.build.dir}/bundle.bnd"/>
+            <property name="bnd.dist.jar" value="${dist.dir}/${bnd.name}.jar"/>
+
+            <!-- Package structure properties -->
+            <property name="bundles.dirname" value="Bundles"/>
+            <property name="resources.dirname" value="Resources"/>
+            <property name="pkg.contents.dir" value="@{packageDir}/contents"/>
+            <property name="pkg.bundles.dir" value="${pkg.contents.dir}/${bundles.dirname}"/>
+            <property name="pkg.resources.dir" value="${pkg.contents.dir}/${resources.dirname}"/>
+
+            <delete dir="${bnd.build.dir}"/><!-- Ensures only new .class -->
+            <mkdir dir="${bnd.build.dir}"/>
+
+            <!-- Create a temporary classpath for included Bundles/ -->
+            <path id="embedded.bundles.cp">
+                <fileset dir="@{packageDir}">
+                    <include name="contents/${bundles.dirname}/**/*.jar"/>
+                </fileset>
+            </path>
+            <property name="embedded.bundles.cp.literal" refid="embedded.bundles.cp"/>
+
+            <!-- Include all embedded libraries found inside Resources/ -->
+            <path id="private.cp">
+                <fileset  dir="@{packageDir}">
+                    <include name="contents/${resources.dirname}/**/*.jar"/>
+                </fileset>
+            </path>
+            <property name="private.cp.literal" refid="private.cp"/>
+
+            <!-- This is the classpath used to build the component -->
+            <property name="bnd.classpath"
+                value="${private.cp.literal}:${embedded.bundles.cp.literal}:${bnd.build.dir}:@{classpath}"/>
+
+            <!-- Build time! Build component with given classpath and local private libraries -->
+            <javac srcdir="${bnd.src.dir}" destdir="${bnd.build.dir}"
+                   debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+                   source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+                   includeantruntime="false">
+                <classpath>
+                    <pathelement path="${bnd.classpath}"/>
+                </classpath>
+            </javac>
+
+            <!-- Trata o arquivo bundle.bnd, se existir -->
+            <if><available file="${bnd.meta-inf.dir}/bundle.bnd"/>
+                <then>
+                    <copy file="${bnd.meta-inf.dir}/bundle.bnd"
+                        tofile="${bnd.file}" overwrite="true"/>
+                </then>
+                <else>
+                    <echo message="Using auto-generated bundle descriptor"/>
+                    <delete file="${bnd.file}"/>
+                </else>
+            </if>
+
+            <!-- Copy all packagefile(s) -->
+            <copy todir="${bnd.build.dir}" overwrite="true" verbose="true">
+                <fileset dir="${bnd.src.dir}">
+                    <include name="**/packageinfo"/>
+                </fileset>
+            </copy>
+
+            <!-- Create or add default properties to bundle.bnd -->
+            <echo file="${bnd.file}" append="true"
+                  message="### Start of generated content ###${line.separator}"/>
+            <echo file="${bnd.file}" append="true"
+                  message="X-Package: 1.0${line.separator}"/>
+            <echo file="${bnd.file}" append="true"
+                  message="Bundle-Name: ${bnd.name}${line.separator}"/>
+            <echo file="${bnd.file}" append="true"
+                  message="Bundle-SymbolicName: ${bnd.name}${line.separator}"/>
+            <echo file="${bnd.file}" append="true"
+                  message="build: ${build.tstamp}${line.separator}"/>
+
+            <!-- Create a proper Bundle-ClassPath for included libraries -->
+            <if><resourcecount refid="private.cp" when="greater" count="0"/>
+                <then>
+                    <pathconvert refid="private.cp" property="private.cp.bnd" dirsep="/" pathsep=",">
+                        <map from="${pkg.contents.dir}/" to=""/>
+                    </pathconvert>
+                    <echo file="${bnd.file}" append="true"
+                          message="Bundle-ClassPath: .,${private.cp.bnd}${line.separator}"/>
+                    <echo file="${bnd.file}" append="true"
+                          message="Include-Resource: ${resources.dirname}=${resources.dirname}${line.separator}"/>
+                    <copy todir="${bnd.build.dir}" overwrite="true">
+                        <fileset dir="${pkg.contents.dir}">
+                            <include name="${resources.dirname}/**/*.jar"/>
+                        </fileset>
+                    </copy>
+                </then>
+            </if>
+
+            <!-- ================ -->
+            <!-- Find all exports -->
+            <!-- ================ -->
+            <listpackages dir="${bnd.build.dir}" property="package.list"/>
+            <echo file="${bnd.file}" append="true"
+                  message="Export-Package: ${package.list}${line.separator}"/>
+
+            <!-- ================== -->
+            <!-- Include activators -->
+            <!-- ================== -->
+            <fileset dir="${bnd.build.dir}" id="classes">
+                <include name="**/*Activator.class"/>
+            </fileset>
+            <pathconvert dirsep="." refid="classes" property="activator.list" pathsep=", " setonempty="false">
+                <mapper type="regexp" from="${bnd.build.dir}/(.*).class" to="\1" />
+            </pathconvert>
+            <if><isset property="activator.list"/>
+                <then>
+                    <echo file="${bnd.file}" append="true"
+                          message="Bundle-Activator: ${activator.list}${line.separator}"/>
+                </then>
+            </if>
+
+            <echo file="${bnd.file}" append="true"
+                  message="### End of generated content ###${line.separator}"/>
+
+            <!-- Add additional bundle directives -->
+            <if><available file="@{packageDir}/bundle.inc"/>
+                <then>
+                    <concat destfile="${bnd.file}" append="true">
+                        <file name="${bnd.src.dir}/bundle.inc"/>
+                    </concat>
+                </then>
+            </if>
+
+            <!-- Add package descriptors (MANDATORY) -->
+            <concat destfile="${bnd.file}" append="true">
+                <file name="${bnd.meta-inf.dir}/Package.info"/>
+            </concat>
+
+            <loadfile property="bnd.file.contents" srcFile="${bnd.file}"/>
+            <echo taskname="bnd.file" message="${bnd.file.contents}"/>
+
+            <mkdir dir="${dist.dir}"/>
+            <bnd files="${bnd.file}" output="${bnd.dist.jar}"
+                 classpath="${bnd.build.dir}:${private.cp.literal}"
+                 eclipse="false" failok="false" exceptions="true"/>
+
+            <if><not><contains string="${bnd.file.contents}" substring="x-no-ipojo"/></not>
+                <then>
+                    <ipojo input="${bnd.dist.jar}">
+                        <classpath>
+                            <pathelement path="${bnd.classpath}"/>
+                            <path refid="ipojo.cp"/>
+                        </classpath>
+                    </ipojo>
+                </then>
+            </if>
+
+            <!-- Add miscelaneous files from meta-inf/ -->
+            <jar destfile="${bnd.dist.jar}" update="true" filesonly="true">
+                <mappedresources>
+                    <fileset dir="${bnd.meta-inf.dir}">
+                        <include name="**/*"/>
+                        <exclude name="MANIFEST.MF"/>
+                        <exclude name="Package.info"/>
+                        <exclude name="bundle.*"/>
+                    </fileset>
+                    <globmapper from="*" to="META-INF/*"/>
+                </mappedresources>
+            </jar>
+
+            <!-- Add resource files from src/ -->
+            <jar destfile="${bnd.dist.jar}" update="true" filesonly="true">
+                <fileset dir="${bnd.src.dir}">
+                    <include name="**/*"/>
+                    <exclude name="**/*.jar"/>
+                    <exclude name="**/*.java"/>
+                </fileset>
+            </jar>
+
+            <!-- Add full contents/ if it exists -->
+            <if><available file="${pkg.contents.dir}" type="dir"/>
+                <then>
+                    <jar destfile="${bnd.dist.jar}" update="true">
+                        <fileset dir="${pkg.contents.dir}" includes="**/*"/>
+                    </jar>
+                </then>
+            </if>
+
+            <autodeploy bundleFile="${bnd.dist.jar}" bundleType="applications"/>
+
+        </sequential>
+    </macrodef>
+
+    <target name="build.all.packages">
+        <!-- TODO: AUTODEPLOY -->
+        <for param="package.dir">
+            <path>
+                <dirset dir="${packages.src.dir}">
+                    <include name="*/src"/>
+                </dirset>
+            </path>
+            <sequential>
+                <local name="package.basedir"/>
+                <dirname property="package.basedir" file="@{package.dir}"/>
+                <build.package packageDir="${package.basedir}" classpath="${classpath.packages.literal}"/>
+            </sequential>
+        </for>
     </target>
 
     <target name="make">
@@ -1586,6 +1836,12 @@
                     <property name="bnd.path" value="${libraries.src.dir}/${libraries}/src"/>
                     <property name="auto.deploy" value="true"/>
                 </ant>
+            </then>
+        </if>
+        <if><isset property="package"/>
+            <then>
+                <property name="package.dir" value="${packages.src.dir}/${package}"/>
+                <build.package packageDir="${package.dir}" classpath="${classpath.packages.literal}"/>
             </then>
         </if>
         <if><isset property="components"/>

@@ -24,11 +24,11 @@ import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.data.Property;
 import com.vaadin.server.ClientConnector;
+import com.vaadin.server.ExternalResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
 import com.vaadin.server.Responsive;
 import com.vaadin.server.Sizeable;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServletRequest;
 import com.vaadin.server.VaadinSession;
@@ -72,10 +72,10 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.handlers.event.Publishes;
 import org.apache.felix.ipojo.handlers.event.publisher.Publisher;
 
-@Theme ("kuori")
+@Theme ("valo")
 @Title ("LucidJ Console")
 @Widgetset ("xyz.kuori.CustomWidgetSet")
-@StyleSheet ("vaadin://base-ui/styles.css")
+@StyleSheet ("vaadin://~/vaadinui_libraries/styles.css")
 @Component (immediate = true)
 @Instantiate
 @Provides (specifications = UI.class)
@@ -115,7 +115,7 @@ public class BaseVaadinUI extends UI
         final MenuBar.MenuItem settingsItem = settings.addItem
         (
             "Willie Coyote",
-            new ThemeResource ("../kuori/img/willie-coyote-32.png"),
+            new ExternalResource ("vaadin://~/vaadinui_libraries/willie-coyote-32.png"),
             null
         );
         settingsItem.addItem("Edit Profile", null, new MenuBar.Command()

@@ -16,38 +16,48 @@
 
 package org.lucidj.vaadinui;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.server.ClientConnector;
 import com.vaadin.server.UIClassSelectionEvent;
 import com.vaadin.server.UICreateEvent;
 import com.vaadin.server.UIProvider;
 import com.vaadin.ui.UI;
-import org.apache.felix.ipojo.*;
-import org.apache.felix.ipojo.annotations.*;
+
+import org.apache.felix.ipojo.ComponentInstance;
+import org.apache.felix.ipojo.ConfigurationException;
+import org.apache.felix.ipojo.Factory;
+import org.apache.felix.ipojo.InstanceManager;
+import org.apache.felix.ipojo.MissingHandlerException;
+import org.apache.felix.ipojo.Pojo;
+import org.apache.felix.ipojo.UnacceptableConfiguration;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 
 @Component
 @Instantiate
-@Provides(specifications = UIProvider.class)
+@Provides (specifications = UIProvider.class)
 public class BaseVaadinUIProvider extends UIProvider
 {
-    private static final Logger log = Logger.getLogger ("UIProvider");
+    private final static transient Logger log = LoggerFactory.getLogger (BaseVaadinUIProvider.class);
 
-    @Requires(optional = true, specification = com.vaadin.ui.UI.class)
+    @Requires (optional = true, specification = com.vaadin.ui.UI.class)
     private UI base_ui;
 
     @Override
     public Class<? extends UI> getUIClass (UIClassSelectionEvent uiClassSelectionEvent)
     {
-        log.info ("getUIClass");
-
+        log.debug ("getUIClass: base_ui = {}", base_ui);
         return ((base_ui == null)? EmptyUI.class: base_ui.getClass());
     }
 
     @Override
     public UI createInstance (UICreateEvent event)
     {
-        log.info("base_ui = " + base_ui);
+        log.debug ("base_ui = {}", base_ui);
 
         if (base_ui != null)
         {
@@ -56,18 +66,15 @@ public class BaseVaadinUIProvider extends UIProvider
             try
             {
                 final ComponentInstance new_comp = factory.createComponentInstance (null);
-
-                log.info("new_comp = " + new_comp.toString ());
-
                 final UI new_ui = (UI)((InstanceManager)new_comp).getPojoObject();
 
-                log.info("new_ui = " + new_ui.toString ());
+                log.debug ("new_comp={} new_ui={}", new_comp, new_ui);
 
                 new_ui.addDetachListener (new ClientConnector.DetachListener()
                 {
                     public void detach(ClientConnector.DetachEvent event)
                     {
-                        log.info ("######### Detached " + new_comp + " ##########");
+                        log.debug ("######### Detached {}  ##########", new_comp);
                         new_ui.close ();
                         new_comp.dispose();
                     }
@@ -77,11 +84,11 @@ public class BaseVaadinUIProvider extends UIProvider
             }
             catch (UnacceptableConfiguration | MissingHandlerException | ConfigurationException e)
             {
-                log.info ("createInstance: Exception " + e.toString ());
+                log.error ("Exception creating Vaadin UI", e);
             }
         }
 
-        log.info ("EmptyUI()");
+        log.info ("Notice: No Vaadin UI available");
         return (new EmptyUI ());
     }
 }

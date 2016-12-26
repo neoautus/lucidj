@@ -33,8 +33,8 @@ import com.vaadin.ui.JavaScriptFunction;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-@JavaScript ({ "vaadin://aceeditor/ace-builds/src-noconflict/ace.js", "vaadin://aceeditor/ace-builds/src-noconflict/ext-language_tools.js", "aceeditor.js" })
-@StyleSheet ("vaadin://aceeditor/aceeditor.css")
+@JavaScript ({ "vaadin://~/aceeditor_libraries/ace-builds/src-noconflict/ace.js", "vaadin://~/aceeditor_libraries/ace-builds/src-noconflict/ext-language_tools.js", "aceeditor.js" })
+@StyleSheet ("vaadin://~/aceeditor_libraries/aceeditor.css")
 public class AceEditor extends AbstractJavaScriptComponent implements Component.Focusable
 {
     private final transient Logger log = LoggerFactory.getLogger (AceEditor.class);

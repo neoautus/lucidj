@@ -41,7 +41,7 @@ import com.vaadin.ui.VerticalLayout;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 
-@StyleSheet ("vaadin://markdown_renderer_libraries/styles.css")
+@StyleSheet ("vaadin://~/markdown_renderer_libraries/styles.css")
 @org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides

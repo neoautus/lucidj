@@ -82,10 +82,6 @@
             <ivy:dependency org="org.apache.shiro" name="shiro-core" rev="1.2.4" transitive="false"/>
         </pathdep>
 
-        <pathdep group="bouncycastle">
-            <ivy:dependency org="org.bouncycastle" name="bcprov-jdk15on" rev="1.54"/>
-        </pathdep>
-
         <property name="ipojo.rev" value="1.12.1"/>
         <pathdep group="ipojo">
             <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo" rev="${ipojo.rev}" />
@@ -100,12 +96,12 @@
             <ivy:dependency org="org.apache.tinkerpop" name="tinkergraph-gremlin" rev="3.0.2-incubating"/>
         </pathdep>
 
-        <property name="vaadin.rev" value="7.6.7"/>
+        <property name="vaadin.rev" value="7.7.6"/>
         <pathdep group="vaadin">
             <ivy:dependency org="com.vaadin"       name="vaadin-server"          rev="${vaadin.rev}"/>
             <ivy:dependency org="com.vaadin"       name="vaadin-client"          rev="${vaadin.rev}"/>
-            <ivy:dependency org="com.vaadin"       name="vaadin-client-compiled" rev="${vaadin.rev}"/>
-            <ivy:dependency org="com.vaadin"       name="vaadin-themes"          rev="${vaadin.rev}"/>
+            <ivy:dependency org="com.vaadin"       name="vaadin-client-compiled" rev="${vaadin.rev}" transitive="false"/>
+            <ivy:dependency org="com.vaadin"       name="vaadin-themes"          rev="${vaadin.rev}" transitive="false"/>
         </pathdep>
 
         <pathdep group="vaadin-client-compiler">
@@ -191,6 +187,83 @@
             <ivy:dependency org="org.fusesource.jansi" name="jansi" rev="1.14" />
         </pathdep>
 
+        <!-- For <propertyregex/> -->
+        <taskdef resource="net/sf/antcontrib/antlib.xml">
+            <classpath>
+                <fileset dir="${libcache.dir}" includes="tasks/**/*.jar"/>
+            </classpath>
+        </taskdef>
+
+        <!-- For <bnd/> -->
+        <taskdef resource="aQute/bnd/ant/taskdef.properties">
+            <classpath id="bnd.cp">
+                <fileset dir="${libcache.dir}" includes="bnd/jar/*.jar"/>
+            </classpath>
+        </taskdef>
+	
+	<echo>
+	    ==================================================================
+	</echo>
+
+        <echo message="Wrapping jars into ${wrapped-jars.dir}"/>
+        <delete dir="${wrapped-jars.dir}"/>
+        <mkdir dir="${wrapped-jars.dir}"/>
+
+        <!-- Wrap any jar more or less like wrap: protocol -->
+        <!-- src: full path for source jar -->
+        <!-- dest: destination directory OR full path of wrapped jar -->
+        <macrodef name="wrapjar">
+            <attribute name="src"/>
+            <attribute name="dest"/>
+            <sequential>
+                <basename property="src.basename" file="@{src}" suffix=".jar"/>
+                <propertyregex property="bsn" input="${src.basename}"
+                    regexp="(.*)-(\d+\..*)" select="\1" defaultValue="${src.basename}"/>
+                <propertyregex property="version" input="${src.basename}"
+                    regexp="(.*)-(\d+\..*)" select="\2" defaultValue="0.0.0"/>
+                <condition property="output.jar" value="@{dest}/${src.basename}.jar" else="@{dest}">
+                    <available file="@{dest}" type="dir"/>
+                </condition>
+                <property name="output.bnd" value="${output.jar}.bnd"/>
+                <echo file="${output.bnd}">
+                    Bundle-SymbolicName: ${bsn}
+                    Bundle-Name: wrapped-${bsn}
+                    Bundle-Version: ${version}
+                    Import-Package: *;resolution:=optional
+                    Export-Package: *;version=${version}
+                </echo>
+                <bnd files="${output.bnd}" output="${output.jar}"
+                     eclipse="false" failok="false" exceptions="true">
+                    <classpath location="@{src}"/>
+                </bnd>
+                <jar destfile="${output.jar}" update="true" filesonly="true">
+                    <zipfileset src="@{src}">
+                        <include name="**/*"/>
+                        <exclude name="**/*.class"/>
+                    </zipfileset>
+                </jar>
+            </sequential>
+        </macrodef>
+
+        <!-- And action! -->
+        <wrapjar src="${libcache.dir}/vaadin/jar/gwt-user-2.7.0.vaadin4.jar"
+            dest="${wrapped-jars.dir}"/>
+
+	<echo>
+	    ==================================================================
+	</echo>
+	
+	<!-- Base Apache Karaf distribution in use -->
+	<echo message="Downloading Apache Karaf distribution: ${karaf.dist.zip}"/>
+        <mkdir dir="${karaf.dist.dir}"/>
+        <if><not><available file="${karaf.dist.dir}/${karaf.dist.zip}"/></not>
+            <then>
+                <get src="${karaf.dist.url}" dest="${karaf.dist.dir}/download.tmp" verbose="true"/>
+                <move file="${karaf.dist.dir}/download.tmp"
+                    tofile="${karaf.dist.dir}/${karaf.dist.zip}"/>
+            </then>
+        </if>
+	
         <!-- Ready to go! -->
         <touch file="${configure.ok.file}"/>
 

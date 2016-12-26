@@ -43,7 +43,7 @@ public class BootstrapDeployer extends Thread implements BundleListener
 
     private BundleContext context;
 
-    private String watched_directory = System.getProperty ("rq.deploy");
+    private String watched_directory;
     private int poll_ms = 2000;
     private boolean initial_delay_flag = false;
     private int initial_delay_ms = 3000;
@@ -59,6 +59,9 @@ public class BootstrapDeployer extends Thread implements BundleListener
         this.context = context;
         this.context.addBundleListener (this);
         setName (this.context.getBundle ().getSymbolicName ());
+
+        // TODO: (IN)SANITY CHECKS
+        watched_directory = System.getProperty ("rq.home") + "/runtime/system";
     }
 
     private String get_state_string (int state)

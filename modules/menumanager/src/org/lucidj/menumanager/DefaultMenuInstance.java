@@ -22,21 +22,15 @@ import org.lucidj.api.MenuManager;
 import org.lucidj.api.MenuProvider;
 import org.lucidj.api.Renderer;
 import org.lucidj.renderer.SimpleObservable;
-import org.lucidj.runtime.Registry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.navigator.View;
-import com.vaadin.navigator.ViewProvider;
-
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observer;
-import java.util.Set;
 import java.util.TreeSet;
 
-public class DefaultMenuInstance implements MenuInstance, ViewProvider, Renderer.Observable
+public class DefaultMenuInstance implements MenuInstance, Renderer.Observable
 {
     private final static transient Logger log = LoggerFactory.getLogger (DefaultMenuInstance.class);
 
@@ -47,19 +41,10 @@ public class DefaultMenuInstance implements MenuInstance, ViewProvider, Renderer
     private Map<String, Object> properties = new HashMap<> ();
     private EventListener event_listener;
 
-    private Registry menu_registry = new Registry ();
-    private WeakReference<ViewProvider> last_view_provider;
-
     @Override // MenuInstance
     public void setMenuManager (MenuManager menu_manager)
     {
         this.menu_manager = menu_manager;
-    }
-
-    @Override // MenuInstance
-    public Registry registry ()
-    {
-        return (menu_registry);
     }
 
     @Override // MenuInstance
@@ -121,45 +106,6 @@ public class DefaultMenuInstance implements MenuInstance, ViewProvider, Renderer
         {
             event_listener.entrySelectedEvent (entry);
         }
-    }
-
-    @Override // ViewProvider
-    public String getViewName (String s)
-    {
-        log.debug ("getViewName: {}", s);
-
-        Set<ViewProvider> view_providers = menu_registry.select (ViewProvider.class);
-
-        for (ViewProvider provider: view_providers)
-        {
-            String view_name = provider.getViewName (s);
-
-            log.debug ("provider={} view_name={}", provider, view_name);
-
-            if (view_name != null)
-            {
-                last_view_provider = new WeakReference<ViewProvider> (provider);
-                return (view_name);
-            }
-        }
-
-        return (null);
-    }
-
-    @Override // ViewProvider
-    public View getView (String s)
-    {
-        log.debug ("getView: {}", s);
-
-        ViewProvider provider = last_view_provider.get ();
-
-        if (provider != null)
-        {
-            log.debug ("getView: provider={}", provider);
-            return (provider.getView (s));
-        }
-
-        return (null);
     }
 
     @Override // Renderer.Observable

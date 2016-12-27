@@ -52,6 +52,8 @@ import org.lucidj.shiro.Shiro;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Timer;
@@ -278,9 +280,17 @@ public class BaseVaadinUI extends UI
         if (vaadinRequest instanceof VaadinServletRequest)
         {
             VaadinServletRequest vsr = (VaadinServletRequest)vaadinRequest;
+            InetAddress remote_addr = null;
+
+            // TODO: STILL CRAPPY, FIND A BETTER WAY
+            try
+            {
+                remote_addr = InetAddress.getByName (vsr.getRemoteAddr ());
+            }
+            catch (UnknownHostException ignore) {};
 
             // TODO: CAVEATS??
-            if ("127.0.0.1".equals (vsr.getLocalAddr ()))
+            if (remote_addr != null && remote_addr.isLoopbackAddress ())
             {
                 // Autologin into System when browsing from localhost
                 shiro.createSystemSubject ();

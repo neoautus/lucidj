@@ -88,6 +88,7 @@
             <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.api" rev="${ipojo.rev}" />
             <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.annotations" rev="${ipojo.rev}"/>
             <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.handler.eventadmin" rev="1.8.0"/>
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.handler.extender" rev="1.4.0"/>
         </pathdep>
 
         <pathdep group="tinkerpop">

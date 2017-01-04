@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,7 +16,6 @@
 
 package org.lucidj.vaadinui;
 
-import org.lucidj.api.BundleDeployer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,9 +71,6 @@ class VaadinMapper implements HttpContext
             return (null);
         }
 
-        // Remove the resource name to obtain the resource spec component/path
-        String resource_spec = name.substring (VAADIN_RESOURCE_NAME.length () + 1);
-
         URL found_resource = look_for_resource (last_bundle, name);
 
         if (found_resource == null)
@@ -87,13 +83,14 @@ class VaadinMapper implements HttpContext
 
                 if (found_resource != null)
                 {
+                    // TODO: ADD SOME CACHE
                     last_bundle = bundle;
                     break;
                 }
             }
         }
 
-        log.info ("getResource ({}) => {}", name, found_resource);
+        log.debug ("getResource ({}) => {}", name, found_resource);
         return (found_resource);
     }
 

@@ -218,8 +218,16 @@ public class DefaultBundleManager implements BundleManager, BundleListener
             {
                 try
                 {
-                    log.info ("Bundle {} is resolved -- will start now", bnd);
-                    bnd.start ();
+                    if ("transient".equalsIgnoreCase (properties.getProperty (PROP_BUNDLE_START, "normal")))
+                    {
+                        log.info ("Bundle {} is resolved -- will start transient now", bnd);
+                        bnd.start (Bundle.START_TRANSIENT);
+                    }
+                    else
+                    {
+                        log.info ("Bundle {} is resolved -- will start now", bnd);
+                        bnd.start ();
+                    }
                 }
                 catch (Exception e)
                 {

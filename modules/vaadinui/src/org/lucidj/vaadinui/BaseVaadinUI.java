@@ -215,15 +215,20 @@ public class BaseVaadinUI extends UI
     {
         initSystemToolbar ();
 
-        ManagedObjectInstance desktop_instance = object_factory.newInstance ("org.lucidj.ui.gauss.GaussUI", null);
-        DesktopInterface desktop = desktop_instance.adapt (DesktopInterface.class);
+        ManagedObjectInstance[] desktops = object_factory.getManagedObjects (DesktopInterface.class, null);
 
-        log.info ("----------> desktop = {}", desktop);
-
-        if (desktop != null)
+        if (desktops.length > 0)
         {
-            desktop.init (this);
-            system_toolbar.replaceComponent (empty_desktop, desktop.getMainLayout ());
+            ManagedObjectInstance desktop_instance = object_factory.newInstance (desktops [0], null);
+            DesktopInterface desktop = desktop_instance.adapt (DesktopInterface.class);
+
+            log.info ("----------> desktop = {}", desktop);
+
+            if (desktop != null)
+            {
+                desktop.init (this);
+                system_toolbar.replaceComponent (empty_desktop, desktop.getMainLayout ());
+            }
         }
     }
 

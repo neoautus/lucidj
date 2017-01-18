@@ -20,10 +20,25 @@ package org.lucidj.api;
  * the underlining service. These objects may have a predefined set of properties.
  */
 
+import org.osgi.framework.Bundle;
+
 public interface ManagedObjectInstance extends ManagedObject
 {
+    String PROVIDER = "object.provider";
+    String CLASS = "object.class";
+
     // Null if the object is no more available. Do NOT hold object
     <A> A adapt (Class<A> type);
+
+    Bundle getBundle ();
+
+    String[] getPropertyKeys ();
+    boolean  containsKey     (String key);
+    Object   getProperty     (String key);
+    Class<?> getPropertyType (String key);
+    void     setProperty     (String key, Object value);
+    <T> T    getObject       (Class<T> type);
+    <T> void putObject       (Class<T> type, T obj);
 }
 
 // EOF

@@ -24,15 +24,6 @@ import java.util.Map;
 
 public interface ManagedObject
 {
-    String[] getPropertyKeys ();
-    boolean  containsKey     (String key);
-    Object   getProperty     (String key);
-    Class<?> getPropertyType (String key);
-    void     setProperty     (String key, Object value);
-    <T> T    getObject       (Class<T> type);
-    //void     putObject       (Class classref, Object obj);
-    <T> void putObject       (Class<T> type, T obj);
-
     void validate   (ManagedObjectInstance instance);
     void invalidate ();
 

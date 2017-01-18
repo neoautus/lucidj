@@ -19,21 +19,28 @@ package org.lucidj.managedobject;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import org.osgi.framework.Bundle;
 
 public class DefaultManagedObjectInstance implements ManagedObjectInstance
 {
     private ManagedObject managed_object;
+    private Bundle provider_bundle;
+    private Map<String, Object> properties;
 
-    public DefaultManagedObjectInstance (ManagedObject object)
+    public DefaultManagedObjectInstance (ManagedObject object, Bundle bundle, Map<String, Object> properties)
     {
-        managed_object = object;
+        this.properties = (properties != null)? properties: new HashMap<String, Object> ();
+        this.provider_bundle = bundle;
+        this.managed_object = object;
     }
 
     @Override
     public <A> A adapt (Class<A> type)
     {
-        if (type.isAssignableFrom (managed_object.getClass ()))
+        if (managed_object != null && type.isAssignableFrom (managed_object.getClass ()))
         {
             return (type.cast (managed_object));
         }
@@ -42,51 +49,51 @@ public class DefaultManagedObjectInstance implements ManagedObjectInstance
     }
 
     @Override
+    public Bundle getBundle ()
+    {
+        return (provider_bundle);
+    }
+
+    @Override // ManagedObject
     public String[] getPropertyKeys ()
     {
-        return ((managed_object == null)? new String [0]: managed_object.getPropertyKeys ());
+        return (properties.keySet ().toArray (new String [0]));
     }
 
-    @Override
+    @Override // ManagedObject
     public boolean containsKey (String key)
     {
-        return (managed_object != null && managed_object.containsKey (key));
+        return (properties.containsKey (key));
     }
 
-    @Override
+    @Override // ManagedObject
     public Object getProperty (String key)
     {
-        return ((managed_object == null)? null: managed_object.getProperty (key));
+        return (properties.get (key));
     }
 
-    @Override
+    @Override // ManagedObject
     public Class<?> getPropertyType (String key)
     {
-        return ((managed_object == null)? null: managed_object.getPropertyType (key));
+        return (properties.containsKey (key)? properties.get (key).getClass (): null);
     }
 
-    @Override
+    @Override // ManagedObject
     public void setProperty (String key, Object value)
     {
-        if (managed_object != null)
-        {
-            managed_object.setProperty (key, value);
-        }
+        properties.put (key, value);
     }
 
-    @Override
+    @Override // ManagedObject
     public <T> T getObject (Class<T> type)
     {
-        return ((managed_object == null)? null: managed_object.getObject (type));
+        return (type.cast (properties.get (type.getCanonicalName ())));
     }
 
-    @Override
+    @Override // ManagedObject
     public <T> void putObject (Class<T> type, T obj)
     {
-        if (managed_object != null)
-        {
-            managed_object.putObject (type, obj);
-        }
+        properties.put (type.getCanonicalName (), obj);
     }
 
     @Override
@@ -109,6 +116,7 @@ public class DefaultManagedObjectInstance implements ManagedObjectInstance
 
             // Unlink object from deactivating service
             managed_object = null;
+            provider_bundle = null;
         }
     }
 

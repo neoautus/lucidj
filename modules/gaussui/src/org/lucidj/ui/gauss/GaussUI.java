@@ -437,56 +437,13 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     }
 
     @Override // ManagedObject
-    public String[] getPropertyKeys ()
-    {
-        return (properties.keySet ().toArray (new String [0]));
-    }
-
-    @Override // ManagedObject
-    public boolean containsKey (String key)
-    {
-        return (properties.containsKey (key));
-    }
-
-    @Override // ManagedObject
-    public Object getProperty (String key)
-    {
-        return (properties.get (key));
-    }
-
-    @Override // ManagedObject
-    public Class<?> getPropertyType (String key)
-    {
-        return (properties.containsKey (key)? properties.get (key).getClass (): null);
-    }
-
-    @Override // ManagedObject
-    public void setProperty (String key, Object value)
-    {
-        properties.put (key, value);
-    }
-
-    @Override // ManagedObject
-    public <T> T getObject (Class<T> type)
-    {
-        return (type.cast (properties.get (type.getCanonicalName ())));
-    }
-
-    @Override // ManagedObject
-    public <T> void putObject (Class<T> type, T obj)
-    {
-        properties.put (type.getCanonicalName (), obj);
-    }
-
-    @Override // ManagedObject
     public void validate (ManagedObjectInstance instance)
     {
         log.info ("-----> validate ({})", instance);
-        log.info ("-----> instance props = {}", instance.getPropertyKeys ());
         log.info ("-----> object props = {}", properties);
-        context = getObject (BundleContext.class);
-        menu_manager = getObject (MenuManager.class);
-        nav_manager = getObject (NavigatorManager.class);
+        context = instance.getBundle ().getBundleContext ();
+        menu_manager = instance.getObject (MenuManager.class);
+        nav_manager = instance.getObject (NavigatorManager.class);
     }
 
     @Override // ManagedObject

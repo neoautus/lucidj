@@ -16,6 +16,7 @@
 
 package org.lucidj.ui.gauss;
 
+import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.MenuManager;
@@ -43,7 +44,7 @@ public class Gauss implements ManagedObjectProvider
 
     private static final String[] provided_classes = new String[]
     {
-        GaussUI.class.getCanonicalName ()
+        DesktopInterface.class.getCanonicalName ()
     };
 
     @Context
@@ -77,11 +78,12 @@ public class Gauss implements ManagedObjectProvider
     @Override
     public ManagedObject newInstance (String clazz, Map<String, Object> properties)
     {
+        properties.put (BundleContext.class.getName (), context);
+        properties.put (MenuManager.class.getName (), menu_manager);
+        properties.put (NavigatorManager.class.getName (), nav_manager);
+
         ManagedObject new_ui = new GaussUI (properties);
 
-        new_ui.putObject (BundleContext.class, context);
-        new_ui.putObject (MenuManager.class, menu_manager);
-        new_ui.putObject (NavigatorManager.class, nav_manager);
         return (new_ui);
     }
 }

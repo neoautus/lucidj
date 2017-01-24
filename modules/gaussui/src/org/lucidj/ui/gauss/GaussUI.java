@@ -34,8 +34,10 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.navigator.ViewDisplay;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Page;
 import com.vaadin.server.Sizeable;
 import com.vaadin.server.Sizeable.Unit;
+import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Accordion;
@@ -99,16 +101,6 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
     private MenuInstance main_menu;
     private ObjectRenderer object_renderer;
-    private Map<String, Object> properties;
-
-    //=========================================================================================
-    // INIT
-    //=========================================================================================
-
-    public GaussUI (Map<String, Object> properties)
-    {
-        this.properties = properties;
-    }
 
     //=========================================================================================
     // LAYOUTS
@@ -439,30 +431,33 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     @Override // ManagedObject
     public void validate (ManagedObjectInstance instance)
     {
-        log.info ("-----> validate ({})", instance);
-        log.info ("-----> object props = {}", properties);
         context = instance.getBundle ().getBundleContext ();
         menu_manager = instance.getObject (MenuManager.class);
         nav_manager = instance.getObject (NavigatorManager.class);
     }
 
     @Override // ManagedObject
-    public void invalidate ()
+    public void invalidate (ManagedObjectInstance instance)
     {
-        log.info ("-----> invalidate ()");
+        if (navigator != null && navigator.getUI ().isAttached ())
+        {
+            // TODO: INVALIDATE THE DESTKTOP, _NOT_ THE WHOLE SESSION AND UI
+            UI attached_ui = navigator.getUI();
+            attached_ui.getSession ().getSession ().invalidate ();
+            attached_ui.getPage ().reload ();
+        }
     }
 
     @Override // ManagedObject
     public Map<String, Object> serializeObject ()
     {
-        return (properties);
+        return (null);
     }
 
     @Override // ManagedObject
     public boolean deserializeObject (Map<String, Object> properties)
     {
-        this.properties.putAll (properties);
-        return (true);
+        return (false);
     }
 
     class SafeNavigator extends Navigator

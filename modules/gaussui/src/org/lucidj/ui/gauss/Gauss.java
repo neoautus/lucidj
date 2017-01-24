@@ -18,17 +18,14 @@ package org.lucidj.ui.gauss;
 
 import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.NavigatorManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-
-import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -44,11 +41,8 @@ public class Gauss implements ManagedObjectProvider
 
     private static final String[] provided_classes = new String[]
     {
-        DesktopInterface.class.getCanonicalName ()
+        DesktopInterface.class.getName ()
     };
-
-    @Context
-    private BundleContext context;
 
     @Requires
     private MenuManager menu_manager;
@@ -76,15 +70,12 @@ public class Gauss implements ManagedObjectProvider
     }
 
     @Override
-    public ManagedObject newInstance (String clazz, Map<String, Object> properties)
+    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        properties.put (BundleContext.class.getName (), context);
-        properties.put (MenuManager.class.getName (), menu_manager);
-        properties.put (NavigatorManager.class.getName (), nav_manager);
+        instance.putObject (MenuManager.class, menu_manager);
+        instance.putObject (NavigatorManager.class, nav_manager);
 
-        ManagedObject new_ui = new GaussUI (properties);
-
-        return (new_ui);
+        return (new GaussUI ());
     }
 }
 

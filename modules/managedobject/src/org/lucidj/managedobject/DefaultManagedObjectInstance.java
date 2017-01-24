@@ -30,11 +30,20 @@ public class DefaultManagedObjectInstance implements ManagedObjectInstance
     private Bundle provider_bundle;
     private Map<String, Object> properties;
 
-    public DefaultManagedObjectInstance (ManagedObject object, Bundle bundle, Map<String, Object> properties)
+    public DefaultManagedObjectInstance (Bundle provider_bundle, Map<String, Object> properties)
     {
         this.properties = (properties != null)? properties: new HashMap<String, Object> ();
-        this.provider_bundle = bundle;
-        this.managed_object = object;
+        this.provider_bundle = provider_bundle;
+    }
+
+    public void internalSetManagedObject (ManagedObject managed_object)
+    {
+        this.managed_object = managed_object;
+    }
+
+    public Map<String, Object> internalGetProperties ()
+    {
+        return (properties);
     }
 
     @Override
@@ -87,49 +96,13 @@ public class DefaultManagedObjectInstance implements ManagedObjectInstance
     @Override // ManagedObject
     public <T> T getObject (Class<T> type)
     {
-        return (type.cast (properties.get (type.getCanonicalName ())));
+        return (type.cast (properties.get (type.getName ())));
     }
 
     @Override // ManagedObject
     public <T> void putObject (Class<T> type, T obj)
     {
-        properties.put (type.getCanonicalName (), obj);
-    }
-
-    @Override
-    public void validate (ManagedObjectInstance instance)
-    {
-        if (managed_object != null)
-        {
-            // Notify object
-            managed_object.validate (instance /* this! */);
-        }
-    }
-
-    @Override
-    public void invalidate ()
-    {
-        if (managed_object != null)
-        {
-            // Notify object
-            managed_object.invalidate ();
-
-            // Unlink object from deactivating service
-            managed_object = null;
-            provider_bundle = null;
-        }
-    }
-
-    @Override
-    public Map<String, Object> serializeObject ()
-    {
-        return ((managed_object == null)? null: managed_object.serializeObject ());
-    }
-
-    @Override
-    public boolean deserializeObject (Map<String, Object> properties)
-    {
-        return (managed_object != null && managed_object.deserializeObject (properties));
+        properties.put (type.getName (), obj);
     }
 }
 

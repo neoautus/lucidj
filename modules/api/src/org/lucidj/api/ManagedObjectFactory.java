@@ -24,7 +24,7 @@ public interface ManagedObjectFactory
     ManagedObjectInstance[] getManagedObjects (Class clazz, String filter);
     ManagedObjectInstance newInstance (String clazz, Map<String, Object> properties);
     ManagedObjectInstance newInstance (Class clazz, Map<String, Object> properties);
-    ManagedObjectInstance newInstance (ManagedObjectInstance ref, Map<String, Object> properties);
+    ManagedObjectInstance newInstance (ManagedObjectInstance descriptor);
 }
 
 // EOF

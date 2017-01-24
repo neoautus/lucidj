@@ -16,12 +16,10 @@
 
 package org.lucidj.api;
 
-import java.util.Map;
-
 public interface ManagedObjectProvider
 {
     String[] getProvidedClasses ();
-    ManagedObject newInstance (String clazz, Map<String, Object> properties);
+    ManagedObject newObject (String clazz, ManagedObjectInstance instance);
 }
 
 // EOF

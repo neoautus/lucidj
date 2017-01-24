@@ -219,7 +219,7 @@ public class BaseVaadinUI extends UI
 
         if (desktops.length > 0)
         {
-            ManagedObjectInstance desktop_instance = object_factory.newInstance (desktops [0], null);
+            ManagedObjectInstance desktop_instance = object_factory.newInstance (desktops [0]);
             DesktopInterface desktop = desktop_instance.adapt (DesktopInterface.class);
 
             log.info ("----------> desktop = {}", desktop);

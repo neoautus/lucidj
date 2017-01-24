@@ -25,7 +25,7 @@ import java.util.Map;
 public interface ManagedObject
 {
     void validate   (ManagedObjectInstance instance);
-    void invalidate ();
+    void invalidate (ManagedObjectInstance instance);
 
     Map<String, Object> serializeObject   ();
     boolean             deserializeObject (Map<String, Object> properties);

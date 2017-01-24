@@ -64,7 +64,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         {
             if (filter == null || filter.contains ("bugabuga"))
             {
-                ManagedObjectInstance ref = new DefaultManagedObjectInstance (null, null, null);
+                ManagedObjectInstance ref = new DefaultManagedObjectInstance (null, null);
                 ref.setProperty (ManagedObjectInstance.PROVIDER, provider);
                 ref.setProperty (ManagedObjectInstance.CLASS, clazz);
                 found_objects.add (ref);
@@ -82,36 +82,45 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
     }
 
     @Override // ManagedObjectFactory
-    public ManagedObjectInstance newInstance (ManagedObjectInstance ref, Map<String, Object> properties)
+    public ManagedObjectInstance newInstance (ManagedObjectInstance descriptor)
     {
-        ManagedObjectProvider provider = (ManagedObjectProvider)ref.getProperty (ManagedObjectInstance.PROVIDER);
-        String ref_class = (String)ref.getProperty (ManagedObjectInstance.CLASS);
-        ManagedObjectInstance new_instance = null;
+        if (!DefaultManagedObjectInstance.class.isAssignableFrom (descriptor.getClass ()))
+        {
+            return (null);
+        }
 
-        log.info ("newInstance: provider={} ref_class={} ref={} properties={}", provider, ref_class, ref, properties);
+        DefaultManagedObjectInstance full_descriptor = (DefaultManagedObjectInstance)descriptor;
+
+        ManagedObjectProvider provider =
+            (ManagedObjectProvider)full_descriptor.getProperty (ManagedObjectInstance.PROVIDER);
+        String ref_class = (String)full_descriptor.getProperty (ManagedObjectInstance.CLASS);
+        DefaultManagedObjectInstance new_instance = null;
+
+        log.info ("newInstance: provider={} ref_class={} ref={}", provider, ref_class, full_descriptor);
 
         if (provider != null && ref_class != null)
         {
-            if (properties == null)
-            {
-                properties = new HashMap<> ();
-            }
-
-            // Create new ManagedObject itself...
-            ManagedObject new_object = provider.newInstance (ref_class, properties);
-
-            // ...create the instance...
+            // The provided descriptor contains desired object properties
             Bundle provider_bundle = FrameworkUtil.getBundle (provider.getClass ());
-            new_instance = new DefaultManagedObjectInstance (new_object, provider_bundle, properties);
+            Map<String, Object> properties = full_descriptor.internalGetProperties ();
+
+            // Create the instance...
+            new_instance = new DefaultManagedObjectInstance (provider_bundle, properties);
             new_instance.setProperty (ManagedObjectInstance.PROVIDER, provider);
             new_instance.setProperty (ManagedObjectInstance.CLASS, ref_class);
+
+            // ...create new ManagedObject itself...
+            ManagedObject new_object = provider.newObject (ref_class, new_instance);
+
+            // ...set the ManagedObject...
+            new_instance.internalSetManagedObject (new_object);
 
             // ...and register it within the class instance set
             Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (provider_bundle);
 
             if (instance_set != null)
             {
-                instance_set.add (new WeakReference<> (new_instance));
+                instance_set.add (new WeakReference<> ((ManagedObjectInstance)new_instance));
             }
 
             // Validate ManagedObject
@@ -128,7 +137,13 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
     {
         ManagedObjectInstance[] available_providers = getManagedObjects (clazz, null);
 
-        return ((available_providers.length == 0)? null: newInstance (available_providers [0], properties));
+        if (available_providers.length > 0 && available_providers [0] instanceof DefaultManagedObjectInstance)
+        {
+            DefaultManagedObjectInstance descriptor = (DefaultManagedObjectInstance)available_providers [0];
+            descriptor.internalGetProperties ().putAll (properties);
+            return (newInstance (descriptor));
+        }
+        return (null);
     }
 
     @Override // ManagedObjectFactory
@@ -210,9 +225,14 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
             {
                 ManagedObjectInstance instance = instance_ref.get ();
 
-                if (instance != null)
+                if (instance != null && instance instanceof DefaultManagedObjectInstance)
                 {
-                    instance.invalidate ();
+                    ManagedObject dying_object = instance.adapt (ManagedObject.class);
+
+                    if (dying_object != null)
+                    {
+                        dying_object.invalidate (instance);
+                    }
                 }
             }
 

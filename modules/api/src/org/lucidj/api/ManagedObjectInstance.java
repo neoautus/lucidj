@@ -22,10 +22,10 @@ package org.lucidj.api;
 
 import org.osgi.framework.Bundle;
 
-public interface ManagedObjectInstance extends ManagedObject
+public interface ManagedObjectInstance
 {
-    String PROVIDER = "object.provider";
-    String CLASS = "object.class";
+    String PROVIDER = "object-provider";
+    String CLASS = "object-class";
 
     // Null if the object is no more available. Do NOT hold object
     <A> A adapt (Class<A> type);

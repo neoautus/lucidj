@@ -22,6 +22,7 @@ public interface ManagedObjectFactory
 {
     ManagedObjectInstance[] getManagedObjects (String clazz, String filter);
     ManagedObjectInstance[] getManagedObjects (Class clazz, String filter);
+    ManagedObjectInstance wrapObject (ManagedObject managed_object);
     ManagedObjectInstance newInstance (String clazz, Map<String, Object> properties);
     ManagedObjectInstance newInstance (Class clazz, Map<String, Object> properties);
     ManagedObjectInstance newInstance (ManagedObjectInstance descriptor);

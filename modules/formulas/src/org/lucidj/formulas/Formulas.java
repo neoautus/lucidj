@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,9 +16,11 @@
 
 package org.lucidj.formulas;
 
+import org.lucidj.api.ManagedObjectFactory;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
-import org.lucidj.runtime.Kernel;
+import org.lucidj.shiro.Shiro;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
@@ -29,6 +31,7 @@ import java.util.Map;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 
 @Component
 @Instantiate
@@ -36,6 +39,12 @@ import org.apache.felix.ipojo.annotations.Provides;
 public class Formulas implements MenuProvider, ViewProvider
 {
     private final static String NAVID = "formulas";
+
+    @Requires
+    private Shiro shiro;
+
+    @Requires
+    private ManagedObjectFactory object_factory;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -70,7 +79,8 @@ public class Formulas implements MenuProvider, ViewProvider
     {
         if (NAVID.equals (s))
         {
-            return (Kernel.newComponent (FormulasView.class));
+            ManagedObjectInstance view_instance = object_factory.wrapObject (new FormulasView (shiro));
+            return (view_instance.adapt (View.class));
         }
         return null;
     }

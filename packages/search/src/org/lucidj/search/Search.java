@@ -16,9 +16,10 @@
 
 package org.lucidj.search;
 
+import org.lucidj.api.ManagedObjectFactory;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
-import org.lucidj.runtime.Kernel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,11 +30,10 @@ import com.vaadin.server.Resource;
 
 import java.util.Map;
 
-import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 
 @Component
 @Instantiate
@@ -43,8 +43,8 @@ public class Search implements MenuProvider, ViewProvider
     private final static transient Logger log = LoggerFactory.getLogger (Search.class);
     private final static String V_SEARCH = "search";
 
-    @Context
-    private BundleContext context;
+    @Requires
+    private ManagedObjectFactory object_factory;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -75,7 +75,8 @@ public class Search implements MenuProvider, ViewProvider
     {
         if (V_SEARCH.equals (s))
         {
-            return (Kernel.newComponent (SearchView.class));
+            ManagedObjectInstance view_instance = object_factory.wrapObject (new SearchView ());
+            return (view_instance.adapt (View.class));
         }
         return null;
     }

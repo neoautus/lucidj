@@ -23,6 +23,8 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.html.HtmlRenderer;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.uiaccess.UIAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +39,12 @@ import com.vaadin.ui.VerticalLayout;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Provides;
+// TODO: HANDLE SUBSCRIBER
 import org.apache.felix.ipojo.handlers.event.Subscriber;
 
-@Component
-@Provides (specifications = com.vaadin.navigator.View.class)
-public class SearchView extends VerticalLayout implements View
+public class SearchView extends VerticalLayout implements ManagedObject, View
 {
     private final static transient Logger log = LoggerFactory.getLogger (SearchView.class);
     private SearchView self = this;
@@ -99,6 +99,30 @@ public class SearchView extends VerticalLayout implements View
         {
             buildView();
         }
+    }
+
+    @Override
+    public void validate (ManagedObjectInstance instance)
+    {
+        log.info ("validate");
+    }
+
+    @Override
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        log.info ("invalidate");
+    }
+
+    @Override
+    public Map<String, Object> serializeObject ()
+    {
+        return (null);
+    }
+
+    @Override
+    public boolean deserializeObject (Map<String, Object> properties)
+    {
+        return (false);
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -34,11 +34,6 @@ import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 
-import org.apache.felix.ipojo.ConfigurationException;
-import org.apache.felix.ipojo.annotations.Context;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-
 import com.vaadin.annotations.StyleSheet;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
@@ -53,6 +48,8 @@ import org.osgi.framework.BundleContext;
 
 import org.lucidj.api.ApplicationInterface;
 import org.lucidj.api.ComponentState;
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.TaskContext;
 import org.lucidj.runtime.Kernel;
 import org.lucidj.shiro.Shiro;
@@ -65,9 +62,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @StyleSheet ("vaadin://~/formulas_libraries/styles.css")
-@org.apache.felix.ipojo.annotations.Component
-@Provides (specifications = com.vaadin.navigator.View.class)
-public class FormulasView extends VerticalLayout implements View, ApplicationInterface
+public class FormulasView extends VerticalLayout implements ManagedObject, View, ApplicationInterface
 {
     //==============================
     //==============================
@@ -77,8 +72,6 @@ public class FormulasView extends VerticalLayout implements View, ApplicationInt
 
     // TODO: CREATE A PROPER NAVIGATION AID
     private String navid = "formulas";
-
-    @Context transient BundleContext ctx;
 
     private final transient static Logger log = LoggerFactory.getLogger (FormulasView.class);
 
@@ -94,7 +87,7 @@ public class FormulasView extends VerticalLayout implements View, ApplicationInt
     private Accordion acSidebar = null;
     private ComponentPalette sidebar = null;
 
-    @Requires
+    private BundleContext ctx;
     private Shiro shiro;
 
     private TaskContext tctx;
@@ -111,9 +104,33 @@ public class FormulasView extends VerticalLayout implements View, ApplicationInt
     private VerticalLayout content;
     private Cell insert_here_cell;
 
-    public FormulasView () throws ConfigurationException
+    public FormulasView (Shiro shiro)
+    {
+        this.shiro = shiro;
+    }
+
+    @Override // ManagedObject
+    public void validate (ManagedObjectInstance instance)
+    {
+        ctx = instance.getBundle ().getBundleContext ();
+    }
+
+    @Override // ManagedObject
+    public void invalidate (ManagedObjectInstance instance)
     {
 
+    }
+
+    @Override // ManagedObject
+    public Map<String, Object> serializeObject ()
+    {
+        return null;
+    }
+
+    @Override // ManagedObject
+    public boolean deserializeObject (Map<String, Object> properties)
+    {
+        return (false);
     }
 
     @Override // ApplicationInterface

@@ -64,7 +64,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         {
             if (filter == null || filter.contains ("bugabuga"))
             {
-                ManagedObjectInstance ref = new DefaultManagedObjectInstance (null, null);
+                ManagedObjectInstance ref = new DefaultManagedObjectInstance (null);
                 ref.setProperty (ManagedObjectInstance.PROVIDER, provider);
                 ref.setProperty (ManagedObjectInstance.CLASS, clazz);
                 found_objects.add (ref);
@@ -79,6 +79,35 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
     public ManagedObjectInstance[] getManagedObjects (Class clazz, String filter)
     {
         return (getManagedObjects (clazz.getName (), filter));
+    }
+
+    @Override // ManagedObjectFactory
+    public ManagedObjectInstance wrapObject (ManagedObject managed_object)
+    {
+        log.info ("wrapInstance: managed_object={}", managed_object);
+
+        // Create the instance...
+        DefaultManagedObjectInstance new_instance = new DefaultManagedObjectInstance (null);
+        new_instance.setProperty (ManagedObjectInstance.CLASS, managed_object.getClass ().getName ());
+
+        // ...set the ManagedObject...
+        new_instance.internalSetManagedObject (managed_object);
+
+        // ...and register it within the class instance set
+        Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (new_instance.getBundle ());
+
+        // TODO: CREATE instance_set ON DEMAND
+        if (instance_set != null)
+        {
+            instance_set.add (new WeakReference<> ((ManagedObjectInstance)new_instance));
+        }
+
+        // Validate ManagedObject
+        managed_object.validate (new_instance);
+
+        log.info ("Wrapped instance {} from {}", new_instance, managed_object);
+
+        return (new_instance);
     }
 
     @Override // ManagedObjectFactory
@@ -105,7 +134,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
             Map<String, Object> properties = full_descriptor.internalGetProperties ();
 
             // Create the instance...
-            new_instance = new DefaultManagedObjectInstance (provider_bundle, properties);
+            new_instance = new DefaultManagedObjectInstance (properties);
             new_instance.setProperty (ManagedObjectInstance.PROVIDER, provider);
             new_instance.setProperty (ManagedObjectInstance.CLASS, ref_class);
 

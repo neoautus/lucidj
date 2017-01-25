@@ -16,9 +16,10 @@
 
 package org.lucidj.top;
 
+import org.lucidj.api.ManagedObjectFactory;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
-import org.lucidj.runtime.Kernel;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
@@ -29,6 +30,7 @@ import java.util.Map;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 
 @Component
 @Instantiate
@@ -36,6 +38,9 @@ import org.apache.felix.ipojo.annotations.Provides;
 public class Top implements MenuProvider, ViewProvider
 {
     private final static String NAVID = "top";
+
+    @Requires
+    private ManagedObjectFactory object_factory;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -64,7 +69,8 @@ public class Top implements MenuProvider, ViewProvider
     {
         if (NAVID.equals (s))
         {
-            return (Kernel.newComponent (TopView.class));
+            ManagedObjectInstance view_instance = object_factory.wrapObject (new TopView ());
+            return (view_instance.adapt (View.class));
         }
         return null;
     }

@@ -23,22 +23,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 public class DefaultManagedObjectInstance implements ManagedObjectInstance
 {
     private ManagedObject managed_object;
-    private Bundle provider_bundle;
+    private Bundle source_bundle;
     private Map<String, Object> properties;
 
-    public DefaultManagedObjectInstance (Bundle provider_bundle, Map<String, Object> properties)
+    public DefaultManagedObjectInstance (Map<String, Object> properties)
     {
         this.properties = (properties != null)? properties: new HashMap<String, Object> ();
-        this.provider_bundle = provider_bundle;
     }
 
     public void internalSetManagedObject (ManagedObject managed_object)
     {
         this.managed_object = managed_object;
+        source_bundle = FrameworkUtil.getBundle (managed_object.getClass ());
     }
 
     public Map<String, Object> internalGetProperties ()
@@ -60,7 +61,7 @@ public class DefaultManagedObjectInstance implements ManagedObjectInstance
     @Override
     public Bundle getBundle ()
     {
-        return (provider_bundle);
+        return (source_bundle);
     }
 
     @Override // ManagedObject

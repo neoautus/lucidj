@@ -16,13 +16,14 @@
 
 package org.lucidj.top;
 
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.TaskContext;
 import org.lucidj.runtime.Kernel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.lucidj.uiaccess.UIAccess;
 
-import com.vaadin.annotations.StyleSheet;
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
 import com.vaadin.navigator.View;
@@ -30,16 +31,12 @@ import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.ui.*;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Provides;
-
-@Component
-@Provides (specifications = com.vaadin.navigator.View.class)
-public class TopView extends VerticalLayout implements View
+public class TopView extends VerticalLayout implements ManagedObject, View
 {
     final Logger log = LoggerFactory.getLogger (TopView.class);
 
@@ -143,6 +140,30 @@ public class TopView extends VerticalLayout implements View
         {
             buildView();
         }
+    }
+
+    @Override
+    public void validate (ManagedObjectInstance instance)
+    {
+        // Nothing
+    }
+
+    @Override
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        // Nothing
+    }
+
+    @Override
+    public Map<String, Object> serializeObject ()
+    {
+        return (null);
+    }
+
+    @Override
+    public boolean deserializeObject (Map<String, Object> properties)
+    {
+        return (false);
     }
 }
 

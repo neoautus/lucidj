@@ -1,9 +1,9 @@
 <component name="libraryTable">
   <library name="karaf-runtime-4.x">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/cache/lib/karaf-runtime/bundle/org.apache.karaf.features.core-4.0.5.jar!/" />
-      <root url="jar://$PROJECT_DIR$/cache/lib/karaf-runtime/bundle/org.apache.karaf.shell.console-4.0.5.jar!/" />
-      <root url="jar://$PROJECT_DIR$/cache/lib/karaf-runtime/bundle/org.apache.karaf.shell.core-4.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/karaf-runtime/bundle/org.apache.karaf.features.core-4.0.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/karaf-runtime/bundle/org.apache.karaf.shell.console-4.0.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/karaf-runtime/bundle/org.apache.karaf.shell.core-4.0.8.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

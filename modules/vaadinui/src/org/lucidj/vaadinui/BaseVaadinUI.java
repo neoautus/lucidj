@@ -48,23 +48,20 @@ import com.vaadin.ui.UIDetachedException;
 import com.vaadin.ui.VerticalLayout;
 
 import org.lucidj.api.DesktopInterface;
+import org.lucidj.api.ManagedObjectFactory;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.shiro.Shiro;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.felix.ipojo.ComponentInstance;
-import org.apache.felix.ipojo.ConfigurationException;
-import org.apache.felix.ipojo.Factory;
-import org.apache.felix.ipojo.InstanceManager;
-import org.apache.felix.ipojo.MissingHandlerException;
-import org.apache.felix.ipojo.Pojo;
-import org.apache.felix.ipojo.UnacceptableConfiguration;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -96,8 +93,8 @@ public class BaseVaadinUI extends UI
     @Requires
     private Shiro shiro;
 
-    @Requires (optional = true, proxy = false, specification = DesktopInterface.class)
-    private DesktopInterface base_desktop;
+    @Requires
+    private ManagedObjectFactory object_factory;
 
     @Publishes (name = "searchbox", topics = "search", dataKey = "args")
     private Publisher search;
@@ -211,50 +208,6 @@ public class BaseVaadinUI extends UI
     }
 
     //=========================================================================================
-    // DESKTOP INSTANCES
-    //=========================================================================================
-
-    public DesktopInterface createDesktopInstance ()
-    {
-        log.info ("base_desktop = " + base_desktop);
-
-        if (base_desktop != null)
-        {
-            Factory factory = ((Pojo)base_desktop).getComponentInstance ().getFactory ();
-
-            // TODO: MOVE COMPONENT HANDLING TO KERNEL
-            try
-            {
-                final ComponentInstance new_comp = factory.createComponentInstance (null);
-
-                log.info ("new_comp = " + new_comp.toString ());
-
-                final DesktopInterface new_desktop = (DesktopInterface)((InstanceManager)new_comp).getPojoObject ();
-
-                log.info ("new_desktop = " + new_desktop.toString ());
-
-//                new_desktop.addDetachListener (new ClientConnector.DetachListener ()
-//                {
-//                    public void detach (ClientConnector.DetachEvent event)
-//                    {
-//                        log.info ("######### Detached " + new_comp + " ##########");
-//                        new_ui.close ();
-//                        new_comp.dispose ();
-//                    }
-//                });
-
-                return (new_desktop);
-            }
-            catch (UnacceptableConfiguration | MissingHandlerException | ConfigurationException e)
-            {
-                log.info ("createInstance: Exception " + e.toString ());
-            }
-        }
-
-        return (null);
-    }
-
-    //=========================================================================================
     // UI INITIALIZATION
     //=========================================================================================
 
@@ -262,10 +215,20 @@ public class BaseVaadinUI extends UI
     {
         initSystemToolbar ();
 
-        if ((desktop = createDesktopInstance ()) != null)
+        ManagedObjectInstance[] desktops = object_factory.getManagedObjects (DesktopInterface.class, null);
+
+        if (desktops.length > 0)
         {
-            desktop.init (this);
-            system_toolbar.replaceComponent (empty_desktop, desktop.getMainLayout ());
+            ManagedObjectInstance desktop_instance = object_factory.newInstance (desktops [0]);
+            DesktopInterface desktop = desktop_instance.adapt (DesktopInterface.class);
+
+            log.info ("----------> desktop = {}", desktop);
+
+            if (desktop != null)
+            {
+                desktop.init (this);
+                system_toolbar.replaceComponent (empty_desktop, desktop.getMainLayout ());
+            }
         }
     }
 
@@ -278,9 +241,17 @@ public class BaseVaadinUI extends UI
         if (vaadinRequest instanceof VaadinServletRequest)
         {
             VaadinServletRequest vsr = (VaadinServletRequest)vaadinRequest;
+            InetAddress remote_addr = null;
+
+            // TODO: STILL CRAPPY, FIND A BETTER WAY
+            try
+            {
+                remote_addr = InetAddress.getByName (vsr.getRemoteAddr ());
+            }
+            catch (UnknownHostException ignore) {};
 
             // TODO: CAVEATS??
-            if ("127.0.0.1".equals (vsr.getLocalAddr ()))
+            if (remote_addr != null && remote_addr.isLoopbackAddress ())
             {
                 // Autologin into System when browsing from localhost
                 shiro.createSystemSubject ();

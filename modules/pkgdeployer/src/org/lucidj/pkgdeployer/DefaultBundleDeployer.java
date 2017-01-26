@@ -180,7 +180,7 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
         }
         catch (IllegalStateException e)
         {
-            log.error ("Exception updating bundle {}", e);
+            log.error ("Exception updating bundle {}", bnd, e);
             return (false);
         }
     }
@@ -194,7 +194,7 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
         }
         catch (IllegalStateException e)
         {
-            log.error ("Exception updating bundle {}", e);
+            log.error ("Exception refreshing bundle {}", bnd, e);
             return (false);
         }
     }
@@ -208,7 +208,7 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
         }
         catch (IllegalStateException e)
         {
-            log.error ("Exception updating bundle: {}", bnd, e);
+            log.error ("Exception uninstalling bundle: {}", bnd, e);
             return (false);
         }
     }
@@ -248,17 +248,18 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
     @Override // Runnable
     public void run ()
     {
+        // TODO: MORE GRACEFUL START WHEN LOADING DEPLOYMENT ENGINES +++
         while (!poll_thread.isInterrupted ())
         {
             try
             {
-                poll_repository_for_updates_and_removals ();
-
                 synchronized (this)
                 {
                     log.debug ("Sleeping for {}ms", thread_poll_ms);
                     wait (thread_poll_ms);
                 }
+
+                poll_repository_for_updates_and_removals ();
             }
             catch (InterruptedException e)
             {

@@ -1085,7 +1085,10 @@
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
                 <include name="jansi/jar/*.jar"/>
+
+                <!-- iPOJO -->
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>
+                <include name="ipojo/bundle/org.apache.felix.ipojo.handler.extender-*.jar"/>
             </fileset>
 
             <!-- Include the non-osgi bastards -->

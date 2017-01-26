@@ -29,6 +29,7 @@ public interface BundleManager
     String PROP_LOCATION      = "location";
     String PROP_LAST_MODIFIED = "last-modified";
     String PROP_BUNDLE_STATE  = "bundle-status";
+    String PROP_BUNDLE_START  = "bundle-start";
 
     Manifest   getManifest            (String location);
     Manifest   getManifest            (File jar);

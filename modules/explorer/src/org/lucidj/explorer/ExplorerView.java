@@ -16,6 +16,8 @@
 
 package org.lucidj.explorer;
 
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.shiro.Shiro;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,22 +42,13 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.Map;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Property;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-
-@Component
-@Provides (specifications = com.vaadin.navigator.View.class)
-public class ExplorerView extends VerticalLayout implements View, ItemClickEvent.ItemClickListener
+public class ExplorerView extends VerticalLayout implements ManagedObject, View, ItemClickEvent.ItemClickListener
 {
-    @Requires
-    private Shiro shiro;
-
     private final transient Logger log = LoggerFactory.getLogger (ExplorerView.class);
 
-    @Property(name="View-Toolbar")
+    private Shiro shiro;
     private CssLayout toolbar = null;
 
     private final VerticalLayout self = this;
@@ -64,6 +57,11 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
     private TreeTable treetable;
     private Object[] treetable_visible_columns;
     private transient WatchService watch_service;
+
+    public ExplorerView (Shiro shiro)
+    {
+        this.shiro = shiro;
+    }
 
     private void build_toolbar ()
     {
@@ -312,6 +310,30 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
 
             activate_file_change_watcher (userdir);
         }
+    }
+
+    @Override
+    public void validate (ManagedObjectInstance instance)
+    {
+        // Nothing
+    }
+
+    @Override
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        // Nothing
+    }
+
+    @Override
+    public Map<String, Object> serializeObject ()
+    {
+        return (null);
+    }
+
+    @Override
+    public boolean deserializeObject (Map<String, Object> properties)
+    {
+        return (false);
     }
 }
 

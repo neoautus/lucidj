@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -52,7 +52,6 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
 {
     private final transient static Logger log = LoggerFactory.getLogger (AbstractCell.class);
 
-    private String bundle_symbolic_name;
     private Object source_object;
     private ObjectRenderer object_renderer;
     private Component rendered_object;
@@ -68,12 +67,11 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
     {
         log.info("Cell: object = {}", object);
 
-        bundle_symbolic_name = ctx.getBundle ().getSymbolicName ();
-
         if (object != null)
         {
             // Register and render the source object
             source_object = object;
+            // TODO: DO WE REALLY NEED ctx HERE??
             object_renderer = new ObjectRenderer (ctx);
             rendered_object = object_renderer.link (source_object);
         }

@@ -17,6 +17,9 @@
 package org.rationalq.vaadin;
 
 import org.lucidj.api.QuarkSerializable;
+import org.lucidj.api.Serializer;
+import org.lucidj.api.SerializerEngine;
+import org.lucidj.api.SerializerInstance;
 
 import com.vaadin.ui.Component;
 import com.vaadin.ui.declarative.Design;
@@ -29,18 +32,41 @@ import java.util.Map;
 
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
 @org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides
-public class VaadinSerializer implements QuarkSerializable
+public class VaadinSerializer implements Serializer, QuarkSerializable
 {
     private VaadinComponentFactory vcf = new VaadinComponentFactory ();
+
+    @Requires
+    private SerializerEngine serializer;
+
+    @Validate
+    private void validate ()
+    {
+        serializer.register (Vaadin.class, this);
+    }
 
     @Override
     public boolean compatibleClass (Class cls)
     {
         return (Component.class.isAssignableFrom (cls));
+    }
+
+    @Override
+    public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+    {
+        return (serializeObject (to_serialize));
+    }
+
+    @Override
+    public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+    {
+        return null;
     }
 
     class VaadinComponentFactory extends Design.DefaultComponentFactory

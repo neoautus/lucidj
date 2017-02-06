@@ -17,26 +17,25 @@
 package org.lucidj.console;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import org.fusesource.jansi.HtmlAnsiOutputStream;
 import org.lucidj.api.Quark;
 import org.lucidj.api.Renderer;
+import org.lucidj.api.Serializer;
+import org.lucidj.api.SerializerInstance;
 import org.lucidj.renderer.SimpleObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observer;
 
-public class Console implements Quark, Renderer.Observable
+public class Console implements Serializer, Quark, Renderer.Observable
 {
     private final transient Logger log = LoggerFactory.getLogger (Console.class);
 
@@ -240,6 +239,20 @@ public class Console implements Quark, Renderer.Observable
         {
             contents = new StringBuilder (stored_contents);
         }
+    }
+
+    @Override // Serializer
+    public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+    {
+        // Complete content log including timestamps and tags
+        properties.put ("/", contents.toString ());
+        return (properties);
+    }
+
+    @Override // Serializer
+    public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+    {
+        return null;
     }
 }
 

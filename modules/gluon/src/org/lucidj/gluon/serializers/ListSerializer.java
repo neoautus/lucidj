@@ -20,6 +20,7 @@ import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerInstance;
 import org.lucidj.gluon.GluonConstants;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,17 +28,18 @@ import java.util.Map;
 public class ListSerializer implements Serializer
 {
     @Override
-    public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+    public Map<String, Object> serializeObject (SerializerInstance engine, Object object)
     {
         Map<String, Object> data = new HashMap<> ();
-        List list = (List)to_serialize;
+        List list_object = (List)object;
+        List<Map<String, Object>> list_serialized = new ArrayList<> ();
 
-        for (Object object: list)
+        for (Object item: list_object)
         {
-            list.add (engine.serializeObject (object));
+            list_serialized.add (engine.serializeObject (item));
         }
 
-        data.put (GluonConstants.CONTENTS, list);
+        data.put (GluonConstants.CONTENTS, list_serialized);
         return (data);
     }
 

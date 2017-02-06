@@ -55,6 +55,7 @@ public class GluonSerializer implements SerializerEngine
     @Override
     public boolean register (Class clazz, Serializer serializer)
     {
+        log.info ("{} register: {} => {}", this, clazz, serializer);
         serializer_lookup.put (clazz, serializer);
         return (true);
     }
@@ -79,8 +80,11 @@ public class GluonSerializer implements SerializerEngine
             // Hard way... we need to find some compatible serializer
             for (Map.Entry<Class, Serializer> entry: serializer_lookup.entrySet ())
             {
+                log.info ("{} ==?== {}", entry.getKey(), type);
                 if (entry.getKey ().isAssignableFrom (type))
+                //if (type.isAssignableFrom (entry.getKey ()))
                 {
+                    log.info ("{} =====> {}", entry.getKey(), type);
                     serializer = entry.getValue ();
                 }
             }

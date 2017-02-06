@@ -21,6 +21,8 @@ import org.lucidj.api.ComponentState;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
 import org.lucidj.api.Quark;
+import org.lucidj.api.Serializer;
+import org.lucidj.api.SerializerInstance;
 import org.lucidj.api.TaskContext;
 import org.lucidj.objectmanager.DefaultObjectManager;
 import org.lucidj.runtime.Kernel;
@@ -39,7 +41,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class SmartBox implements Quark, ComponentInterface, ObjectManagerProperty, ComponentState
+public class SmartBox implements Serializer, Quark, ComponentInterface, ObjectManagerProperty, ComponentState
 {
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
 
@@ -400,6 +402,26 @@ public class SmartBox implements Quark, ComponentInterface, ObjectManagerPropert
     public void addStateListener (ChangeListener listener)
     {
         state_listener = listener;
+    }
+
+    @Override // Serializer
+    public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+    {
+        properties.put("/", code);
+
+        //properties.put ("output", om.getObjects ());
+        for (int i = 0; i < om.available (); i++)
+        {
+            properties.put ("output" + i, engine.serializeObject (om.getObject (i)));
+        }
+
+        return(properties);
+    }
+
+    @Override // Serializer
+    public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+    {
+        return (null);
     }
 }
 

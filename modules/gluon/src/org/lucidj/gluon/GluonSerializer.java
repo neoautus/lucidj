@@ -24,6 +24,7 @@ import org.lucidj.gluon.serializers.ListSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.lang.model.type.NullType;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -61,7 +62,7 @@ public class GluonSerializer implements SerializerEngine
     public Map<String, Object> build_representation (SerializerInstance instance, Object obj)
     {
         Serializer serializer = null;
-        Class type = obj.getClass ();
+        Class type = (obj == null)? NullType.class: obj.getClass ();
 
         if (obj instanceof Serializer)
         {
@@ -188,6 +189,7 @@ public class GluonSerializer implements SerializerEngine
 //        register (Calendar.class, CalendarSerializer.class);
 //        register (Locale.class, LocaleSerializer.class);
 
+        register (NullType.class, new DefaultSerializers.NullSerializer ());
         register (int.class, new DefaultSerializers.IntSerializer ());
         register (String.class, new DefaultSerializers.StringSerializer ());
         register (float.class, new DefaultSerializers.FloatSerializer ());

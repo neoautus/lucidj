@@ -26,6 +26,21 @@ import java.util.Map;
 
 public class DefaultSerializers
 {
+    public static class NullSerializer implements Serializer
+    {
+        @Override
+        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        {
+            return null;
+        }
+
+        @Override
+        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        {
+            return null;
+        }
+    }
+
     public static class IntSerializer implements Serializer
     {
         @Override

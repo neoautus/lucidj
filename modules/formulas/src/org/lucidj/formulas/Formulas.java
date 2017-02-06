@@ -20,6 +20,7 @@ import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
+import org.lucidj.api.SerializerEngine;
 import org.lucidj.shiro.Shiro;
 
 import com.vaadin.navigator.View;
@@ -45,6 +46,9 @@ public class Formulas implements MenuProvider, ViewProvider
 
     @Requires
     private ManagedObjectFactory object_factory;
+
+    @Requires
+    private SerializerEngine serializer;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -79,7 +83,8 @@ public class Formulas implements MenuProvider, ViewProvider
     {
         if (NAVID.equals (s))
         {
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new FormulasView (shiro));
+            // TODO: wrapObject() IS ANOTHER USE-CASE (FACTORY-LESS ManagedObject)
+            ManagedObjectInstance view_instance = object_factory.wrapObject (new FormulasView (shiro, serializer));
             return (view_instance.adapt (View.class));
         }
         return null;

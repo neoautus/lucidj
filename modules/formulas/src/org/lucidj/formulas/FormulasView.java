@@ -50,6 +50,7 @@ import org.lucidj.api.ApplicationInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.TaskContext;
 import org.lucidj.runtime.Kernel;
 import org.lucidj.shiro.Shiro;
@@ -103,10 +104,12 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
     private VerticalLayout content;
     private Cell insert_here_cell;
+    private SerializerEngine serializer;
 
-    public FormulasView (Shiro shiro)
+    public FormulasView (Shiro shiro, SerializerEngine serializer)
     {
         this.shiro = shiro;
+        this.serializer = serializer;
     }
 
     @Override // ManagedObject
@@ -118,19 +121,8 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     @Override // ManagedObject
     public void invalidate (ManagedObjectInstance instance)
     {
-
-    }
-
-    @Override // ManagedObject
-    public Map<String, Object> serializeObject ()
-    {
-        return null;
-    }
-
-    @Override // ManagedObject
-    public boolean deserializeObject (Map<String, Object> properties)
-    {
-        return (false);
+        shiro = null;
+        serializer = null;
     }
 
     @Override // ApplicationInterface
@@ -428,6 +420,15 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
                 save_formulae (task_source);
                 break;
             }
+            case "test":
+            {
+                if (serializer != null)
+                {
+                    log.info ("***> serializeObject ({}) <***", object_list);
+                    serializer.serializeObject (null, object_list);
+                }
+                break;
+            }
             case VM_NOTEBOOK:
             {
                 // TODO: CREATE BETTER VIEW REPRESENTATION/REFERENCE
@@ -565,6 +566,8 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         local_toolbar.addComponent(navigation);
 
         createButton (local_toolbar, "save", FontAwesome.SAVE)
+            .addStyleName("ui-toolbar-spacer");
+        createButton (local_toolbar, "test", FontAwesome.MAGIC)
             .addStyleName("ui-toolbar-spacer");
 
         CssLayout edition = new CssLayout();

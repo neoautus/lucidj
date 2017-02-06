@@ -112,18 +112,6 @@ public class SearchView extends VerticalLayout implements ManagedObject, View
     {
         log.info ("invalidate");
     }
-
-    @Override
-    public Map<String, Object> serializeObject ()
-    {
-        return (null);
-    }
-
-    @Override
-    public boolean deserializeObject (Map<String, Object> properties)
-    {
-        return (false);
-    }
 }
 
 // EOF

@@ -34,10 +34,8 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.navigator.ViewDisplay;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Page;
 import com.vaadin.server.Sizeable;
 import com.vaadin.server.Sizeable.Unit;
-import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Accordion;
@@ -52,7 +50,6 @@ import com.vaadin.ui.VerticalLayout;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 
@@ -446,18 +443,6 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             attached_ui.getSession ().getSession ().invalidate ();
             attached_ui.getPage ().reload ();
         }
-    }
-
-    @Override // ManagedObject
-    public Map<String, Object> serializeObject ()
-    {
-        return (null);
-    }
-
-    @Override // ManagedObject
-    public boolean deserializeObject (Map<String, Object> properties)
-    {
-        return (false);
     }
 
     class SafeNavigator extends Navigator

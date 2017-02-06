@@ -16,8 +16,6 @@
 
 package org.lucidj.api;
 
-import java.util.Map;
-
 /* ManagedObjects are created and managed by OSGi services. Their lifecycle is tied with
  * the underlining service. These objects may have a predefined set of properties.
  */
@@ -26,9 +24,6 @@ public interface ManagedObject
 {
     void validate   (ManagedObjectInstance instance);
     void invalidate (ManagedObjectInstance instance);
-
-    Map<String, Object> serializeObject   ();
-    boolean             deserializeObject (Map<String, Object> properties);
 }
 
 // EOF

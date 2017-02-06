@@ -1,10 +1,10 @@
 <component name="libraryTable">
   <library name="vaadin-addons">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/cache/lib/vaadin-widgets/jar/vaadin-context-menu-0.7.3.jar!/" />
       <root url="jar://$PROJECT_DIR$/cache/lib/vaadin-widgets/bundle/gridstack-addon-0.2.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/cache/lib/vaadin-widgets/jar/sizereporter-0.1.4.jar!/" />
       <root url="jar://$PROJECT_DIR$/cache/lib/vaadin-widgets/jar/restrain-0.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/vaadin-widgets/jar/vaadin-context-menu-0.7.4.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

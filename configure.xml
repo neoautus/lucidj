@@ -110,7 +110,7 @@
         </pathdep>
 
         <pathdep group="vaadin-widgets">
-            <ivy:dependency org="com.vaadin.addon" name="vaadin-context-menu" rev="0.7.3" transitive="false"/>
+            <ivy:dependency org="com.vaadin.addon" name="vaadin-context-menu" rev="0.7.4" transitive="false"/>
             <ivy:dependency org="org.vaadin.alump.gridstack" name="gridstack-addon" rev="0.2.1"/>
             <ivy:dependency org="org.vaadin.addons" name="sizereporter" rev="0.1.4" />
             <ivy:dependency org="org.vaadin.addons" name="restrain" rev="0.1" />

@@ -242,15 +242,16 @@ public class Console implements Serializer, Quark, Renderer.Observable
     }
 
     @Override // Serializer
-    public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+    public boolean serializeObject (SerializerInstance instance, Object to_serialize)
     {
         // Complete content log including timestamps and tags
-        properties.put ("/", contents.toString ());
-        return (properties);
+        instance.setValue (contents.toString ());
+        instance.setObjectClass (this.getClass ());
+        return (true);
     }
 
     @Override // Serializer
-    public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+    public Object deserializeObject (SerializerInstance instance)
     {
         return null;
     }

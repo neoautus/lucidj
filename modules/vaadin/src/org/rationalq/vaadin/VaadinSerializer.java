@@ -20,6 +20,8 @@ import org.lucidj.api.QuarkSerializable;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.ui.Component;
 import com.vaadin.ui.declarative.Design;
@@ -40,6 +42,8 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class VaadinSerializer implements Serializer, QuarkSerializable
 {
+    private final static transient Logger log = LoggerFactory.getLogger (VaadinSerializer.class);
+
     private VaadinComponentFactory vcf = new VaadinComponentFactory ();
 
     @Requires
@@ -59,13 +63,28 @@ public class VaadinSerializer implements Serializer, QuarkSerializable
     }
 
     @Override
-    public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+    public boolean serializeObject (SerializerInstance instance, Object object)
     {
-        return (serializeObject (to_serialize));
+        try
+        {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream ();
+
+            // TODO: BETTER WAY TO SET COMPONENT FACTORY
+            Design.setComponentFactory (vcf);
+            Design.write ((Component)object, baos);
+            instance.setValue (baos.toString ("UTF-8"));
+            instance.setObjectClass (Vaadin.class);
+            return (true);
+        }
+        catch (Exception e)
+        {
+            log.error ("Exception serializing object", e);
+            return (false);
+        }
     }
 
     @Override
-    public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+    public Object deserializeObject (SerializerInstance instance)
     {
         return null;
     }

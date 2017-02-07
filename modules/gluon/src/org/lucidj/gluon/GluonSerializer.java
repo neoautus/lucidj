@@ -28,6 +28,7 @@ import javax.lang.model.type.NullType;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -60,10 +61,11 @@ public class GluonSerializer implements SerializerEngine
         return (true);
     }
 
-    public Map<String, Object> build_representation (SerializerInstance instance, Object obj)
+    private GluonInstance build_representation (Object obj)
     {
-        Serializer serializer = null;
+        GluonInstance instance = new GluonInstance ();
         Class type = (obj == null)? NullType.class: obj.getClass ();
+        Serializer serializer = null;
 
         if (obj instanceof Serializer)
         {
@@ -94,32 +96,32 @@ public class GluonSerializer implements SerializerEngine
 
         log.debug ("build_representation: instance={} obj={} serializer={}", instance, obj, serializer);
 
-        // Null or the serialized object representation
-        return ((serializer == null)? null: serializer.serializeObject (instance, obj));
+        if (serializer != null && serializer.serializeObject (instance, obj))
+        {
+            return (instance);
+        }
+        return (null);
     }
 
     @Override
     public boolean serializeObject (Writer writer, Object obj)
     {
-        SerializerInstance instance = new GluonInstance ();
-        Map<String, Object> map_representation;
+        GluonInstance instance = build_representation (obj);
 
         // Build the object representation including all nested known objects
-        if ((map_representation = build_representation (instance, obj)) == null)
+        if (instance != null)
         {
-            return (false);
+            try
+            {
+                GluonWriter qwriter = new GluonWriter (writer);
+                return (qwriter.writeRepresentation (instance));
+            }
+            catch (IOException e)
+            {
+                log.error ("Exception on serializeObject()", e);
+            }
         }
-
-        try
-        {
-            GluonWriter qwriter = new GluonWriter (writer);
-            return (qwriter.writeRepresentation (map_representation));
-        }
-        catch (IOException e)
-        {
-            log.error ("Exception on serializeObject()", e);
-            return (false);
-        }
+        return (false);
     }
 
     @Override
@@ -219,16 +221,104 @@ public class GluonSerializer implements SerializerEngine
 
     public class GluonInstance implements SerializerInstance
     {
-        @Override
-        public Map<String, Object> serializeObject (Object to_serialize)
+        private Map<String, Object> properties = null;
+        private String string_value = null;
+        private List<GluonInstance> object_values = null;
+
+        public Map<String, Object> getProperties ()
         {
-            return (build_representation (this, to_serialize));
+            return (properties);
+        }
+
+        public boolean hasProperties ()
+        {
+            return (properties != null);
         }
 
         @Override
-        public Object deserializeObject (Map<String, Object> properties)
+        public String toString ()
         {
-            return (null);
+            return ("[value=" + string_value + " | objects=" + object_values + " | properties=" + properties + "]");
+        }
+
+        @Override
+        public boolean setObjectClass (Class clazz)
+        {
+            return (setProperty (SerializerInstance.CLASS, clazz.getName ()));
+        }
+
+        public String getObjectClass ()
+        {
+            return ((String)getProperty (SerializerInstance.CLASS));
+        }
+
+        public String[] getPropertyKeys ()
+        {
+            return ((properties == null)? null: properties.keySet ().toArray (new String [0]));
+        }
+
+        public boolean containsKey (String key)
+        {
+            return (properties.containsKey (key));
+        }
+
+        @Override
+        public boolean setProperty (String key, Object object)
+        {
+            if (properties == null)
+            {
+                properties = new HashMap<> ();
+            }
+
+            GluonInstance instance = build_representation (object);
+
+            if (instance != null)
+            {
+                properties.put (key, instance.hasProperties ()? instance: instance.getValue ());
+                return (true);
+            }
+            return (false);
+        }
+
+        public Object getProperty (String key)
+        {
+            return ((properties == null)? null: properties.get (key));
+        }
+
+        // HERE THE REAL VALUE REPRESENTATION IS SET, BE IT FULL OR INLINE OR ENCODED
+        @Override
+        public void setValue (String representation)
+        {
+            string_value = representation;
+        }
+
+        @Override
+        public boolean addObject (Object object)
+        {
+            GluonInstance instance = build_representation (object);
+
+            if (instance == null)
+            {
+                return (false);
+            }
+
+            if (object_values == null)
+            {
+                object_values = new ArrayList<> ();
+            }
+
+            object_values.add (instance);
+            return (true);
+        }
+
+        public String getValue ()
+        {
+            return (string_value);
+        }
+
+        public List<GluonInstance> getObjects ()
+        {
+            return (object_values);
         }
     }
 }

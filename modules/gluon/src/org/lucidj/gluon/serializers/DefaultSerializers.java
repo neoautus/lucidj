@@ -18,24 +18,19 @@ package org.lucidj.gluon.serializers;
 
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerInstance;
-import org.lucidj.gluon.GluonConstants;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class DefaultSerializers
 {
     public static class NullSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -44,13 +39,13 @@ public class DefaultSerializers
     public static class IntSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -59,13 +54,14 @@ public class DefaultSerializers
     public static class StringSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            instance.setValue ("\"" + object + "\"");
+            return (true);
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -74,13 +70,13 @@ public class DefaultSerializers
     public static class FloatSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -89,13 +85,13 @@ public class DefaultSerializers
     public static class BooleanSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -104,13 +100,13 @@ public class DefaultSerializers
     public static class ByteSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -119,13 +115,13 @@ public class DefaultSerializers
     public static class CharSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -134,13 +130,13 @@ public class DefaultSerializers
     public static class ShortSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -149,13 +145,13 @@ public class DefaultSerializers
     public static class LongSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }
@@ -164,13 +160,13 @@ public class DefaultSerializers
     public static class DoubleSerializer implements Serializer
     {
         @Override
-        public Map<String, Object> serializeObject (SerializerInstance engine, Object to_serialize)
+        public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return null;
+            return false;
         }
 
         @Override
-        public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+        public Object deserializeObject (SerializerInstance instance)
         {
             return null;
         }

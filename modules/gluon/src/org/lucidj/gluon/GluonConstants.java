@@ -19,9 +19,8 @@ package org.lucidj.gluon;
 public interface GluonConstants
 {
     String DEFAULT_BOUNDARY = "-------THINK_BIG_BE_BOLD-------";
-    String DEF_FILE_HANDLER = "#!/usr/bin/quark-handler";
-    String FILE_HANDLER = "/File-Handler";
-    String QUARK_VERSION = "Q-Quark-Version";
+    String VERSION = "Q-Quark-Version";
+
     String SIMPLE_REPRESENTATION = "/simple";
     String COMPLEX_REPRESENTATION = "/complex";
     String OBJECT_CLASS = "Q-Object";

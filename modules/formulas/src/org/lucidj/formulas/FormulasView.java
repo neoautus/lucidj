@@ -58,6 +58,9 @@ import org.lucidj.runtime.CompositeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -410,6 +413,43 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         }
     }
 
+    private void test_serialization ()
+    {
+        if (serializer == null)
+        {
+            log.error ("serializer == null, no test available");
+            return;
+        }
+
+        Path userdir = shiro.getDefaultUserDir ();
+        Path destination_path = userdir.resolve ("serialization.txt");
+        Charset cs = Charset.forName ("UTF-8");
+        Writer writer = null;
+
+        try
+        {
+            writer = Files.newBufferedWriter (destination_path, cs);
+
+            log.info ("***> serializeObject ({}) to {} <***", object_list, destination_path);
+            serializer.serializeObject (writer, object_list);
+        }
+        catch (Exception e)
+        {
+            log.error ("Exception on serialization", e);
+        }
+        finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            }
+            catch (Exception ignore) {};
+        }
+    }
+
     private void handle_button_click (Button source)
     {
         switch (source.getId())
@@ -422,11 +462,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
             }
             case "test":
             {
-                if (serializer != null)
-                {
-                    log.info ("***> serializeObject ({}) <***", object_list);
-                    serializer.serializeObject (null, object_list);
-                }
+                test_serialization ();
                 break;
             }
             case VM_NOTEBOOK:

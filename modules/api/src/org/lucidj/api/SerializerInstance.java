@@ -16,12 +16,14 @@
 
 package org.lucidj.api;
 
-import java.util.Map;
-
 public interface SerializerInstance
 {
-    Map<String, Object> serializeObject   (Object to_serialize);
-    Object              deserializeObject (Map<String, Object> properties);
+    String CLASS = "X-Object";
+
+    boolean  setObjectClass  (Class clazz);
+    boolean  setProperty     (String key, Object object);
+    void     setValue        (String representation);
+    boolean  addObject       (Object object);
 }
 
 // EOF

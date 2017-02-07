@@ -18,33 +18,23 @@ package org.lucidj.gluon.serializers;
 
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerInstance;
-import org.lucidj.gluon.GluonConstants;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ListSerializer implements Serializer
 {
     @Override
-    public Map<String, Object> serializeObject (SerializerInstance engine, Object object)
+    public boolean serializeObject (SerializerInstance instance, Object object)
     {
-        Map<String, Object> data = new HashMap<> ();
-        List list_object = (List)object;
-        List<Map<String, Object>> list_serialized = new ArrayList<> ();
-
-        for (Object item: list_object)
+        for (Object item: (List)object)
         {
-            list_serialized.add (engine.serializeObject (item));
+            instance.addObject (item);
         }
-
-        data.put (GluonConstants.CONTENTS, list_serialized);
-        return (data);
+        return (true);
     }
 
     @Override
-    public Object deserializeObject (SerializerInstance engine, Map<String, Object> properties)
+    public Object deserializeObject (SerializerInstance engine)
     {
         return null;
     }

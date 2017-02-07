@@ -49,6 +49,7 @@ public class VaadinSerializer implements Serializer, QuarkSerializable
     private void validate ()
     {
         serializer.register (Vaadin.class, this);
+        serializer.register (Component.class, this);
     }
 
     @Override

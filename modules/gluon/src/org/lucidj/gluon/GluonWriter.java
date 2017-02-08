@@ -16,7 +16,6 @@
 
 package org.lucidj.gluon;
 
-import com.google.common.io.BaseEncoding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.lucidj.gluon.GluonSerializer.GluonInstance;
@@ -24,6 +23,7 @@ import org.lucidj.gluon.GluonSerializer.GluonInstance;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,76 +31,30 @@ public class GluonWriter
 {
     private final static transient Logger log = LoggerFactory.getLogger (GluonWriter.class);
 
-    private Writer writer;
     private int ref_counter = 1;
+    private Writer writer;
     private String file_format_boundary;
 
-    private BaseEncoding base64 = BaseEncoding.base64 ().withSeparator ("\n", 76);
-
-    List<Map<String, Object>> serialization_queue = new ArrayList<> ();
+    private List<GluonInstance> serialization_queue = new ArrayList<> ();
+    private Map<GluonInstance, GluonInstance> property_to_reference = new HashMap<> ();
 
     public GluonWriter (Writer writer)
     {
         this.writer = writer;
     }
 
-//    private void write_token_property (QuarkToken token, String key,
-//                                       List<Map<String, Object>> serialization_queue)
-//        throws IOException
-//    {
-//        log.info ("write_token_property() key=[{}] value=[{}]", key, token);
-//
-//        // PropertyKey: PropertyValue
-//        writer.write (key);
-//        writer.write (": ");
-//        writer.write (token.getName ());
-//
-//        Map<String, Object> parameters = token.getProperties ();
-//
-//        // Look for property parameters <Property>/<Parameter>
-//        for (Map.Entry<String, Object> param : parameters.entrySet ())
-//        {
-//            String param_name = param.getKey ();
-//            Object param_value = param.getValue ();
-//
-//            log.info ("Write param name=[{}] value=[{}]", param_name, param_value);
-//
-//            writer.write ("; ");
-//
-//            // Boolean parameters have special shortcuts
-//            if (param_value instanceof Boolean)
-//            {
-//                if (!(Boolean)param_value)
-//                {
-//                    writer.write ("!");
-//                }
-//                writer.write (param_name);
-//            }
-//            else
-//            {
-//                // Normal parameter
-//                writer.write (param_name);
-//                writer.write ("=");
-//                write_representation (param_value, serialization_queue);
-//            }
-//        }
-//
-//        writer.write ("\n");
-//    }
-
-    private void write_primitive_property (GluonInstance instance, String key, String[] keyset)
+    private void write_primitive_property (String key, GluonInstance value)
         throws IOException
     {
         writer.write (key);
         writer.write (": ");
 
-        GluonInstance entry = instance.getProperty (key);
-        String[] attr_keyset = entry.getPropertyKeys ();
+        String[] attr_keyset = value.getPropertyKeys ();
         String semicolon = "";
 
-        if (entry.isPrimitive ())
+        if (value.isPrimitive ())
         {
-            writer.write (entry.getValue ());
+            writer.write (value.getValue ());
             semicolon = "; ";
         }
 
@@ -111,53 +65,56 @@ public class GluonWriter
                 writer.write (semicolon);
                 writer.write (attr_key);
                 writer.write ("=");
-                writer.write ((entry.getProperty (attr_key)).getValue ());
+                writer.write ((value.getProperty (attr_key)).getValue ());
                 semicolon = "; ";
             }
         }
         writer.write ("\n");
     }
 
-//    private void write_property (Map<String, Object> props, String key,
-//                                 List<Map<String, Object>> serialization_queue)
-//            throws IOException
-//    {
-//        Object obj = props.get (key);
-//        Map<String, Object> representation = build_representation (obj);
-//
-//        if (representation.containsKey (QuarkConstants.COMPLEX_REPRESENTATION))
-//        {
-//            QuarkToken embedded = new QuarkToken ("Embedded");
-//            embedded.setProperty ("refid", ref_counter);
-//            representation.put (QuarkConstants.SIMPLE_REPRESENTATION, embedded);
-//
-//            // Insert reference data into the object representation
-//            representation.put (QuarkConstants.OBJECT_CLASS_EMBEDDED, true);
-//            representation.put (QuarkConstants.OBJECT_CLASS_ID, ref_counter);
-//
-//            // Store the complex representation
-//            serialization_queue.add (representation);
-//            ref_counter++;
-//
-//            // Write token
-//            write_token_property (embedded, key, serialization_queue);
-//        }
-//        else
-//        {
-//            write_primitive_property (props, key, serialization_queue);
-//        }
-//    }
+    private void write_property (GluonInstance instance, String key)
+        throws IOException
+    {
+        GluonInstance property = instance.getProperty (key);
+
+        // Filter all complex objects swapping them with a reference
+        // and putting they into the serialization queue
+        if (!property.isPrimitive ())
+        {
+            GluonInstance reference = property_to_reference.get (property);
+
+            if (reference == null)
+            {
+                // Append embedding data into Object-Class property
+                GluonInstance object_class = property.getProperty (GluonConstants.OBJECT_CLASS);
+                object_class.setProperty ("id", ref_counter);
+                object_class.setProperty ("embedded", true);
+
+                // Create a reference pointing back to object
+                reference = property.newInstance ();
+                reference.setProperty ("embedded", true);
+                reference.setProperty ("refid", ref_counter);
+
+                // Insert property into serialization queue for embedded objects
+                property_to_reference.put (property, reference);
+                serialization_queue.add (property);
+                ref_counter++;
+            }
+            property = reference;
+        }
+        write_primitive_property (key, property);
+    }
 
     private void write_properties (GluonInstance instance)
         throws IOException
     {
-        String[] keyset = instance.getPropertyKeys ();
-
-        if (keyset == null)
+        if (!instance.hasProperties ())
         {
             writer.write ("# No properties for this object\n");
             return;
         }
+
+        String[] keyset = instance.getPropertyKeys ();
 
         // First write all X- properties
         for (String key: keyset)
@@ -166,8 +123,7 @@ public class GluonWriter
             {
                 continue;
             }
-
-            write_primitive_property (instance, key, keyset);
+            write_property (instance, key);
         }
 
         // Now write all other properties
@@ -177,17 +133,27 @@ public class GluonWriter
             {
                 continue;
             }
-
-            write_primitive_property (instance, key, keyset);
+            write_property (instance, key);
         }
     }
 
-    public boolean writeRepresentation (GluonInstance instance)
+    private void write_object (GluonInstance object)
         throws IOException
     {
-        log.info ("writeRepresentation: representation={}", instance);
+        writer.write ("\n");
+        writer.write (file_format_boundary);
+        writer.write ("\n");
 
-        GluonInstance content_boundary = instance.getProperty (GluonConstants.CONTENT_BOUNDARY);
+        write_properties (object);
+
+        writer.write ("\n"); // Empty line
+        writer.write (object.getValue ());
+    }
+
+    public boolean writeRepresentation (GluonInstance root)
+        throws IOException
+    {
+        GluonInstance content_boundary = root.getProperty (GluonConstants.CONTENT_BOUNDARY);
 
         if (content_boundary != null && content_boundary.isPrimitive ())
         {
@@ -197,42 +163,24 @@ public class GluonWriter
         // Minimum sanity please
         if (file_format_boundary == null
             || file_format_boundary.isEmpty ()
-            || file_format_boundary.length () < 4)
+            || file_format_boundary.length () < 8)
         {
             file_format_boundary = GluonConstants.DEFAULT_BOUNDARY;
-            instance.setProperty (GluonConstants.CONTENT_BOUNDARY, file_format_boundary);
+            root.setProperty (GluonConstants.CONTENT_BOUNDARY, file_format_boundary);
         }
 
-        // Build root object properties
-//        HashMap<String, Object> properties = new HashMap<> ();
-//        properties.put (GluonConstants.VERSION, "1.0.0");
-//        properties.put (GluonConstants.CONTENT_TYPE, "multipart/mixed");
-//        properties.put (QuarkConstants.CONTENT_BOUNDARY, QuarkConstants.DEFAULT_BOUNDARY);
-//        properties.putAll (representation);
-//        properties.put (QuarkConstants.OBJECT_CLASS, obj.getClass ().getCanonicalName ());
-
-
         // Write the properties of root object
-        write_properties (instance);
+        write_properties (root);
 
         /***************************/
         /* MAIN SERIALIZED OBJECTS */
         /***************************/
 
-        if (instance.getObjects () != null)
+        if (root.getObjects () != null)
         {
-            for (GluonInstance object: instance.getObjects ())
+            for (GluonInstance object: root.getObjects ())
             {
-                log.info ("object = " + object);
-
-                writer.write ("\n");
-                writer.write (file_format_boundary);
-                writer.write ("\n");
-
-                write_properties (object);
-
-                writer.write ("\n"); // Empty line
-                writer.write (object.getValue ());
+                write_object (object);
             }
         }
         else
@@ -240,21 +188,9 @@ public class GluonWriter
             // Serialize just this one
         }
 
-        if (!serialization_queue.isEmpty ())
+        for (GluonInstance object: serialization_queue)
         {
-            for (int i = 0; i < serialization_queue.size (); i++)
-            {
-                Map<String, Object> obj_representation = serialization_queue.get (i);
-
-                writer.write ("\n");
-                writer.write (file_format_boundary);
-                writer.write ("\n");
-
-//                write_properties (obj_representation, serialization_queue);
-
-                writer.write ("\n"); // Empty line
-                writer.write ((String)obj_representation.get (GluonConstants.COMPLEX_REPRESENTATION));
-            }
+            write_object (object);
         }
 
         /*******************/

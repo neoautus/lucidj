@@ -225,11 +225,11 @@ public class GluonSerializer implements SerializerEngine
 
     public class GluonInstance implements SerializerInstance
     {
-        private Map<String, Object> properties = null;
+        private Map<String, GluonInstance> properties = null;
         private String string_value = null;
         private List<GluonInstance> object_values = null;
 
-        public Map<String, Object> getProperties ()
+        public Map<String, GluonInstance> getProperties ()
         {
             return (properties);
         }
@@ -253,7 +253,11 @@ public class GluonSerializer implements SerializerEngine
 
         public String getObjectClass ()
         {
-            return ((String)getProperty (GluonConstants.OBJECT_CLASS));
+            if (properties != null && properties.containsKey (GluonConstants.OBJECT_CLASS))
+            {
+                return (properties.get (GluonConstants.OBJECT_CLASS).getValue ());
+            }
+            return (null);
         }
 
         public boolean isPrimitive ()
@@ -288,7 +292,7 @@ public class GluonSerializer implements SerializerEngine
             return (instance);
         }
 
-        public Object getProperty (String key)
+        public GluonInstance getProperty (String key)
         {
             return ((properties == null)? null: properties.get (key));
         }

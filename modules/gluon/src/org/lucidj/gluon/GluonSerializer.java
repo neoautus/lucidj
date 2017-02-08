@@ -82,13 +82,10 @@ public class GluonSerializer implements SerializerEngine
             // Hard way... we need to find some compatible serializer
             for (Map.Entry<Class, Serializer> entry: serializer_lookup.entrySet ())
             {
-                log.debug ("{} ==?== {}", entry.getKey(), type);
                 if (entry.getKey ().isAssignableFrom (type))
                 {
-                    log.debug ("{} =====> {}", entry.getKey(), type);
                     serializer = entry.getValue ();
                     serializer_lookup.put (type, serializer);
-                    log.debug ("{} cache: {} => {}", this, type, serializer);
                     break;
                 }
             }
@@ -96,11 +93,17 @@ public class GluonSerializer implements SerializerEngine
 
         log.debug ("build_representation: instance={} obj={} serializer={}", instance, obj, serializer);
 
-        if (serializer != null && serializer.serializeObject (instance, obj))
+        if (serializer == null)
         {
-            return (instance);
+            log.error ("Serializer not found for {}", type);
+            return (null);
         }
-        return (null);
+        else if (!serializer.serializeObject (instance, obj))
+        {
+            log.error ("Serialization failed for {}", type);
+            return (null);
+        }
+        return (instance);
     }
 
     @Override
@@ -111,9 +114,11 @@ public class GluonSerializer implements SerializerEngine
         // Build the object representation including all nested known objects
         if (instance != null)
         {
+            // Our signature -------------------------------------------------------------------
             SerializerInstance se = instance.setProperty (SerializerEngine.SERIALIZATION_ENGINE,
                 this.getClass ().getName ());
             se.setProperty ("version", "1.0");
+            // ---------------------------------------------------------------------------------
 
             try
             {
@@ -203,9 +208,11 @@ public class GluonSerializer implements SerializerEngine
 
         register (NullType.class, new DefaultSerializers.NullSerializer ());
         register (int.class, new DefaultSerializers.IntSerializer ());
+        register (Integer.class, new DefaultSerializers.IntSerializer ());
         register (String.class, new DefaultSerializers.StringSerializer ());
         register (float.class, new DefaultSerializers.FloatSerializer ());
         register (boolean.class, new DefaultSerializers.BooleanSerializer ());
+        register (Boolean.class, new DefaultSerializers.BooleanSerializer ());
         register (byte.class, new DefaultSerializers.ByteSerializer ());
         register (char.class, new DefaultSerializers.CharSerializer ());
         register (short.class, new DefaultSerializers.ShortSerializer ());
@@ -239,11 +246,11 @@ public class GluonSerializer implements SerializerEngine
             return (properties != null);
         }
 
-        @Override
-        public String toString ()
-        {
-            return ("[value=" + string_value + " | objects=" + object_values + " | properties=" + properties + "]");
-        }
+//        @Override
+//        public String toString ()
+//        {
+//            return ("[value=" + string_value + " | objects=" + object_values + " | properties=" + properties + "]");
+//        }
 
         @Override
         public SerializerInstance setObjectClass (Class clazz)
@@ -297,7 +304,6 @@ public class GluonSerializer implements SerializerEngine
             return ((properties == null)? null: properties.get (key));
         }
 
-        // HERE THE REAL VALUE REPRESENTATION IS SET, BE IT FULL OR INLINE OR ENCODED
         @Override
         public void setValue (String representation)
         {
@@ -319,6 +325,11 @@ public class GluonSerializer implements SerializerEngine
                 object_values.add (instance);
             }
             return (instance);
+        }
+
+        public GluonInstance newInstance ()
+        {
+            return (new GluonInstance ());
         }
 
         public String getValue ()

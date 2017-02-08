@@ -111,6 +111,10 @@ public class GluonSerializer implements SerializerEngine
         // Build the object representation including all nested known objects
         if (instance != null)
         {
+            SerializerInstance se = instance.setProperty (SerializerEngine.SERIALIZATION_ENGINE,
+                this.getClass ().getName ());
+            se.setProperty ("version", "1.0");
+
             try
             {
                 GluonWriter qwriter = new GluonWriter (writer);
@@ -242,14 +246,19 @@ public class GluonSerializer implements SerializerEngine
         }
 
         @Override
-        public boolean setObjectClass (Class clazz)
+        public SerializerInstance setObjectClass (Class clazz)
         {
-            return (setProperty (SerializerInstance.CLASS, clazz.getName ()));
+            return (setProperty (GluonConstants.OBJECT_CLASS, clazz.getName ()));
         }
 
         public String getObjectClass ()
         {
-            return ((String)getProperty (SerializerInstance.CLASS));
+            return ((String)getProperty (GluonConstants.OBJECT_CLASS));
+        }
+
+        public boolean isPrimitive ()
+        {
+            return (string_value != null && getProperty (GluonConstants.OBJECT_CLASS) == null);
         }
 
         public String[] getPropertyKeys ()
@@ -263,7 +272,7 @@ public class GluonSerializer implements SerializerEngine
         }
 
         @Override
-        public boolean setProperty (String key, Object object)
+        public SerializerInstance setProperty (String key, Object object)
         {
             if (properties == null)
             {
@@ -274,10 +283,9 @@ public class GluonSerializer implements SerializerEngine
 
             if (instance != null)
             {
-                properties.put (key, instance.hasProperties ()? instance: instance.getValue ());
-                return (true);
+                properties.put (key, instance);
             }
-            return (false);
+            return (instance);
         }
 
         public Object getProperty (String key)
@@ -293,22 +301,20 @@ public class GluonSerializer implements SerializerEngine
         }
 
         @Override
-        public boolean addObject (Object object)
+        public SerializerInstance addObject (Object object)
         {
             GluonInstance instance = build_representation (object);
 
-            if (instance == null)
+            if (instance != null)
             {
-                return (false);
-            }
+                if (object_values == null)
+                {
+                    object_values = new ArrayList<> ();
+                }
 
-            if (object_values == null)
-            {
-                object_values = new ArrayList<> ();
+                object_values.add (instance);
             }
-
-            object_values.add (instance);
-            return (true);
+            return (instance);
         }
 
         public String getValue ()
@@ -319,6 +325,11 @@ public class GluonSerializer implements SerializerEngine
         public List<GluonInstance> getObjects ()
         {
             return (object_values);
+        }
+
+        public boolean hasObjects ()
+        {
+            return (object_values != null);
         }
     }
 }

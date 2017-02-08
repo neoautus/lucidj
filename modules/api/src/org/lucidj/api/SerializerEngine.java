@@ -21,6 +21,8 @@ import java.io.Writer;
 
 public interface SerializerEngine
 {
+    String SERIALIZATION_ENGINE = "X-Serialization-Engine";
+
     boolean register (Class clazz, Serializer serializer);
     boolean serializeObject (Writer wrt, Object obj);
     Object deserializeObject (Reader reader);

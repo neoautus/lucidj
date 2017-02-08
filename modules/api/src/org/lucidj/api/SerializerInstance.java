@@ -18,12 +18,10 @@ package org.lucidj.api;
 
 public interface SerializerInstance
 {
-    String CLASS = "X-Object";
-
-    boolean  setObjectClass  (Class clazz);
-    boolean  setProperty     (String key, Object object);
-    void     setValue        (String representation);
-    boolean  addObject       (Object object);
+    void                setValue       (String representation);
+    SerializerInstance  addObject      (Object object);
+    SerializerInstance  setProperty    (String key, Object object);
+    SerializerInstance  setObjectClass (Class clazz);
 }
 
 // EOF

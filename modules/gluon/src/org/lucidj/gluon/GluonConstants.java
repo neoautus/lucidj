@@ -19,16 +19,16 @@ package org.lucidj.gluon;
 public interface GluonConstants
 {
     String DEFAULT_BOUNDARY = "-------THINK_BIG_BE_BOLD-------";
-    String VERSION = "Q-Quark-Version";
+    String CONTENT_BOUNDARY = "X-Content-Boundary";
+    String OBJECT_CLASS = "X-Object";
 
+    String VERSION = "Q-Quark-Version";
     String SIMPLE_REPRESENTATION = "/simple";
     String COMPLEX_REPRESENTATION = "/complex";
-    String OBJECT_CLASS = "Q-Object";
     String OBJECT_CLASS_EMBEDDED = OBJECT_CLASS + "/embedded";
     String OBJECT_CLASS_ID = OBJECT_CLASS + "/id";
     String CONTENT_TYPE = "Q-Content-Type";
     String CONTENT_ENCODING = CONTENT_TYPE + "/encoding";
-    String CONTENT_BOUNDARY = CONTENT_TYPE + "/boundary";
     String CONTENTS = "/contents";
     String INLINE_REPRESENTATION = "/inline";
     String FULL_REPRESENTATION = "/full";

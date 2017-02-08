@@ -250,48 +250,72 @@ public class GluonWriter
 //        writer.write ("\n");
 //    }
 
-//    private void write_primitive_property (Map<String, Object> props, String key,
-//                                           List<Map<String, Object>> serialization_queue)
-//        throws IOException
-//    {
-//        log.info ("write_property() key=[" + key + "] value=[" + props.get (key) + "]");
-//
-//        // PropertyKey: PropertyValue
-//        writer.write (key);
-//        writer.write (": ");
-//        write_representation (props.get (key), serialization_queue);
-//
+    private void write_primitive_property (GluonInstance instance, String key, String[] keyset)
+        throws IOException
+    {
+        writer.write (key);
+        writer.write (": ");
+
+        Object value = instance.getProperty (key);
+
+        if (value instanceof String)
+        {
+            writer.write ("!!!!!!" + value);
+        }
+        else if (value instanceof GluonInstance)
+        {
+            GluonInstance entry = (GluonInstance)value;
+            String[] attr_keyset = entry.getPropertyKeys ();
+            String semicolon = "";
+
+            if (entry.isPrimitive ())
+            {
+                writer.write (entry.getValue ());
+                semicolon = "; ";
+            }
+
+            if (attr_keyset != null)
+            {
+                for (String attr_key : attr_keyset)
+                {
+                    writer.write (semicolon);
+                    writer.write (attr_key);
+                    writer.write ("=");
+                    writer.write (((GluonInstance)entry.getProperty (attr_key)).getValue ());
+                    semicolon = "; ";
+                }
+            }
+        }
+        writer.write ("\n");
+    }
+
 //        String property_param = key + "/";
 //
 //        // Look for property parameters <Property>/<Parameter>
-//        for (Map.Entry<String, Object> param : props.entrySet ())
+//        for (String attr_key: keyset)
 //        {
-//            if (param.getKey ().startsWith (property_param))
+//            if (attr_key.startsWith (property_param))
 //            {
-//                String param_key = param.getKey ();
-//                String param_name = param_key.substring (property_param.length ());
-//                Object param_value = props.get (param_key);
-//
-//                log.info ("Write param name=[" + param_name +
-//                        "] value=[" + param_value + "]");
+//                String attr_name = attr_key.substring (property_param.length ());
+//                Object attr_value = instance.getProperty (attr_key);
 //
 //                writer.write ("; ");
 //
 //                // Boolean parameters have special shortcuts
-//                if (param_value instanceof Boolean)
+//                if (attr_value instanceof Boolean)
 //                {
-//                    if (!(Boolean)param_value)
+//                    if (!(Boolean)attr_value)
 //                    {
 //                        writer.write ("!");
 //                    }
-//                    writer.write (param_name);
+//                    writer.write (attr_name);
 //                }
 //                else
 //                {
 //                    // Normal parameter
-//                    writer.write (param_name);
+//                    writer.write (attr_name);
 //                    writer.write ("=");
-//                    write_representation (param_value, serialization_queue);
+//                    writer.write ((String)attr_value);
 //                }
 //            }
 //        }
@@ -332,52 +356,34 @@ public class GluonWriter
     private void write_properties (GluonInstance instance)
         throws IOException
     {
-        log.info ("Will write_properties()");
+        String[] keyset = instance.getPropertyKeys ();
 
-        // First write all Q-quark properties
-//        for (Map.Entry<String, Object> property : props.entrySet ())
-//        {
-//            if (property.getKey ().contains ("/") ||
-//                    property.getKey ().startsWith ("/") ||
-//                    !property.getKey ().startsWith ("Q-"))
-//            {
-//                continue;
-//            }
-//
-//            write_property (props, property.getKey (), serialization_queue);
-//        }
-        String[] keys = instance.getPropertyKeys ();
-
-        // Now write all other properties (skipping all parameters)
-        if (keys != null)
+        if (keyset == null)
         {
-            for (String key: keys)
+            writer.write ("# No properties for this object\n");
+            return;
+        }
+
+        // First write all X- properties
+        for (String key: keyset)
+        {
+            if (!key.startsWith ("X-"))
             {
-                Object value = instance.getProperty (key);
-
-                writer.write (key);
-                writer.write ("=");
-
-                if (value instanceof String)
-                {
-                    writer.write ((String)value);
-                }
-                else
-                {
-                    writer.write ("INSTANCE");
-                }
-
-                writer.write ("\n");
-//            if (property.getKey ().contains ("/") ||
-//                    property.getKey ().startsWith ("/") ||
-//                    property.getKey ().startsWith ("Q-"))
-//            {
-//                // Skip property parameters <Property>/<Parameter> and Q-properties
-//                continue;
-//            }
-//
-//            write_property (props, property.getKey (), serialization_queue);
+                continue;
             }
+
+            write_primitive_property (instance, key, keyset);
+        }
+
+        // Now write all other properties
+        for (String key: keyset)
+        {
+            if (key.startsWith ("X-"))
+            {
+                continue;
+            }
+
+            write_primitive_property (instance, key, keyset);
         }
     }
 
@@ -386,7 +392,12 @@ public class GluonWriter
     {
         log.info ("writeRepresentation: representation={}", instance);
 
-        file_format_boundary = (String)instance.getProperty (GluonConstants.CONTENT_BOUNDARY);
+        GluonInstance content_boundary = (GluonInstance)instance.getProperty (GluonConstants.CONTENT_BOUNDARY);
+
+        if (content_boundary != null && content_boundary.isPrimitive ())
+        {
+            file_format_boundary = content_boundary.getValue ();
+        }
 
         // Minimum sanity please
         if (file_format_boundary == null
@@ -394,6 +405,7 @@ public class GluonWriter
             || file_format_boundary.length () < 4)
         {
             file_format_boundary = GluonConstants.DEFAULT_BOUNDARY;
+            instance.setProperty (GluonConstants.CONTENT_BOUNDARY, file_format_boundary);
         }
 
         // Build root object properties

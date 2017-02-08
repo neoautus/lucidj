@@ -16,7 +16,7 @@
 
 package org.lucidj.gluon.serializers;
 
-import org.apache.karaf.util.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerInstance;
 
@@ -42,7 +42,8 @@ public class DefaultSerializers
         @Override
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return false;
+            instance.setValue (Integer.toString ((Integer)object));
+            return (true);
         }
 
         @Override
@@ -89,7 +90,7 @@ public class DefaultSerializers
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
             instance.setValue ((Boolean)object? "true": "false");
-            return false;
+            return (true);
         }
 
         @Override

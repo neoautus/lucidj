@@ -50,6 +50,7 @@ public class GluonWriter
     {
         this.writer = writer;
 
+        // Initialize our very exclusive macro processor :)
         macro_subst = new StrSubstitutor (new StrLookup ()
         {
             @Override
@@ -85,6 +86,13 @@ public class GluonWriter
         });
     }
 
+    private String extract_macro (String value)
+    {
+        int macro_marker = value.indexOf (GluonConstants.MACRO_CHAR);
+        int start_of_macro = macro_marker + GluonConstants.MACRO_CHAR.length ();
+        return (value.substring (start_of_macro));
+    }
+
     private void write_key_value (String key, String operator, GluonInstance entry)
         throws IOException
     {
@@ -100,8 +108,7 @@ public class GluonWriter
         // Do we have a macro here?
         if (attr_value.contains (GluonConstants.MACRO_CHAR))
         {
-            int start_of_macro = attr_value.indexOf (GluonConstants.MACRO_CHAR);
-            String macro = attr_value.substring (start_of_macro + 1);
+            String macro = extract_macro (attr_value);
             macro_attr_name = key;
             macro_attr_value = attr_value;
             macro_attr_entry = attr_entry;
@@ -116,22 +123,20 @@ public class GluonWriter
         }
     }
 
-    private void write_primitive_properties (String key, GluonInstance value)
+    private String strip_macros (String value)
+    {
+        // Macros are stored on the string AFTER the MACRO_CHAR marker
+        int start_of_macro = value.indexOf (GluonConstants.MACRO_CHAR);
+        return (value.substring (0, start_of_macro));
+    }
+
+    private void write_value_and_attributes (GluonInstance value)
         throws IOException
     {
-        //------------------------------------
-        // key: value [; attribute=value ]...
-        // (1)   (2)           (3)
-        //------------------------------------
-
-        // Key (1)
-        writer.write (key);
-        writer.write (": ");
-
         String[] attr_keyset = value.getPropertyKeys ();
         String semicolon = "";
 
-        // Value (2)
+        // Value
         if (value.isPrimitive ())
         {
             String prop_value = value.getValue ();
@@ -142,20 +147,17 @@ public class GluonWriter
                 // NEVER apply macrosubstitution on property values
                 if (prop_value.contains (GluonConstants.MACRO_CHAR))
                 {
-                    // Discard the macro portion of the value
-                    int start_of_macro = prop_value.indexOf (GluonConstants.MACRO_CHAR);
-                    writer.write (prop_value.substring (0, start_of_macro));
+                    writer.write (strip_macros (prop_value));
                 }
                 else
                 {
-                    // No macros, output everything
                     writer.write (prop_value);
                 }
                 semicolon = "; ";
             }
         }
 
-        // Attributes (3)
+        // Attributes
         if (attr_keyset != null)
         {
             for (String attr_key : attr_keyset)
@@ -167,11 +169,9 @@ public class GluonWriter
         }
     }
 
-    private void write_property (GluonInstance instance, String key)
+    private void filter_and_write_value_and_attributes (GluonInstance property)
         throws IOException
     {
-        GluonInstance property = instance.getProperty (key);
-
         // Filter all complex objects swapping them with a reference
         // and moving the object into the serialization queue
         if (!property.isPrimitive ())
@@ -199,20 +199,51 @@ public class GluonWriter
         }
 
         // Write either a property or a reference to an object
-        write_primitive_properties (key, property);
+        write_value_and_attributes (property);
+    }
+
+    private void write_property (GluonInstance property, String property_name)
+        throws IOException
+    {
+        writer.write (property_name);
+        writer.write (": ");
+
+        // We write either the object list OR the attributes
+        // because we handle lists and arrays as primitive types,
+        // that don't have any attributes. Of course you can
+        // use SerializerInstance.setProperty() to set some
+        // attribute, but it will be ignored.
+        if (property.hasObjects ())
+        {
+            String comma = "";
+
+            // Write all objects embedded into the property
+            for (GluonInstance embedded_object: property.getObjects ())
+            {
+                writer.write (comma);
+                filter_and_write_value_and_attributes (embedded_object);
+                comma = ", ";
+            }
+        }
+        else
+        {
+            // Write the object properties
+            filter_and_write_value_and_attributes (property);
+        }
+
         writer.write ("\n");
     }
 
-    private void write_properties (GluonInstance instance)
+    private void write_all_object_properties (GluonInstance object)
         throws IOException
     {
-        if (!instance.hasProperties ())
+        if (!object.hasProperties ())
         {
             writer.write ("# No properties for this object\n");
             return;
         }
 
-        String[] keyset = instance.getPropertyKeys ();
+        String[] keyset = object.getPropertyKeys ();
 
         // First write all X- properties
         for (String key: keyset)
@@ -221,7 +252,8 @@ public class GluonWriter
             {
                 continue;
             }
-            write_property (instance, key);
+            write_property (object.getProperty (key), key);
+
         }
 
         // Now write all other properties
@@ -231,7 +263,7 @@ public class GluonWriter
             {
                 continue;
             }
-            write_property (instance, key);
+            write_property (object.getProperty (key), key);
         }
     }
 
@@ -242,9 +274,9 @@ public class GluonWriter
         writer.write (file_format_boundary);
         writer.write ("\n");
 
-        write_properties (object);
+        write_all_object_properties (object);
 
-        writer.write ("\n"); // Empty line
+        writer.write ("\n");
         writer.write (object.getValue ());
     }
 
@@ -267,13 +299,25 @@ public class GluonWriter
             root.setProperty (GluonConstants.CONTENT_BOUNDARY, file_format_boundary);
         }
 
+        /************************/
+        /* HEADER (ROOT OBJECT) */
+        /************************/
+
         // Write the properties of root object
-        write_properties (root);
+        write_all_object_properties (root);
+
+        // The root might have some value
+        if (root.getValue () != null)
+        {
+            writer.write ("\n");
+            writer.write (root.getValue ());
+        }
 
         /***************************/
         /* MAIN SERIALIZED OBJECTS */
         /***************************/
 
+        // Write all top-level objects
         if (root.getObjects () != null)
         {
             for (GluonInstance object: root.getObjects ())
@@ -281,11 +325,8 @@ public class GluonWriter
                 write_object (object);
             }
         }
-        else
-        {
-            // Serialize just this one
-        }
 
+        // Write all nested objects remaining
         for (GluonInstance object: serialization_queue)
         {
             write_object (object);
@@ -301,8 +342,7 @@ public class GluonWriter
 
         writer.write ("\n");
         writer.write (file_format_boundary);
-        writer.write ("--\n");
-
+        writer.write ("//\n");
         return (true);
     }
 }

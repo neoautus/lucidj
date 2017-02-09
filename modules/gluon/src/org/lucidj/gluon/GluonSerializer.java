@@ -19,6 +19,7 @@ package org.lucidj.gluon;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
+import org.lucidj.gluon.serializers.DefaultArraySerializers;
 import org.lucidj.gluon.serializers.DefaultSerializers;
 import org.lucidj.gluon.serializers.ListSerializer;
 import org.slf4j.Logger;
@@ -61,7 +62,7 @@ public class GluonSerializer implements SerializerEngine
         return (true);
     }
 
-    private GluonInstance build_representation (Object obj)
+    private GluonInstance build_representation_tree (Object obj)
     {
         GluonInstance instance = new GluonInstance ();
         Class type = (obj == null)? NullType.class: obj.getClass ();
@@ -91,7 +92,7 @@ public class GluonSerializer implements SerializerEngine
             }
         }
 
-        log.debug ("build_representation: instance={} obj={} serializer={}", instance, obj, serializer);
+        log.debug ("build_representation_tree: instance={} obj={} serializer={}", instance, obj, serializer);
 
         if (serializer == null)
         {
@@ -109,7 +110,7 @@ public class GluonSerializer implements SerializerEngine
     @Override
     public boolean serializeObject (Writer writer, Object obj)
     {
-        GluonInstance instance = build_representation (obj);
+        GluonInstance instance = build_representation_tree (obj);
 
         // Build the object representation including all nested known objects
         if (instance != null)
@@ -181,7 +182,6 @@ public class GluonSerializer implements SerializerEngine
 //        register (double[].class, DoubleArraySerializer.class);
 //        register (boolean[].class, BooleanArraySerializer.class);
 //        register (String[].class, StringArraySerializer.class);
-//        register (Object[].class, ObjectArraySerializer.class);
 //        register (KryoSerializable.class, KryoSerializableSerializer.class);
 //        register (BigInteger.class, BigIntegerSerializer.class);
 //        register (BigDecimal.class, BigDecimalSerializer.class);
@@ -219,6 +219,7 @@ public class GluonSerializer implements SerializerEngine
         register (long.class, new DefaultSerializers.LongSerializer ());
         register (double.class, new DefaultSerializers.DoubleSerializer ());
 
+        register (Object[].class, new DefaultArraySerializers.ObjectArraySerializer ());
         register (List.class, new ListSerializer ());
 
         log.info ("ObjectSerializer started");
@@ -290,7 +291,7 @@ public class GluonSerializer implements SerializerEngine
                 properties = new HashMap<> ();
             }
 
-            GluonInstance instance = build_representation (object);
+            GluonInstance instance = build_representation_tree (object);
 
             if (instance != null)
             {
@@ -313,7 +314,7 @@ public class GluonSerializer implements SerializerEngine
         @Override
         public SerializerInstance addObject (Object object)
         {
-            GluonInstance instance = build_representation (object);
+            GluonInstance instance = build_representation_tree (object);
 
             if (instance != null)
             {

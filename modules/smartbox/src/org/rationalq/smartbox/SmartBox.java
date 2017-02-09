@@ -407,17 +407,18 @@ public class SmartBox implements Serializer, Quark, ComponentInterface, ObjectMa
     @Override // Serializer
     public boolean serializeObject (SerializerInstance instance, Object to_serialize)
     {
+        // Throw in all current properties
+        for (Map.Entry<String, Object> entry: properties.entrySet ())
+        {
+            instance.setProperty (entry.getKey (), entry.getValue ());
+        }
+
+        // Base object data
         instance.setObjectClass (this.getClass ());
         instance.setValue (code);
 
-        //properties.put ("output", om.getObjects ());
-        for (int i = 0; i < om.available (); i++)
-        {
-            instance.setProperty ("output" + i, om.getObject (i));
-        }
-
-        // TODO: PUT OTHER PROPERTIES
-
+        // Runtime properties
+        instance.setProperty ("output", om.getObjects ());
         return (true);
     }
 

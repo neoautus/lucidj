@@ -19,6 +19,7 @@ package org.lucidj.gluon.serializers;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerInstance;
+import org.lucidj.gluon.GluonConstants;
 
 public class DefaultSerializers
 {
@@ -27,7 +28,8 @@ public class DefaultSerializers
         @Override
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return false;
+            instance.setValue ("null");
+            return (true);
         }
 
         @Override
@@ -89,7 +91,9 @@ public class DefaultSerializers
         @Override
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            instance.setValue ((Boolean)object? "true": "false");
+            instance.setValue ((Boolean)object?
+                "true" + GluonConstants.MACRO_CHAR + "${attr.name}":
+                "false" + GluonConstants.MACRO_CHAR + "!${attr.name}");
             return (true);
         }
 

@@ -211,13 +211,16 @@ public class GluonSerializer implements SerializerEngine
         register (Integer.class, new DefaultSerializers.IntSerializer ());
         register (String.class, new DefaultSerializers.StringSerializer ());
         register (float.class, new DefaultSerializers.FloatSerializer ());
+        register (Float.class, new DefaultSerializers.FloatSerializer ());
         register (boolean.class, new DefaultSerializers.BooleanSerializer ());
         register (Boolean.class, new DefaultSerializers.BooleanSerializer ());
         register (byte.class, new DefaultSerializers.ByteSerializer ());
         register (char.class, new DefaultSerializers.CharSerializer ());
         register (short.class, new DefaultSerializers.ShortSerializer ());
         register (long.class, new DefaultSerializers.LongSerializer ());
+        register (Long.class, new DefaultSerializers.LongSerializer ());
         register (double.class, new DefaultSerializers.DoubleSerializer ());
+        register (Double.class, new DefaultSerializers.DoubleSerializer ());
 
         register (Object[].class, new DefaultArraySerializers.ObjectArraySerializer ());
         register (List.class, new ListSerializer ());

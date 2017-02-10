@@ -76,7 +76,8 @@ public class DefaultSerializers
         @Override
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return false;
+            instance.setValue (Float.toString ((Float)object) + "f");
+            return (true);
         }
 
         @Override
@@ -154,7 +155,8 @@ public class DefaultSerializers
         @Override
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return false;
+            instance.setValue (Long.toString ((Long)object) + "L");
+            return (true);
         }
 
         @Override
@@ -169,7 +171,8 @@ public class DefaultSerializers
         @Override
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
-            return false;
+            instance.setValue (Double.toString ((Double)object) + "d");
+            return (true);
         }
 
         @Override

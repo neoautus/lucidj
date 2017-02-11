@@ -14,31 +14,13 @@
  * the License.
  */
 
-package org.lucidj.gluon.serializers;
+package org.lucidj.gluon;
 
 import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerInstance;
 
-public class DefaultArraySerializers
+public interface GluonPrimitive extends Serializer
 {
-    public static class ObjectArraySerializer implements Serializer
-    {
-        @Override
-        public boolean serializeObject (SerializerInstance instance, Object object)
-        {
-            for (Object item: (Object[])object)
-            {
-                instance.addObject (item);
-            }
-            return (true);
-        }
-
-        @Override
-        public Object deserializeObject (SerializerInstance instance)
-        {
-            return null;
-        }
-    }
+    boolean match (String charseq);
 }
 
 // EOF

@@ -68,6 +68,8 @@ public class GluonSerializer implements SerializerEngine
         Class type = (obj == null)? NullType.class: obj.getClass ();
         Serializer serializer = null;
 
+        instance.setBackingObject (obj);
+
         if (obj instanceof Serializer)
         {
             // Shortest way, the object knows how to serialize itself
@@ -137,6 +139,23 @@ public class GluonSerializer implements SerializerEngine
     @Override
     public Object deserializeObject (Reader reader)
     {
+        GluonInstance instance = new GluonInstance ();
+
+        try
+        {
+            GluonReader greader = new GluonReader (reader);
+
+            if (!greader.readRepresentation (instance))
+            {
+                return (null);
+            }
+        }
+        catch (IOException e)
+        {
+            log.error ("Exception reading {}", reader, e);
+            return (null);
+        }
+
         return null;
     }
 
@@ -237,6 +256,7 @@ public class GluonSerializer implements SerializerEngine
     public class GluonInstance implements SerializerInstance
     {
         private Map<String, GluonInstance> properties = null;
+        private Object backing_object = null;
         private String string_value = null;
         private List<GluonInstance> object_values = null;
 
@@ -266,14 +286,14 @@ public class GluonSerializer implements SerializerEngine
         {
             if (properties != null && properties.containsKey (GluonConstants.OBJECT_CLASS))
             {
-                return (properties.get (GluonConstants.OBJECT_CLASS).getValue ());
+                return ((String)properties.get (GluonConstants.OBJECT_CLASS).getBackingObject ());
             }
             return (null);
         }
 
         public boolean isPrimitive ()
         {
-            return (string_value != null && getProperty (GluonConstants.OBJECT_CLASS) == null);
+            return (getProperty (GluonConstants.OBJECT_CLASS) == null);
         }
 
         public String[] getPropertyKeys ()
@@ -314,6 +334,11 @@ public class GluonSerializer implements SerializerEngine
             string_value = representation;
         }
 
+        public void setBackingObject (Object value)
+        {
+            backing_object = value;
+        }
+
         @Override
         public SerializerInstance addObject (Object object)
         {
@@ -339,6 +364,11 @@ public class GluonSerializer implements SerializerEngine
         public String getValue ()
         {
             return (string_value);
+        }
+
+        public Object getBackingObject ()
+        {
+            return (backing_object);
         }
 
         public List<GluonInstance> getObjects ()

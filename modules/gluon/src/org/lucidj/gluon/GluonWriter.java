@@ -41,7 +41,6 @@ public class GluonWriter
     private Map<GluonInstance, GluonInstance> property_to_reference = new HashMap<> ();
 
     private StrSubstitutor macro_subst;
-    private GluonInstance macro_attr_entry;
     private String macro_attr_name;
     private String macro_attr_value;
     private String macro_attr_operator;
@@ -56,11 +55,7 @@ public class GluonWriter
             @Override
             public String lookup (String s)
             {
-                if (s == null)
-                {
-                    return ("null");
-                }
-                else if (s.equals ("attr.name"))
+                if (s.equals ("attr.name"))
                 {
                     return (macro_attr_name);
                 }
@@ -72,16 +67,7 @@ public class GluonWriter
                 {
                     return (macro_attr_operator);
                 }
-                else
-                {
-                    GluonInstance property = macro_attr_entry.getProperty (s);
-
-                    if (property.isPrimitive ())
-                    {
-                        return (property.getValue ());
-                    }
-                }
-                return ("nil");
+                return (null);
             }
         });
     }
@@ -111,7 +97,6 @@ public class GluonWriter
             String macro = extract_macro (attr_value);
             macro_attr_name = key;
             macro_attr_value = attr_value;
-            macro_attr_entry = attr_entry;
             macro_attr_operator = operator;
             writer.write (macro_subst.replace (macro));
         }
@@ -248,7 +233,7 @@ public class GluonWriter
         // First write all X- properties
         for (String key: keyset)
         {
-            if (!key.startsWith ("X-"))
+            if (!key.startsWith ("X-") || key.startsWith ("."))
             {
                 continue;
             }
@@ -259,7 +244,7 @@ public class GluonWriter
         // Now write all other properties
         for (String key: keyset)
         {
-            if (key.startsWith ("X-"))
+            if (key.startsWith ("X-") || key.startsWith ("."))
             {
                 continue;
             }
@@ -287,7 +272,7 @@ public class GluonWriter
 
         if (content_boundary != null && content_boundary.isPrimitive ())
         {
-            file_format_boundary = content_boundary.getValue ();
+            file_format_boundary = (String)content_boundary.getBackingObject ();
         }
 
         // Minimum sanity please
@@ -306,12 +291,8 @@ public class GluonWriter
         // Write the properties of root object
         write_all_object_properties (root);
 
-        // The root might have some value
-        if (root.getValue () != null)
-        {
-            writer.write ("\n");
-            writer.write (root.getValue ());
-        }
+        // The value of root is ignored since we use the first char sequence after the
+        // newline break from properties as section boundary.
 
         /***************************/
         /* MAIN SERIALIZED OBJECTS */

@@ -58,6 +58,7 @@ import org.lucidj.runtime.CompositeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -450,6 +451,44 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         }
     }
 
+    private void test_deserialization ()
+    {
+        if (serializer == null)
+        {
+            log.error ("serializer == null, no test available");
+            return;
+        }
+
+        Path userdir = shiro.getDefaultUserDir ();
+        Path destination_path = userdir.resolve ("serialization.txt");
+        Charset cs = Charset.forName ("UTF-8");
+        Reader reader = null;
+
+        try
+        {
+            reader = Files.newBufferedReader (destination_path, cs);
+
+            log.info ("***> deserializeObject ({}) to {} <***", object_list, destination_path);
+            Object obj = serializer.deserializeObject (reader);
+            log.info ("***> obj = {}", obj);
+        }
+        catch (Exception e)
+        {
+            log.error ("Exception on serialization", e);
+        }
+        finally
+        {
+            try
+            {
+                if (reader != null)
+                {
+                    reader.close();
+                }
+            }
+            catch (Exception ignore) {};
+        }
+    }
+
     private void handle_button_click (Button source)
     {
         switch (source.getId())
@@ -463,6 +502,11 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
             case "test":
             {
                 test_serialization ();
+                break;
+            }
+            case "test2":
+            {
+                test_deserialization ();
                 break;
             }
             case VM_NOTEBOOK:
@@ -605,6 +649,8 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
             .addStyleName("ui-toolbar-spacer");
         createButton (local_toolbar, "test", FontAwesome.MAGIC)
             .addStyleName("ui-toolbar-spacer");
+        createButton (local_toolbar, "test2", FontAwesome.FLASK)
+                .addStyleName("ui-toolbar-spacer");
 
         CssLayout edition = new CssLayout();
         edition.addStyleName("v-component-group");

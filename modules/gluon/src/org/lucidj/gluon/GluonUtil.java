@@ -1,0 +1,119 @@
+/*
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+package org.lucidj.gluon;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.lucidj.gluon.GluonSerializer.GluonInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class GluonUtil
+{
+    private final static transient Logger log = LoggerFactory.getLogger (GluonUtil.class);
+
+    private static void dump_instance (GluonInstance instance, Writer writer, int level)
+        throws IOException
+    {
+        String indent = new String(new char [level * 8]).replace('\0', ' ');
+
+        //writer.write (indent + "Instance: " + instance + "\n");
+
+        if (instance.getProperty (GluonConstants.OBJECT_CLASS) != null)
+        {
+            writer.write (indent + "OBJECT\n");
+        }
+        else
+        {
+            writer.write (indent + "PRIMITIVE\n");
+        }
+
+        String[] keyset = instance.getPropertyKeys ();
+
+        writer.write (indent + "Value: " + instance.getBackingObject () + "\n");
+        writer.write (indent + "Representation: " + instance.getValue () + "\n");
+
+
+        // First write all X- properties
+        if (keyset == null)
+        {
+            //writer.write (indent + "No Properties\n");
+        }
+        else
+        {
+            for (String key: keyset)
+            {
+                writer.write (indent + "Property: " + key + "=" +
+                        instance.getProperty (key) + " (" +
+                        instance.getProperty (key).getClass ().getName () + ")\n");
+
+                if (instance.getProperty (key) instanceof GluonInstance)
+                {
+                    dump_instance ((GluonInstance)instance.getProperty (key), writer, level + 1);
+                }
+            }
+        }
+
+        if (instance.getObjects () == null)
+        {
+            //writer.write (indent + "No Objects\n");
+        }
+        else
+        {
+            for (GluonInstance obj: instance.getObjects ())
+            {
+                writer.write (indent + "Object:\n");
+                dump_instance (obj, writer, level + 1);
+            }
+        }
+    }
+
+    public static void dumpRepresentation (GluonInstance root, String filename)
+    {
+        Path userdir = FileSystems.getDefault ().getPath (System.getProperty ("rq.home"), "userdata");
+        Path destination_path = userdir.resolve (filename);
+        Charset cs = Charset.forName ("UTF-8");
+        Writer writer = null;
+
+        try
+        {
+            writer = Files.newBufferedWriter (destination_path, cs);
+            dump_instance (root, writer, 1);
+        }
+        catch (Exception e)
+        {
+            log.error ("Exception on serialization", e);
+        }
+        finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            }
+            catch (Exception ignore) {};
+        }
+    }
+}
+
+// EOF

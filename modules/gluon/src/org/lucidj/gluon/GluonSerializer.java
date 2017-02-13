@@ -123,6 +123,8 @@ public class GluonSerializer implements SerializerEngine
             se.setProperty ("version", "1.0");
             // ---------------------------------------------------------------------------------
 
+            GluonUtil.dumpRepresentation (instance, "serialize_dump.txt");
+
             try
             {
                 GluonWriter qwriter = new GluonWriter (writer);
@@ -149,6 +151,8 @@ public class GluonSerializer implements SerializerEngine
             {
                 return (null);
             }
+
+            GluonUtil.dumpRepresentation (instance, "deserialize_dump.txt");
         }
         catch (IOException e)
         {

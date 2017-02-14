@@ -23,6 +23,8 @@ import org.lucidj.gluon.GluonSerializer.GluonInstance;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GluonReader
 {
@@ -40,11 +42,104 @@ public class GluonReader
         rd = new BufferedReader (reader);
     }
 
-    private void read_attributes (GluonInstance property_instance, String str)
+    // Shamelessly copied from org.apache.felix.framework.util.manifestparser.ManifestParser.java
+    public static List<String> parseDelimitedString(String value, String delim, boolean trim)
+    {
+        if (value == null)
+        {
+            value = "";
+        }
+
+        List<String> list = new ArrayList<> ();
+
+        int CHAR = 1;
+        int DELIMITER = 2;
+        int STARTQUOTE = 4;
+        int ENDQUOTE = 8;
+
+        StringBuffer sb = new StringBuffer();
+
+        int expecting = (CHAR | DELIMITER | STARTQUOTE);
+
+        boolean isEscaped = false;
+        for (int i = 0; i < value.length(); i++)
+        {
+            char c = value.charAt(i);
+
+            boolean isDelimiter = (delim.indexOf(c) >= 0);
+
+            if (!isEscaped && (c == '\\'))
+            {
+                isEscaped = true;
+                continue;
+            }
+
+            if (isEscaped)
+            {
+                sb.append('\\');
+                sb.append(c);
+            }
+            else if (isDelimiter && ((expecting & DELIMITER) > 0))
+            {
+                if (trim)
+                {
+                    list.add(sb.toString().trim());
+                }
+                else
+                {
+                    list.add(sb.toString());
+                }
+                sb.delete(0, sb.length());
+                expecting = (CHAR | DELIMITER | STARTQUOTE);
+            }
+            else if ((c == '"') && ((expecting & STARTQUOTE) > 0))
+            {
+                sb.append(c);
+                expecting = CHAR | ENDQUOTE;
+            }
+            else if ((c == '"') && ((expecting & ENDQUOTE) > 0))
+            {
+                sb.append(c);
+                expecting = (CHAR | STARTQUOTE | DELIMITER);
+            }
+            else if ((expecting & CHAR) > 0)
+            {
+                sb.append(c);
+            }
+            else
+            {
+                log.error ("Invalid delimited string: {}", value);
+                return (null);
+            }
+
+            isEscaped = false;
+        }
+
+        if (sb.length() > 0)
+        {
+            if (trim)
+            {
+                list.add(sb.toString().trim());
+            }
+            else
+            {
+                list.add(sb.toString());
+            }
+        }
+
+        return (list);
+    }
+
+    private boolean read_attributes (GluonInstance property_instance, String str)
     {
         // We expect something like:
         //   [value;]attr1=value[;attr2=value2[;attrN=valueN]]
-        String attribute_list[] = str.split("\\;");
+        List<String> attribute_list = parseDelimitedString (str, ";", true);
+
+        if (attribute_list == null)
+        {
+            return (false);
+        }
 
         for (String attribute: attribute_list)
         {
@@ -76,6 +171,7 @@ public class GluonReader
                 }
             }
         }
+        return (true);
     }
 
     private boolean read_property_and_attributes (GluonInstance instance, String line)
@@ -99,15 +195,20 @@ public class GluonReader
 
         log.info ("Reading name=[" + property_name + "] right_hand=[" + right_hand + "]");
 
-        String attribute_groups[] = right_hand.split ("\\,");
+        List<String> attribute_groups = parseDelimitedString (right_hand, ",", true);
+
+        if (attribute_groups == null)
+        {
+            return (false);
+        }
 
         // Here we create the property entry
         GluonInstance property_instance = (GluonInstance)instance.setProperty (property_name, null);
 
-        if (attribute_groups.length == 1)
+        if (attribute_groups.size () == 1)
         {
             // We have a simple property with optional attributes attached
-            read_attributes (property_instance, attribute_groups[0]);
+            read_attributes (property_instance, attribute_groups.get (0));
         }
         else // We have a property with nested objects, like a list, array or set
         {
@@ -117,80 +218,6 @@ public class GluonReader
                 // We add 1 nested object for each attribute group
                 GluonInstance nested_object = (GluonInstance)property_instance.addObject (null);
                 read_attributes (nested_object, attributes.trim ());
-            }
-        }
-        return (true);
-    }
-
-    private boolean read_property_and_attributes_OK (GluonInstance instance, String line)
-    {
-        log.info ("====> PROPERTY: {}", line);
-
-        if (line.startsWith ("#"))
-        {
-            return (true);
-        }
-
-        int pos = line.indexOf (':');
-
-        if (pos == -1)
-        {
-            return (false);
-        }
-
-        String property_name = line.substring(0, pos).trim();
-        String right_hand = line.substring(pos + 1).trim();
-
-        log.info ("Reading name=[" + property_name + "] right_hand=[" + right_hand + "]");
-
-        String attribute_groups[] = right_hand.split ("\\,");
-
-        // Here we create the property entry
-        GluonInstance property_instance = (GluonInstance)instance.setProperty (property_name, null);
-
-        // Then we walk all attribute groups, like Property: {attr group 1}, {attr group 2}, {attr group N}
-        for (String attributes: attribute_groups)
-        {
-            String attribute_list[] = attributes.split("\\;");
-
-            // Let's assume for now a simple object with properties
-            GluonInstance current_instance = property_instance;
-
-            // If we have multiple attribute groups, we actually have multiple objects
-            if (attribute_groups.length > 1)
-            {
-                // Having multiple objects, let's nest them inside the property_instance
-                current_instance = (GluonInstance)property_instance.addObject (null);
-            }
-
-            // Cycle all attributes, like Property: [value;]attr1=value1;attr2=value2;attr3=value3[, next attr group]
-            for (String attribute: attribute_list)
-            {
-                attribute = attribute.trim ();
-
-                // Do we have a value or an attribute?
-                if ("0123456789.\"".indexOf (attribute.charAt (0)) != -1)
-                {
-                    log.info ("# SET VALUE Attribute: {}", attribute);
-                    current_instance.setValue (attribute);
-                }
-                else // attr=value | boolean
-                {
-                    // No '=' leads to special boolean handling
-                    if ((pos = attribute.indexOf ("=")) == -1)
-                    {
-                        log.info ("# SET SPECIAL Attribute: {}", attribute);
-                        current_instance.setProperty (attribute, null).setValue (attribute);
-                    }
-                    else // We have '=', build param name and it's value
-                    {
-                        String attr_name = attribute.substring (0, pos).trim ();
-                        String attr_value = attribute.substring (pos + 1).trim ();
-
-                        log.info ("# SET Normal Attribute: {}={}", attr_name, attr_value);
-                        current_instance.setProperty (attr_name, null).setValue (attr_value);
-                    }
-                }
             }
         }
         return (true);

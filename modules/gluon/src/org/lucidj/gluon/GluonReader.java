@@ -145,8 +145,12 @@ public class GluonReader
         {
             attribute = attribute.trim ();
 
+            // TODO: BETTER CHECKING STRUCTURE
             // Do we have a value or an attribute?
-            if ("0123456789.\"".indexOf (attribute.charAt (0)) != -1)
+            if ("0123456789.\"".indexOf (attribute.charAt (0)) != -1
+                || attribute.equals ("true")
+                || attribute.equals ("false")
+                || attribute.equals ("null"))
             {
                 log.info ("# SET VALUE Attribute: {}", attribute);
                 property_instance.setValue (attribute);
@@ -159,7 +163,12 @@ public class GluonReader
                 if (pos == -1)
                 {
                     log.info ("# SET SPECIAL Attribute: {}", attribute);
-                    property_instance.setProperty (attribute, null).setValue (attribute);
+                    GluonInstance entry = (GluonInstance)property_instance.setProperty (attribute, null);
+                    entry.setValue (attribute);
+
+                    // TODO: FIND A BETTER WAY!!!
+                    // Very ugly way to gain access to property name
+                    entry.setBackingObject (property_instance);
                 }
                 else // We have '=', build param name and it's value
                 {

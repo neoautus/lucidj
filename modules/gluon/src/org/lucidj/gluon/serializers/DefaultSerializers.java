@@ -20,6 +20,12 @@ import org.apache.commons.lang3.StringEscapeUtils;
 import org.lucidj.api.SerializerInstance;
 import org.lucidj.gluon.GluonConstants;
 import org.lucidj.gluon.GluonPrimitive;
+import org.lucidj.gluon.GluonSerializer;
+
+import javax.lang.model.type.NullType;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.util.regex.Pattern;
 
 public class DefaultSerializers
 {
@@ -35,18 +41,20 @@ public class DefaultSerializers
         @Override
         public Object deserializeObject (SerializerInstance instance)
         {
-            return (null);
+            return (NullType.class);
         }
 
         @Override
         public boolean match (String charseq)
         {
-            return (false);
+            return (charseq.equals ("null"));
         }
     }
 
     public static class IntSerializer implements GluonPrimitive
     {
+        Pattern INT_PATTERN = Pattern.compile ("^-?\\d{1,10}$");
+
         @Override
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
@@ -57,13 +65,13 @@ public class DefaultSerializers
         @Override
         public Object deserializeObject (SerializerInstance instance)
         {
-            return null;
+            return (Integer.valueOf (instance.getValue ()));
         }
 
         @Override
         public boolean match (String charseq)
         {
-            return (false);
+            return (INT_PATTERN.matcher (charseq).matches ());
         }
     }
 
@@ -79,13 +87,14 @@ public class DefaultSerializers
         @Override
         public Object deserializeObject (SerializerInstance instance)
         {
-            return null;
+            String str = instance.getValue ();
+            return (StringEscapeUtils.unescapeJava (str.substring (1, str.length () - 1)));
         }
 
         @Override
         public boolean match (String charseq)
         {
-            return (false);
+            return (charseq.startsWith ("\"") && charseq.endsWith ("\""));
         }
     }
 
@@ -125,13 +134,62 @@ public class DefaultSerializers
         @Override
         public Object deserializeObject (SerializerInstance instance)
         {
-            return null;
+            String str = instance.getValue ();
+
+            if (str.startsWith ("!"))
+            {
+                // Soo ugly it hurts my eyes :[
+                GluonSerializer.GluonInstance hack = (GluonSerializer.GluonInstance)instance;
+                GluonSerializer.GluonInstance obj = (GluonSerializer.GluonInstance)hack.getBackingObject ();
+                obj.renameProperty (str, str.substring (1));
+            }
+
+            return (!str.startsWith ("!") && !str.equals ("false"));
+        }
+
+        private boolean is_valid_identifier (String str)
+        {
+            StringCharacterIterator scan = new StringCharacterIterator (str);
+            char ch = scan.first ();
+
+            // The identifier may be preceded by '!'
+            if (ch == '!')
+            {
+                ch = scan.next ();
+            }
+
+            if (!Character.isJavaIdentifierStart (ch))
+            {
+                return (false);
+            }
+
+            while ((ch = scan.next ()) != CharacterIterator.DONE)
+            {
+                if (!Character.isJavaIdentifierPart (ch))
+                {
+                    return (false);
+                }
+            }
+            return (true);
         }
 
         @Override
         public boolean match (String charseq)
         {
-            return (false);
+            // The special case: null is not boolean
+            if (charseq.equals ("null"))
+            {
+                return (false);
+            }
+
+            // The canonical cases
+            if (charseq.equals ("true") || charseq.equals ("false"))
+            {
+                return (true);
+            }
+
+            // The special shorthand case (any valid java identifier)
+            return (is_valid_identifier (charseq));
         }
     }
 
@@ -200,6 +258,8 @@ public class DefaultSerializers
 
     public static class LongSerializer implements GluonPrimitive
     {
+        Pattern LONG_PATTERN = Pattern.compile("^-?\\d{1,19}L$");
+
         @Override
         public boolean serializeObject (SerializerInstance instance, Object object)
         {
@@ -210,13 +270,14 @@ public class DefaultSerializers
         @Override
         public Object deserializeObject (SerializerInstance instance)
         {
-            return null;
+            String str = instance.getValue ();
+            return (Long.valueOf (str.substring (0, str.length () - 1)));
         }
 
         @Override
         public boolean match (String charseq)
         {
-            return (false);
+            return (LONG_PATTERN.matcher (charseq).matches ());
         }
     }
 

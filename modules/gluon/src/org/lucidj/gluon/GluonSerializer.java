@@ -31,14 +31,17 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IllegalFormatException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -53,6 +56,9 @@ public class GluonSerializer implements SerializerEngine
     private final static transient Logger log = LoggerFactory.getLogger (GluonSerializer.class);
 
     private HashMap<Class, Serializer> serializer_lookup = new HashMap<> ();
+
+    @Context
+    private BundleContext context;
 
     @Override
     public boolean register (Class clazz, Serializer serializer)
@@ -138,6 +144,101 @@ public class GluonSerializer implements SerializerEngine
         return (false);
     }
 
+    private boolean resolve_object (GluonInstance object)
+    {
+        log.info ("{} ====> {}", object, object.getProperties ());
+        return (true);
+    }
+
+    private boolean build_object_tree (GluonInstance instance)
+    {
+        HashMap<Integer, GluonInstance> embedded_objects = new HashMap<> ();
+        List<GluonInstance> object_list = instance.getObjects ();
+
+        for (GluonInstance object: object_list)
+        {
+            if (object.getBackingObject () == null)
+            {
+                resolve_object (object);
+            }
+
+        }
+        return (false);
+    }
+
+    private Object deserialize_primitive (GluonInstance primitive)
+        throws IllegalStateException
+    {
+        String representation = primitive.getValue ();
+
+        // We need to walk the deserializers trying to match the representation
+        for (Map.Entry<Class, Serializer> entry: serializer_lookup.entrySet ())
+        {
+            if (entry.getValue () instanceof GluonPrimitive)
+            {
+                GluonPrimitive deserializer = (GluonPrimitive)entry.getValue ();
+
+                if (deserializer.match (representation))
+                {
+                    Object obj = deserializer.deserializeObject (primitive);
+
+                    // Even with a match, eventually the representation might fail and yield null
+                    if (obj == null)
+                    {
+                        String message =
+                            deserializer.getClass ().getName () +   // The deserializer
+                            " failed to deserialize " +             // The problem
+                            "'" + representation + "'";             // The culprit
+                        throw (new IllegalStateException (message));
+                    }
+                    return (obj);
+                }
+            }
+        }
+        throw (new IllegalStateException ("No matching serializer for '" + representation + "'"));
+    }
+
+    private boolean deserialize_primitives (GluonInstance instance)
+    {
+        // It's good to be optimistic, however nullius in verba :)
+        boolean success = true;
+
+        // Walk all properties and attributes
+        String[] property_keys = instance.getPropertyKeys ();
+
+        if (property_keys != null)
+        {
+            for (String key: property_keys)
+            {
+                GluonInstance property = instance.getProperty (key);
+
+                try
+                {
+                    property.setBackingObject (deserialize_primitive (property));
+                }
+                catch (IllegalStateException e)
+                {
+                    log.error ("Error deserializing {}: {}", key, e.getMessage ());
+                    success = false;
+                }
+
+                // Walk into any attributes
+                success &= deserialize_primitives (property);
+            }
+        }
+
+        // Walk all embeded objects
+        if (instance.getObjects () != null)
+        {
+            for (GluonInstance obj: instance.getObjects ())
+            {
+                success &= deserialize_primitives (obj);
+            }
+        }
+
+        return (success);
+    }
+
     @Override
     public Object deserializeObject (Reader reader)
     {
@@ -152,7 +253,11 @@ public class GluonSerializer implements SerializerEngine
                 return (null);
             }
 
+            deserialize_primitives (instance);
+
             GluonUtil.dumpRepresentation (instance, "deserialize_dump.txt");
+
+            build_object_tree (instance);
         }
         catch (IOException e)
         {
@@ -325,6 +430,13 @@ public class GluonSerializer implements SerializerEngine
                 properties.put (key, instance);
             }
             return (instance);
+        }
+
+        public void renameProperty (String old_name, String new_name)
+        {
+            GluonInstance property = properties.get (old_name);
+            properties.remove (old_name);
+            properties.put (new_name, property);
         }
 
         public GluonInstance getProperty (String key)

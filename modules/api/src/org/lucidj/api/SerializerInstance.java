@@ -19,6 +19,7 @@ package org.lucidj.api;
 public interface SerializerInstance
 {
     void                setValue       (String representation);
+    String              getValue       ();
     SerializerInstance  addObject      (Object object);
     SerializerInstance  setProperty    (String key, Object object);
     SerializerInstance  setObjectClass (Class clazz);

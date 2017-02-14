@@ -35,22 +35,15 @@ public class GluonUtil
     {
         String indent = new String(new char [level * 8]).replace('\0', ' ');
 
-        //writer.write (indent + "Instance: " + instance + "\n");
-
-        if (instance.getProperty (GluonConstants.OBJECT_CLASS) != null)
-        {
-            writer.write (indent + "OBJECT\n");
-        }
-        else
-        {
-            writer.write (indent + "PRIMITIVE\n");
-        }
-
         String[] keyset = instance.getPropertyKeys ();
 
-        writer.write (indent + "Value: " + instance.getBackingObject () + "\n");
-        writer.write (indent + "Representation: " + instance.getValue () + "\n");
+        String class_name = instance.getBackingObject () == null?
+            "": " (" + instance.getBackingObject ().getClass ().getName () + ")";
 
+        writer.write (indent + "Backing Object: " +
+            ((instance.getBackingObject () == null)? "<null>": instance.getBackingObject ()) + class_name + "\n");
+        writer.write (indent + "Representation: " +
+            ((instance.getValue () == null)? "<null>": instance.getValue ()) + "\n");
 
         // First write all X- properties
         if (keyset == null)
@@ -61,14 +54,11 @@ public class GluonUtil
         {
             for (String key: keyset)
             {
-                writer.write (indent + "Property: " + key + "=" +
-                        instance.getProperty (key) + " (" +
-                        instance.getProperty (key).getClass ().getName () + ")\n");
+                GluonInstance property = instance.getProperty (key);
+                writer.write (indent + "Property: " + key + " (" +
+                    ((property.getProperty (GluonConstants.OBJECT_CLASS) != null)? "Object": "Primitive") + ")\n");
 
-                if (instance.getProperty (key) instanceof GluonInstance)
-                {
-                    dump_instance ((GluonInstance)instance.getProperty (key), writer, level + 1);
-                }
+                dump_instance (property, writer, level + 1);
             }
         }
 

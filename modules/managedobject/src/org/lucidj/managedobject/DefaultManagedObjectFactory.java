@@ -62,6 +62,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
 
         for (ManagedObjectProvider provider: provider_list)
         {
+            // TODO: USE org.osgi.framework.Filter (https://osgi.org/javadoc/r5/core/index.html)
             if (filter == null || filter.contains ("bugabuga"))
             {
                 ManagedObjectInstance ref = new DefaultManagedObjectInstance (null);

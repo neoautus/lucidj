@@ -334,14 +334,12 @@ public class GluonReader
 
             while ((line = rd.readLine ()) != null)
             {
-                line = line.trim ();
-
-                if (line.equals (boundary))
+                if (line.trim ().equals (boundary))
                 {
                     log.info ("--BOUNDARY--");
                     break;
                 }
-                else if (line.equals (final_boundary))
+                else if (line.trim ().equals (final_boundary))
                 {
                     log.info ("--FINAL BOUNDARY--");
                     line = null;

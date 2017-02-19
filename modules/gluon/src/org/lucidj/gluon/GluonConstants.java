@@ -18,7 +18,9 @@ package org.lucidj.gluon;
 
 public interface GluonConstants
 {
+    String SERIALIZATION_ENGINE = "X-Serialization-Engine";
     String OBJECT_CLASS = "X-Object";
+    String EMBEDDING_FLAG = "embedded";
 
     String DEFAULT_BOUNDARY = "-------THINK_BIG_BE_BOLD-------";
     String CONTENT_BOUNDARY = ".Content-Boundary";

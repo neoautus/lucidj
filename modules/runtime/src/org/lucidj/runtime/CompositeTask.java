@@ -16,6 +16,8 @@
 
 package org.lucidj.runtime;
 
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Task;
 
 import java.util.ArrayList;
@@ -26,7 +28,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
-public class CompositeTask implements Task, List
+public class CompositeTask implements Task, List, ManagedObject
 {
     private ArrayList<Object> obj_list = new ArrayList<> ();
     private HashMap<String, Object> properties = new HashMap<>();
@@ -193,6 +195,18 @@ public class CompositeTask implements Task, List
     public Object[] toArray (Object[] a)
     {
         return (obj_list.toArray (a));
+    }
+
+    @Override
+    public void validate (ManagedObjectInstance instance)
+    {
+        // Not used
+    }
+
+    @Override
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        // Not used
     }
 }
 

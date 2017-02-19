@@ -20,6 +20,7 @@ import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import org.lucidj.api.Quark;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.Serializer;
+import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
 import org.lucidj.renderer.SimpleObservable;
 import org.slf4j.Logger;
@@ -35,6 +36,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Observer;
 
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
+
+@Component (immediate = true)
+@Instantiate
+@Provides
 public class Console implements Serializer, Quark, Renderer.Observable
 {
     private final transient Logger log = LoggerFactory.getLogger (Console.class);
@@ -49,6 +59,9 @@ public class Console implements Serializer, Quark, Renderer.Observable
     private String last_tag;
     private String last_unfinished_tag;
     private int last_unfinished_tag_pos;
+
+    @Requires
+    private SerializerEngine serializer;
 
     public void output (String tag, String text)
     {
@@ -253,7 +266,14 @@ public class Console implements Serializer, Quark, Renderer.Observable
     @Override // Serializer
     public Object deserializeObject (SerializerInstance instance)
     {
+        // TODO: SELF SERIALIZER CLASS
         return null;
+    }
+
+    @Validate
+    private void validate ()
+    {
+        serializer.register (this.getClass (), this);
     }
 }
 

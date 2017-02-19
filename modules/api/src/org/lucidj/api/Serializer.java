@@ -18,8 +18,8 @@ package org.lucidj.api;
 
 public interface Serializer
 {
-    boolean serializeObject   (SerializerInstance engine, Object object);
-    Object  deserializeObject (SerializerInstance engine);
+    boolean serializeObject   (SerializerInstance instance, Object object);
+    Object  deserializeObject (SerializerInstance instance);
 }
 
 // EOF

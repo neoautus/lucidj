@@ -62,13 +62,13 @@ public class GluonUtil
             }
         }
 
-        if (instance.getObjects () == null)
+        if (instance.getEmbeddedObjects () == null)
         {
             //writer.write (indent + "No Objects\n");
         }
         else
         {
-            for (GluonInstance obj: instance.getObjects ())
+            for (GluonInstance obj: instance.getEmbeddedObjects ())
             {
                 writer.write (indent + "Object:\n");
                 dump_instance (obj, writer, level + 1);

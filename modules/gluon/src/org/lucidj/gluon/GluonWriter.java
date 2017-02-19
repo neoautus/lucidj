@@ -167,12 +167,12 @@ public class GluonWriter
             {
                 // Append embedding data into Object-Class property
                 GluonInstance object_class = property.getProperty (GluonConstants.OBJECT_CLASS);
-                object_class.setProperty ("embedded", true);
+                object_class.setProperty (GluonConstants.EMBEDDING_FLAG, true);
                 object_class.setProperty ("id", ref_counter);
 
                 // Create a reference pointing back to object
                 reference = property.newInstance ();
-                reference.setProperty ("embedded", true);
+                reference.setProperty (GluonConstants.EMBEDDING_FLAG, true);
                 reference.setProperty ("refid", ref_counter);
 
                 // Insert property into serialization queue for embedded objects
@@ -203,7 +203,7 @@ public class GluonWriter
             String comma = "";
 
             // Write all objects embedded into the property
-            for (GluonInstance embedded_object: property.getObjects ())
+            for (GluonInstance embedded_object: property.getEmbeddedObjects ())
             {
                 writer.write (comma);
                 filter_and_write_value_and_attributes (embedded_object);
@@ -299,9 +299,9 @@ public class GluonWriter
         /***************************/
 
         // Write all top-level objects
-        if (root.getObjects () != null)
+        if (root.getEmbeddedObjects () != null)
         {
-            for (GluonInstance object: root.getObjects ())
+            for (GluonInstance object: root.getEmbeddedObjects ())
             {
                 write_object (object);
             }

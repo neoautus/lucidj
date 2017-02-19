@@ -18,11 +18,11 @@ package org.rationalq.smartbox;
 
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
 import org.lucidj.api.Quark;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerInstance;
 import org.lucidj.api.TaskContext;
 import org.lucidj.objectmanager.DefaultObjectManager;
 import org.lucidj.runtime.Kernel;
@@ -41,7 +41,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class SmartBox implements Serializer, Quark, ComponentInterface, ObjectManagerProperty, ComponentState
+public class SmartBox implements Quark, ManagedObject, ComponentInterface, ObjectManagerProperty, ComponentState
 {
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
 
@@ -303,6 +303,11 @@ public class SmartBox implements Serializer, Quark, ComponentInterface, ObjectMa
         return (properties.get (name));
     }
 
+    public HashMap<String, Object> getProperties ()
+    {
+        return (properties);
+    }
+
     @Override
     public String getIconTitle ()
     {
@@ -404,28 +409,16 @@ public class SmartBox implements Serializer, Quark, ComponentInterface, ObjectMa
         state_listener = listener;
     }
 
-    @Override // Serializer
-    public boolean serializeObject (SerializerInstance instance, Object to_serialize)
+    @Override // ManagedObject
+    public void validate (ManagedObjectInstance instance)
     {
-        // Throw in all current properties
-        for (Map.Entry<String, Object> entry: properties.entrySet ())
-        {
-            instance.setProperty (entry.getKey (), entry.getValue ());
-        }
-
-        // Base object data
-        instance.setObjectClass (this.getClass ());
-        instance.setValue (code);
-
-        // Runtime properties
-        instance.setProperty ("output", om.getObjects ());
-        return (true);
+        // Nothing for now
     }
 
-    @Override // Serializer
-    public Object deserializeObject (SerializerInstance engine)
+    @Override // ManagedObject
+    public void invalidate (ManagedObjectInstance instance)
     {
-        return (null);
+        // Nothing for now
     }
 }
 

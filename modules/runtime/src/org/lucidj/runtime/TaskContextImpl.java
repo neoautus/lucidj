@@ -16,6 +16,7 @@
 
 package org.lucidj.runtime;
 
+import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.Task;
 import org.lucidj.api.TaskContext;
 import org.lucidj.quark.QuarkClassLoader;
@@ -35,6 +36,7 @@ import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 
 @Component
 @Provides
@@ -47,6 +49,9 @@ public class TaskContextImpl implements TaskContext
 
     @Context
     private BundleContext ctx;
+
+    @Requires
+    private SerializerEngine serializer;
 
     private ClassLoader cld;
     private QuarkSerializer qsl;
@@ -114,6 +119,21 @@ public class TaskContextImpl implements TaskContext
 
     public boolean load (Path source_path)
     {
+        log.info ("LOAD: source_path={} quark={}",
+            source_path, source_path.toString ().endsWith (".quark"));
+
+        if (source_path.toString ().endsWith (".quark"))
+        {
+            return (load_using_Quark (source_path));
+        }
+        else
+        {
+            return (load_using_Gluon (source_path));
+        }
+    }
+
+    public boolean load_using_Quark (Path source_path)
+    {
         Charset cs = Charset.forName ("UTF-8");
         Reader reader = null;
 
@@ -124,6 +144,47 @@ public class TaskContextImpl implements TaskContext
             log.info ("load (source_path={})", source_path);
 
             task = (Task)qsl.deserializeObject (reader);
+            source = source_path;
+
+            if (task == null)
+            {
+                log.info ("load: empty object");
+                task = new CompositeTask ();
+            }
+
+            log.info ("load ok task={}", task);
+            return (true);
+        }
+        catch (Exception e)
+        {
+            log.info ("Error loading task", e);
+            return (false);
+        }
+        finally
+        {
+            try
+            {
+                if (reader != null)
+                {
+                    reader.close();
+                }
+            }
+            catch (Exception ignore) {};
+        }
+    }
+
+    public boolean load_using_Gluon (Path source_path)
+    {
+        Charset cs = Charset.forName ("UTF-8");
+        Reader reader = null;
+
+        try
+        {
+            reader = Files.newBufferedReader (source_path, cs);
+
+            log.info ("load (source_path={})", source_path);
+
+            task = (Task)serializer.deserializeObject (reader);
             source = source_path;
 
             if (task == null)

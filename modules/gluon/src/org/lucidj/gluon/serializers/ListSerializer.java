@@ -16,16 +16,35 @@
 
 package org.lucidj.gluon.serializers;
 
+import org.lucidj.api.ManagedObjectFactory;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Serializer;
+import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
+import org.lucidj.runtime.CompositeTask;
 
 import java.util.List;
 
+import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
+
+@org.apache.felix.ipojo.annotations.Component (immediate = true)
+@Instantiate
+@Provides
 public class ListSerializer implements Serializer
 {
+    @Requires
+    private SerializerEngine serializer;
+
+    @Requires
+    private ManagedObjectFactory objectFactory;
+
     @Override
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
+        instance.setObjectClass (object.getClass ());
         for (Object item: (List)object)
         {
             instance.addObject (item);
@@ -34,9 +53,21 @@ public class ListSerializer implements Serializer
     }
 
     @Override
-    public Object deserializeObject (SerializerInstance engine)
+    public Object deserializeObject (SerializerInstance instance)
     {
-        return null;
+        ManagedObjectInstance object_instance = objectFactory.wrapObject (new CompositeTask ());
+        CompositeTask composite_task = object_instance.adapt (CompositeTask.class);
+
+        for (Object object: instance.getObjects ())
+        {
+            composite_task.add (object);
+        }
+        return (composite_task);
+    }
+    @Validate
+    private void validate ()
+    {
+        serializer.register (CompositeTask.class, this);
     }
 }
 

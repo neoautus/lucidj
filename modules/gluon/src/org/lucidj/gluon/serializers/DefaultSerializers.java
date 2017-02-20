@@ -19,8 +19,8 @@ package org.lucidj.gluon.serializers;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.lucidj.api.SerializerInstance;
 import org.lucidj.gluon.GluonConstants;
+import org.lucidj.gluon.GluonInstance;
 import org.lucidj.gluon.GluonPrimitive;
-import org.lucidj.gluon.GluonSerializer;
 
 import javax.lang.model.type.NullType;
 import java.text.CharacterIterator;
@@ -139,8 +139,8 @@ public class DefaultSerializers
             if (str.startsWith ("!"))
             {
                 // Soo ugly it hurts my eyes :[
-                GluonSerializer.GluonInstance hack = (GluonSerializer.GluonInstance)instance;
-                GluonSerializer.GluonInstance obj = (GluonSerializer.GluonInstance)hack.getBackingObject ();
+                GluonInstance hack = (GluonInstance)instance;
+                GluonInstance obj = (GluonInstance)hack.getBackingObject ();
                 obj.renameProperty (str, str.substring (1));
             }
 

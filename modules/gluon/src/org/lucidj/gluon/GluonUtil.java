@@ -22,7 +22,6 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.lucidj.gluon.GluonSerializer.GluonInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -30,7 +30,6 @@ import javax.lang.model.type.NullType;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -78,9 +77,9 @@ public class GluonSerializer implements SerializerEngine
         return (register (type.getName (), serializer));
     }
 
-    private GluonInstance build_representation_tree (Object obj)
+    public GluonInstance buildRepresentationTree (Object obj)
     {
-        GluonInstance instance = new GluonInstance ();
+        GluonInstance instance = new GluonInstance (this);
         Class type = (obj == null)? NullType.class: obj.getClass ();
         String type_name = type.getName ();
         Serializer serializer = null;
@@ -113,7 +112,7 @@ public class GluonSerializer implements SerializerEngine
             }
         }
 
-        log.debug ("build_representation_tree: instance={} obj={} serializer={}", instance, obj, serializer);
+        log.debug ("buildRepresentationTree: instance={} obj={} serializer={}", instance, obj, serializer);
 
         if (serializer == null)
         {
@@ -131,7 +130,7 @@ public class GluonSerializer implements SerializerEngine
     @Override
     public boolean serializeObject (Writer writer, Object obj)
     {
-        GluonInstance instance = build_representation_tree (obj);
+        GluonInstance instance = buildRepresentationTree (obj);
 
         // Build the object representation including all nested known objects
         if (instance != null)
@@ -266,7 +265,7 @@ public class GluonSerializer implements SerializerEngine
     @Override
     public Object deserializeObject (Reader reader)
     {
-        GluonInstance instance = new GluonInstance ();
+        GluonInstance instance = new GluonInstance (this);
 
         try
         {
@@ -385,170 +384,6 @@ public class GluonSerializer implements SerializerEngine
     private void invalidate ()
     {
         log.info ("ObjectSerializer stopped");
-    }
-
-    public class GluonInstance implements SerializerInstance
-    {
-        private Map<String, GluonInstance> properties = null;
-        private Object backing_object = null;
-        private String string_value = null;
-        private List<GluonInstance> object_values = null;
-
-        public Map<String, GluonInstance> getProperties ()
-        {
-            return (properties);
-        }
-
-        public boolean hasProperties ()
-        {
-            return (properties != null);
-        }
-
-//        @Override
-//        public String toString ()
-//        {
-//            return ("[value=" + string_value + " | objects=" + object_values + " | properties=" + properties + "]");
-//        }
-
-        @Override
-        public SerializerInstance setObjectClass (Class clazz)
-        {
-            return (setProperty (GluonConstants.OBJECT_CLASS, clazz.getName ()));
-        }
-
-        public String getObjectClass ()
-        {
-            if (properties != null && properties.containsKey (GluonConstants.OBJECT_CLASS))
-            {
-                return ((String)properties.get (GluonConstants.OBJECT_CLASS).getBackingObject ());
-            }
-            return (null);
-        }
-
-        public boolean isPrimitive ()
-        {
-            return (getProperty (GluonConstants.OBJECT_CLASS) == null);
-        }
-
-        public String[] getPropertyKeys ()
-        {
-            return ((properties == null)? null: properties.keySet ().toArray (new String [0]));
-        }
-
-        public boolean containsKey (String key)
-        {
-            return (properties.containsKey (key));
-        }
-
-        @Override
-        public SerializerInstance setProperty (String key, Object object)
-        {
-            if (properties == null)
-            {
-                properties = new HashMap<> ();
-            }
-
-            GluonInstance instance = build_representation_tree (object);
-
-            if (instance != null)
-            {
-                properties.put (key, instance);
-            }
-            return (instance);
-        }
-
-        public void renameProperty (String old_name, String new_name)
-        {
-            GluonInstance property = properties.get (old_name);
-            properties.remove (old_name);
-            properties.put (new_name, property);
-        }
-
-        public GluonInstance getProperty (String key)
-        {
-            return ((properties == null)? null: properties.get (key));
-        }
-
-        public Object getPropertyObject (String key)
-        {
-            if (properties == null)
-            {
-                return (null);
-            }
-
-            GluonInstance property = properties.get (key);
-            return ((property == null)? null: property.getBackingObject ());
-        }
-
-        @Override
-        public void setValue (String representation)
-        {
-            string_value = representation;
-        }
-
-        public void setBackingObject (Object value)
-        {
-            backing_object = value;
-        }
-
-        @Override
-        public SerializerInstance addObject (Object object)
-        {
-            GluonInstance instance = build_representation_tree (object);
-
-            if (instance != null)
-            {
-                if (object_values == null)
-                {
-                    object_values = new ArrayList<> ();
-                }
-
-                object_values.add (instance);
-            }
-            return (instance);
-        }
-
-        @Override
-        public Object[] getObjects ()
-        {
-            List<Object> objects = new ArrayList<> ();
-
-            for (GluonInstance object_instance: getEmbeddedObjects ())
-            {
-                if (object_instance.getBackingObject () != null
-                    && object_instance.getProperty (GluonConstants.OBJECT_CLASS) != null
-                    && object_instance.getProperty (GluonConstants.OBJECT_CLASS).getProperty ("embedded") == null)
-                {
-                    objects.add (object_instance.getBackingObject ());
-                }
-            }
-            return (objects.toArray (new Object[0]));
-        }
-
-        public GluonInstance newInstance ()
-        {
-            return (new GluonInstance ());
-        }
-
-        public String getValue ()
-        {
-            return (string_value);
-        }
-
-        public Object getBackingObject ()
-        {
-            return (backing_object);
-        }
-
-        public List<GluonInstance> getEmbeddedObjects ()
-        {
-            return (object_values);
-        }
-
-        public boolean hasObjects ()
-        {
-            return (object_values != null);
-        }
     }
 }
 

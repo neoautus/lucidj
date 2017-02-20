@@ -20,7 +20,6 @@ import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.lucidj.gluon.GluonSerializer.GluonInstance;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -222,13 +221,13 @@ public class GluonWriter
     private void write_all_object_properties (GluonInstance object)
         throws IOException
     {
-        if (!object.hasProperties ())
+        String[] keyset = object.getPropertyKeys ();
+
+        if (keyset.length == 0)
         {
             writer.write ("# No properties for this object\n");
             return;
         }
-
-        String[] keyset = object.getPropertyKeys ();
 
         // First write all X- properties
         for (String key: keyset)

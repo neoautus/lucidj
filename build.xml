@@ -425,6 +425,7 @@
 
     <target name="launch4j">
 
+        <!-- TODO: ALLOW IGNORING BUILD IF 32BIT ELF SUPPORT ISN'T ENABLED (windres exec) -->
         <property name="launch4j.dist.url"
             value="http://downloads.sourceforge.net/project/launch4j/launch4j-3/3.9/launch4j-3.9-linux.tgz"/>
         <property name="launch4j.dist.file" value="launch4j-3.9-linux.tgz"/>

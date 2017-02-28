@@ -81,7 +81,7 @@ public class GluonWriter
     private void write_key_value (String key, String operator, GluonInstance entry)
         throws IOException
     {
-        GluonInstance attr_entry = entry.getProperty (key);
+        GluonInstance attr_entry = entry.getPropertyEntry (key);
         String attr_value = "\"(embedded)\"";
 
         // TODO: WHAT TO DO IF THE ENTRY IS AN OBJECT?
@@ -165,9 +165,8 @@ public class GluonWriter
             if (reference == null)
             {
                 // Append embedding data into Object-Class property
-                GluonInstance object_class = property.getProperty (GluonConstants.OBJECT_CLASS);
-                object_class.setProperty (GluonConstants.EMBEDDING_FLAG, true);
-                object_class.setProperty ("id", ref_counter);
+                property.setAttribute (GluonConstants.OBJECT_CLASS, GluonConstants.EMBEDDING_FLAG, true);
+                property.setAttribute (GluonConstants.OBJECT_CLASS, "id", ref_counter);
 
                 // Create a reference pointing back to object
                 reference = property.newInstance ();
@@ -186,23 +185,25 @@ public class GluonWriter
         write_value_and_attributes (property);
     }
 
-    private void write_property (GluonInstance property, String property_name)
+    private void write_property (GluonInstance instance, String property_name)
         throws IOException
     {
         writer.write (property_name);
         writer.write (": ");
+
+        GluonInstance entry = instance.getPropertyEntry (property_name);
 
         // We write either the object list OR the attributes
         // because we handle lists and arrays as primitive types,
         // that don't have any attributes. Of course you can
         // use SerializerInstance.setProperty() to set some
         // attribute, but it will be ignored.
-        if (property.hasObjects ())
+        if (entry.hasObjects ())
         {
             String comma = "";
 
             // Write all objects embedded into the property
-            for (GluonInstance embedded_object: property.getEmbeddedObjects ())
+            for (GluonInstance embedded_object: entry.getObjectEntries ())
             {
                 writer.write (comma);
                 filter_and_write_value_and_attributes (embedded_object);
@@ -212,7 +213,7 @@ public class GluonWriter
         else
         {
             // Write the object properties
-            filter_and_write_value_and_attributes (property);
+            filter_and_write_value_and_attributes (entry);
         }
 
         writer.write ("\n");
@@ -236,7 +237,7 @@ public class GluonWriter
             {
                 continue;
             }
-            write_property (object.getProperty (key), key);
+            write_property (object, key);
 
         }
 
@@ -247,7 +248,7 @@ public class GluonWriter
             {
                 continue;
             }
-            write_property (object.getProperty (key), key);
+            write_property (object, key);
         }
     }
 
@@ -267,12 +268,7 @@ public class GluonWriter
     public boolean writeRepresentation (GluonInstance root)
         throws IOException
     {
-        GluonInstance content_boundary = root.getProperty (GluonConstants.CONTENT_BOUNDARY);
-
-        if (content_boundary != null && content_boundary.isPrimitive ())
-        {
-            file_format_boundary = (String)content_boundary.getBackingObject ();
-        }
+        file_format_boundary = (String)root.getProperty (GluonConstants.CONTENT_BOUNDARY);
 
         // Minimum sanity please
         if (file_format_boundary == null
@@ -298,9 +294,9 @@ public class GluonWriter
         /***************************/
 
         // Write all top-level objects
-        if (root.getEmbeddedObjects () != null)
+        if (root.getObjectEntries () != null)
         {
-            for (GluonInstance object: root.getEmbeddedObjects ())
+            for (GluonInstance object: root.getObjectEntries ())
             {
                 write_object (object);
             }

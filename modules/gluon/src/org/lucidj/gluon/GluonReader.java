@@ -129,7 +129,7 @@ public class GluonReader
         return (list);
     }
 
-    private boolean read_attributes (GluonInstance property_instance, String str)
+    private boolean read_attributes (GluonInstance instance, String property_name, String str)
     {
         // We expect something like:
         //   [value;]attr1=value[;attr2=value2[;attrN=valueN]]
@@ -152,7 +152,7 @@ public class GluonReader
                 || attribute.equals ("null"))
             {
                 log.info ("# SET VALUE Attribute: {}", attribute);
-                property_instance.setValue (attribute);
+                instance._setPropertyRepresentation (property_name, attribute);
             }
             else // attr=value | boolean
             {
@@ -162,12 +162,7 @@ public class GluonReader
                 if (pos == -1)
                 {
                     log.info ("# SET SPECIAL Attribute: {}", attribute);
-                    GluonInstance entry = (GluonInstance)property_instance.setProperty (attribute, null);
-                    entry.setValue (attribute);
-
-                    // TODO: FIND A BETTER WAY!!!
-                    // Very ugly way to gain access to property name
-                    entry.setBackingObject (property_instance);
+                    instance._setAttributeRepresentation (property_name, attribute, attribute);
                 }
                 else // We have '=', build param name and it's value
                 {
@@ -175,7 +170,7 @@ public class GluonReader
                     String attr_value = attribute.substring (pos + 1).trim ();
 
                     log.info ("# SET Normal Attribute: {}={}", attr_name, attr_value);
-                    property_instance.setProperty (attr_name, null).setValue (attr_value);
+                    instance._setAttributeRepresentation (property_name, attr_name, attr_value);
                 }
             }
         }
@@ -210,13 +205,10 @@ public class GluonReader
             return (false);
         }
 
-        // Here we create the property entry
-        GluonInstance property_instance = (GluonInstance)instance.setProperty (property_name, null);
-
         if (attribute_groups.size () == 1)
         {
             // We have a simple property with optional attributes attached
-            read_attributes (property_instance, attribute_groups.get (0));
+            read_attributes (instance, property_name, attribute_groups.get (0));
         }
         else // We have a property with nested objects, like a list, array or set
         {
@@ -224,8 +216,8 @@ public class GluonReader
             for (String attributes: attribute_groups)
             {
                 // We add 1 nested object for each attribute group
-                GluonInstance nested_object = (GluonInstance)property_instance.addObject (null);
-                read_attributes (nested_object, attributes.trim ());
+                GluonInstance nested_object = instance.getOrCreatePropertyEntry (property_name);
+                read_attributes (nested_object, property_name, attributes.trim ());
             }
         }
         return (true);

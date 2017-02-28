@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +37,12 @@ public class GluonUtil
 
         String[] keyset = instance.getPropertyKeys ();
 
-        String class_name = instance.getBackingObject () == null?
-            "": " (" + instance.getBackingObject ().getClass ().getName () + ")";
+        String class_name = instance._getValueObject () == null?
+            "": " (" + instance._getValueObject ().getClass ().getName () + ") "
+            + (instance.isPrimitive ()? "PRIMITIVE": "OBJECT");
 
         writer.write (indent + "Backing Object: " +
-            ((instance.getBackingObject () == null)? "<null>": instance.getBackingObject ()) + class_name + "\n");
+            ((instance._getValueObject () == null)? "<null>": instance._getValueObject ()) + class_name + "\n");
         writer.write (indent + "Representation: " +
             ((instance.getValue () == null)? "<null>": instance.getValue ()) + "\n");
 
@@ -53,21 +55,19 @@ public class GluonUtil
         {
             for (String key: keyset)
             {
-                GluonInstance property = instance.getProperty (key);
-                writer.write (indent + "Property: " + key + " (" +
-                    ((property.getProperty (GluonConstants.OBJECT_CLASS) != null)? "Object": "Primitive") + ")\n");
-
-                dump_instance (property, writer, level + 1);
+                GluonInstance entry = instance.getPropertyEntry (key);
+                writer.write (indent + "Property: " + key + "=" + entry.getValue () + "\n");
+                dump_instance (entry, writer, level + 1);
             }
         }
 
-        if (instance.getEmbeddedObjects () == null)
+        if (instance.getObjectEntries () == null)
         {
             //writer.write (indent + "No Objects\n");
         }
         else
         {
-            for (GluonInstance obj: instance.getEmbeddedObjects ())
+            for (GluonInstance obj: instance.getObjectEntries ())
             {
                 writer.write (indent + "Object:\n");
                 dump_instance (obj, writer, level + 1);

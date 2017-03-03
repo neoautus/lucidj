@@ -18,15 +18,15 @@ package org.lucidj.gluon;
 
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerInstance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class GluonInstance implements SerializerInstance
 {
-    static final AtomicLong NEXT_ID = new AtomicLong(0);
-    final long id = NEXT_ID.getAndIncrement();
+    private final static transient Logger log = LoggerFactory.getLogger (GluonInstance.class);
 
     private GluonSerializer serializer;
 
@@ -34,16 +34,22 @@ public class GluonInstance implements SerializerInstance
     private Object backing_object = null;
     private String object_representation = null;
     private String name = null;
+    private GluonInstance root = null;
     private GluonInstance next = null;
     private GluonInstance children = null;
     private Serializer selected_serializer = null;
 
-    public GluonInstance (GluonSerializer parent)
+    public GluonInstance (GluonSerializer serializer)
     {
-        this.serializer = parent;
+        this.serializer = serializer;
+        this.root = this;
     }
 
-
+    public GluonInstance (GluonInstance parent)
+    {
+        this.serializer = parent.serializer;
+        this.root = parent.root;
+    }
 
     public boolean isObject ()
     {
@@ -66,17 +72,14 @@ public class GluonInstance implements SerializerInstance
 
     public GluonInstance newInstance ()
     {
-        return (new GluonInstance (serializer));
+        return (new GluonInstance (this));
     }
 
     private GluonInstance newChildInstance ()
     {
         GluonInstance instance = newInstance ();
 
-        if (children != null)
-        {
-            instance.next = children;
-        }
+        instance.next = children;
         children = instance;
         return (instance);
     }
@@ -122,18 +125,66 @@ public class GluonInstance implements SerializerInstance
         return (!containsKey (GluonConstants.OBJECT_CLASS));
     }
 
+    private void remove_entry (GluonInstance entry_to_remove)
+    {
+        if (this.children == entry_to_remove)
+        {
+            this.children = entry_to_remove.next;
+        }
+        else
+        {
+            for (GluonInstance entry = this.children; entry.next != null; entry = entry.next)
+            {
+                if (entry.next == entry_to_remove)
+                {
+                    entry.next = entry_to_remove.next;
+                    break;
+                }
+            }
+        }
+    }
+
     @Override
     public SerializerInstance setProperty (String key, Object object)
     {
         GluonInstance entry = getOrCreatePropertyEntry (key);
         serializer.applySerializer (entry, object);
+
+        if (entry.containsKey (GluonConstants.OBJECT_CLASS))
+        {
+            // Remove entry from this instance
+            remove_entry (entry);
+
+            // Create the placeholder
+//            GluonObject object_ref = new GluonObject (object);
+            GluonObject object_ref = (GluonObject)entry.getProperty (GluonConstants.OBJECT_CLASS);
+
+            // Transmogrify entry into an embedding
+            entry.name = null;
+            entry.setAttribute (GluonConstants.OBJECT_CLASS, "embedded", true);
+
+            // Add entry on root instance
+            entry.next = root.next;
+            root.next = entry;
+
+            // Add placeholder
+            entry = getOrCreatePropertyEntry (key);
+            serializer.applySerializer (entry, object_ref);
+            //entry.setValue ("<<" + object.toString () + ">>");
+        }
         return (entry);
+    }
+
+    @Override
+    public SerializerInstance setObjectClass (Object object)
+    {
+        return (setProperty (GluonConstants.OBJECT_CLASS, new GluonObject (object.getClass ()).withReference ()));
     }
 
     @Override
     public SerializerInstance setObjectClass (Class clazz)
     {
-        return (setProperty (GluonConstants.OBJECT_CLASS, clazz.getName ()));
+        return (setProperty (GluonConstants.OBJECT_CLASS, new GluonObject (clazz).withReference ()));
     }
 
     @Override
@@ -201,6 +252,33 @@ public class GluonInstance implements SerializerInstance
         GluonInstance entry = newChildInstance ();
 
         serializer.applySerializer (entry, object);
+
+        log.info ("Added entry {} for {}", entry, object);
+        log.info ("Entry {} containsKey {}", entry, entry.containsKey (GluonConstants.OBJECT_CLASS));
+
+        if (this != root && entry.containsKey (GluonConstants.OBJECT_CLASS))
+        {
+            log.info ("addObject() PROCESSING OBJECT");
+
+            // Remove entry from this instance
+            remove_entry (entry);
+
+            // Create the placeholder
+//            GluonObject object_ref = new GluonObject (object);
+            GluonObject object_ref = (GluonObject)entry.getProperty (GluonConstants.OBJECT_CLASS);
+
+            // Transmogrify entry into an embedding
+            entry.setAttribute (GluonConstants.OBJECT_CLASS, "embedded", true);
+            //entry.setAttribute (GluonConstants.OBJECT_CLASS, "id", object_ref.newId ());
+
+            // Add entry on root instance
+            entry.next = root.children;
+            root.children = entry;
+
+            // Add placeholder
+            entry = newChildInstance ();
+            serializer.applySerializer (entry, object_ref);
+        }
 
         return (entry);
     }

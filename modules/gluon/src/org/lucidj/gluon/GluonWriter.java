@@ -18,26 +18,14 @@ package org.lucidj.gluon;
 
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class GluonWriter
 {
-    private final static transient Logger log = LoggerFactory.getLogger (GluonWriter.class);
-
-    private int ref_counter = 1;
     private Writer writer;
     private String file_format_boundary;
-
-    private List<GluonInstance> serialization_queue = new ArrayList<> ();
-    private Map<GluonInstance, GluonInstance> property_to_reference = new HashMap<> ();
 
     private StrSubstitutor macro_subst;
     private String macro_attr_name;
@@ -153,38 +141,6 @@ public class GluonWriter
         }
     }
 
-    private void filter_and_write_value_and_attributes (GluonInstance property)
-        throws IOException
-    {
-        // Filter all complex objects swapping them with a reference
-        // and moving the object into the serialization queue
-        if (!property.isPrimitive ())
-        {
-            GluonInstance reference = property_to_reference.get (property);
-
-            if (reference == null)
-            {
-                // Append embedding data into Object-Class property
-                property.setAttribute (GluonConstants.OBJECT_CLASS, GluonConstants.EMBEDDING_FLAG, true);
-                property.setAttribute (GluonConstants.OBJECT_CLASS, "id", ref_counter);
-
-                // Create a reference pointing back to object
-                reference = property.newInstance ();
-                reference.setProperty (GluonConstants.EMBEDDING_FLAG, true);
-                reference.setProperty ("refid", ref_counter);
-
-                // Insert property into serialization queue for embedded objects
-                property_to_reference.put (property, reference);
-                serialization_queue.add (property);
-                ref_counter++;
-            }
-            property = reference;
-        }
-
-        // Write either a property or a reference to an object
-        write_value_and_attributes (property);
-    }
-
     private void write_property (GluonInstance instance, String property_name)
         throws IOException
     {
@@ -206,14 +162,14 @@ public class GluonWriter
             for (GluonInstance embedded_object: entry.getObjectEntries ())
             {
                 writer.write (comma);
-                filter_and_write_value_and_attributes (embedded_object);
+                write_value_and_attributes (embedded_object);
                 comma = ", ";
             }
         }
         else
         {
             // Write the object properties
-            filter_and_write_value_and_attributes (entry);
+            write_value_and_attributes (entry);
         }
 
         writer.write ("\n");
@@ -300,12 +256,6 @@ public class GluonWriter
             {
                 write_object (object);
             }
-        }
-
-        // Write all nested objects remaining
-        for (GluonInstance object: serialization_queue)
-        {
-            write_object (object);
         }
 
         /*******************/

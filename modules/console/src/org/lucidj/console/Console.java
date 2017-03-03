@@ -259,7 +259,7 @@ public class Console implements Serializer, Quark, Renderer.Observable
     {
         // Complete content log including timestamps and tags
         instance.setValue (contents.toString ());
-        instance.setObjectClass (this.getClass ());
+        instance.setObjectClass (this);
         return (true);
     }
 

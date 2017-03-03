@@ -23,6 +23,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ public class GluonUtil
         writer.write (indent + "Backing Object: " +
             ((instance._getValueObject () == null)? "<null>": instance._getValueObject ()) + class_name + "\n");
         writer.write (indent + "Representation: " +
-            ((instance.getValue () == null)? "<null>": instance.getValue ()) + "\n");
+            ((instance.getValue () == null)? "<null>": StringEscapeUtils.escapeJava (instance.getValue ())) + "\n");
 
         // First write all X- properties
         if (keyset == null)
@@ -56,7 +57,7 @@ public class GluonUtil
             for (String key: keyset)
             {
                 GluonInstance entry = instance.getPropertyEntry (key);
-                writer.write (indent + "Property: " + key + "=" + entry.getValue () + "\n");
+                writer.write (indent + "Property: " + key + "=" + StringEscapeUtils.escapeJava (entry.getValue ()) + "\n");
                 dump_instance (entry, writer, level + 1);
             }
         }

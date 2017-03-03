@@ -22,6 +22,7 @@ import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
 import org.lucidj.gluon.serializers.DefaultArraySerializers;
 import org.lucidj.gluon.serializers.DefaultSerializers;
+import org.lucidj.gluon.serializers.GluonObjectSerializer;
 import org.lucidj.gluon.serializers.ListSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -347,6 +348,7 @@ public class GluonSerializer implements SerializerEngine
 //        register (Calendar.class, CalendarSerializer.class);
 //        register (Locale.class, LocaleSerializer.class);
 
+        register (GluonObject.class, new GluonObjectSerializer ());
         register (NullType.class, new DefaultSerializers.NullSerializer ());
         register (int.class, new DefaultSerializers.IntSerializer ());
         register (Integer.class, new DefaultSerializers.IntSerializer ());

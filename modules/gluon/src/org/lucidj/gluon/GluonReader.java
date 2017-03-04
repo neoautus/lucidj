@@ -147,6 +147,7 @@ public class GluonReader
             // TODO: BETTER CHECKING STRUCTURE
             // Do we have a value or an attribute?
             if ("0123456789.\"".indexOf (attribute.charAt (0)) != -1
+                || (attribute.contains (".") && !attribute.contains ("=")) // :P
                 || attribute.equals ("true")
                 || attribute.equals ("false")
                 || attribute.equals ("null"))

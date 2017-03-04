@@ -29,6 +29,11 @@ public class GluonObject
         class_name = clazz.getName ();
     }
 
+    public GluonObject ()
+    {
+        // Nothing set
+    }
+
     public GluonObject generateId ()
     {
         if (id == 0)
@@ -48,6 +53,11 @@ public class GluonObject
         this.id = id;
     }
 
+    public String getClassName ()
+    {
+        return (class_name);
+    }
+
     public String getValue ()
     {
         return (class_name + (id == 0? "": "@" + id));
@@ -57,13 +67,17 @@ public class GluonObject
     {
         if (value.contains ("@"))
         {
-            id = Integer.valueOf (value.substring (value.indexOf ('@') + 1));
-            return (true);
+            // a.b.c@id
+            int pos = value.indexOf ('@');
+            class_name = value.substring (0, pos);
+            id = Integer.valueOf (value.substring (pos + 1));
         }
         else
         {
-            return (false);
+            // a.b.c
+            class_name = value;
         }
+        return (true);
     }
 }
 

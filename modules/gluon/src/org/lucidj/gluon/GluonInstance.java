@@ -123,7 +123,7 @@ public class GluonInstance implements SerializerInstance
         return (!containsKey (GluonConstants.OBJECT_CLASS));
     }
 
-    private void remove_entry (GluonInstance entry_to_remove)
+    public void removeEntry (GluonInstance entry_to_remove)
     {
         if (this.children == entry_to_remove)
         {
@@ -151,7 +151,7 @@ public class GluonInstance implements SerializerInstance
         if (entry.containsKey (GluonConstants.OBJECT_CLASS))
         {
             // Remove entry from this instance
-            remove_entry (entry);
+            removeEntry (entry);
 
             // Create the placeholder
             GluonObject object_ref = (GluonObject)entry.getProperty (GluonConstants.OBJECT_CLASS);
@@ -255,7 +255,7 @@ public class GluonInstance implements SerializerInstance
             log.info ("addObject() PROCESSING OBJECT");
 
             // Remove entry from this instance
-            remove_entry (entry);
+            removeEntry (entry);
 
             // Create the placeholder
             GluonObject object_ref = (GluonObject)entry.getProperty (GluonConstants.OBJECT_CLASS);

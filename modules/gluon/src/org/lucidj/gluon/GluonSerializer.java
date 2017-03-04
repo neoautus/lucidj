@@ -204,10 +204,10 @@ public class GluonSerializer implements SerializerEngine
 //            }
 //        }
 
-        String object_class = (String)object.getProperty (GluonConstants.OBJECT_CLASS);
-        Serializer serializer = serializer_lookup.get (object_class);
+        GluonObject object_ref = (GluonObject)object.getProperty (GluonConstants.OBJECT_CLASS);
+        Serializer serializer = serializer_lookup.get (object_ref.getClassName ()); // ??????
 
-        log.info ("{} ====> {} serializer={}", object, object_class, serializer);
+        log.info ("{} ====> {} serializer={}", object, object_ref.getClassName (), serializer);
 
         Object obj = serializer.deserializeObject (object);
 
@@ -219,15 +219,30 @@ public class GluonSerializer implements SerializerEngine
 
     private boolean build_object_tree (GluonInstance instance)
     {
-        HashMap<Integer, GluonInstance> embedded_objects = new HashMap<> ();
-        List<GluonInstance> object_list = instance.getObjectEntries ();
+        HashMap<String, GluonInstance> embedded_objects = new HashMap<> ();
+
+        for (GluonInstance entry: instance.getObjectEntries ())
+        {
+            Boolean embedding = (Boolean)entry.getAttribute (GluonConstants.OBJECT_CLASS, GluonConstants.EMBEDDING_FLAG);
+
+            log.info ("====> FILTER entry={} embedding={}", entry, embedding);
+
+            if (embedding != null && embedding)
+            {
+                GluonObject object_ref = (GluonObject)entry.getProperty (GluonConstants.OBJECT_CLASS);
+                embedded_objects.put (object_ref.getValue (), entry);
+                instance.removeEntry (entry);
+            }
+        }
 
         // TODO: ITERATIVE RESOLUTION
-        for (GluonInstance object: object_list)
+        for (GluonInstance entry: instance.getObjectEntries ())
         {
-            if (object._getValueObject () == null)
+            log.info ("====> RESOLVE entry={}", entry);
+
+            if (entry._getValueObject () == null)
             {
-                resolve_object (object);
+                resolve_object (entry);
             }
         }
 

@@ -29,7 +29,7 @@ public class GluonObject
         class_name = clazz.getName ();
     }
 
-    public GluonObject withReference ()
+    public GluonObject generateId ()
     {
         if (id == 0)
         {

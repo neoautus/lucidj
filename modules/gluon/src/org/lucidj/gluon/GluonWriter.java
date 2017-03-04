@@ -69,14 +69,7 @@ public class GluonWriter
     private void write_key_value (String key, String operator, GluonInstance entry)
         throws IOException
     {
-        GluonInstance attr_entry = entry.getPropertyEntry (key);
-        String attr_value = "\"(embedded)\"";
-
-        // TODO: WHAT TO DO IF THE ENTRY IS AN OBJECT?
-        if (attr_entry != null && attr_entry.isPrimitive ())
-        {
-            attr_value = attr_entry.getValue ();
-        }
+        String attr_value = entry._getPropertyRepresentation (key);
 
         // Do we have a macro here?
         if (attr_value.contains (GluonConstants.MACRO_CHAR))
@@ -138,6 +131,12 @@ public class GluonWriter
                 write_key_value (attr_key, "=", value);
                 semicolon = "; ";
             }
+        }
+
+        if (semicolon.length () == 0)
+        {
+            // Whoops
+            writer.write ("nil");
         }
     }
 
@@ -252,9 +251,28 @@ public class GluonWriter
         // Write all top-level objects
         if (root.getObjectEntries () != null)
         {
+            Boolean embedding;
+
+            // First root objects...
             for (GluonInstance object: root.getObjectEntries ())
             {
-                write_object (object);
+                embedding = (Boolean)object.getAttribute (GluonConstants.OBJECT_CLASS, GluonConstants.EMBEDDING_FLAG);
+
+                if (embedding == null || !embedding)
+                {
+                    write_object (object);
+                }
+            }
+
+            // ... then embedded objects
+            for (GluonInstance object: root.getObjectEntries ())
+            {
+                embedding = (Boolean)object.getAttribute (GluonConstants.OBJECT_CLASS, GluonConstants.EMBEDDING_FLAG);
+
+                if (embedding != null && embedding)
+                {
+                    write_object (object);
+                }
             }
         }
 

@@ -28,7 +28,6 @@ public interface SerializerInstance
     void                setPropertyKey  (String key);
     SerializerInstance  setAttribute    (String property, String attribute, Object object);
     SerializerInstance  setObjectClass  (Class clazz);
-    SerializerInstance  setObjectClass  (Object object);
 }
 
 // EOF

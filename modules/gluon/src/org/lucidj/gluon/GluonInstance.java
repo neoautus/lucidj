@@ -16,7 +16,6 @@
 
 package org.lucidj.gluon;
 
-import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +36,6 @@ public class GluonInstance implements SerializerInstance
     private GluonInstance root = null;
     private GluonInstance next = null;
     private GluonInstance children = null;
-    private Serializer selected_serializer = null;
 
     public GluonInstance (GluonSerializer serializer)
     {
@@ -156,12 +154,15 @@ public class GluonInstance implements SerializerInstance
             remove_entry (entry);
 
             // Create the placeholder
-//            GluonObject object_ref = new GluonObject (object);
             GluonObject object_ref = (GluonObject)entry.getProperty (GluonConstants.OBJECT_CLASS);
 
             // Transmogrify entry into an embedding
             entry.name = null;
             entry.setAttribute (GluonConstants.OBJECT_CLASS, "embedded", true);
+            object_ref.generateId ();
+
+            // Update representation
+            serializer.applySerializer (entry.getPropertyEntry (GluonConstants.OBJECT_CLASS), object_ref);
 
             // Add entry on root instance
             entry.next = root.next;
@@ -170,21 +171,14 @@ public class GluonInstance implements SerializerInstance
             // Add placeholder
             entry = getOrCreatePropertyEntry (key);
             serializer.applySerializer (entry, object_ref);
-            //entry.setValue ("<<" + object.toString () + ">>");
         }
         return (entry);
     }
 
     @Override
-    public SerializerInstance setObjectClass (Object object)
-    {
-        return (setProperty (GluonConstants.OBJECT_CLASS, new GluonObject (object.getClass ()).withReference ()));
-    }
-
-    @Override
     public SerializerInstance setObjectClass (Class clazz)
     {
-        return (setProperty (GluonConstants.OBJECT_CLASS, new GluonObject (clazz).withReference ()));
+        return (setProperty (GluonConstants.OBJECT_CLASS, new GluonObject (clazz)));
     }
 
     @Override
@@ -219,7 +213,7 @@ public class GluonInstance implements SerializerInstance
         return ((entry == null)? null: entry.getProperty (attribute));
     }
 
-    public String getPropertyRepresentation (String key)
+    public String _getPropertyRepresentation (String key)
     {
         GluonInstance property = getPropertyEntry (key);
         return ((property == null)? null: property.object_representation);
@@ -264,12 +258,14 @@ public class GluonInstance implements SerializerInstance
             remove_entry (entry);
 
             // Create the placeholder
-//            GluonObject object_ref = new GluonObject (object);
             GluonObject object_ref = (GluonObject)entry.getProperty (GluonConstants.OBJECT_CLASS);
 
             // Transmogrify entry into an embedding
             entry.setAttribute (GluonConstants.OBJECT_CLASS, "embedded", true);
-            //entry.setAttribute (GluonConstants.OBJECT_CLASS, "id", object_ref.newId ());
+            object_ref.generateId ();
+
+            // Update representation
+            serializer.applySerializer (entry.getPropertyEntry (GluonConstants.OBJECT_CLASS), object_ref);
 
             // Add entry on root instance
             entry.next = root.children;

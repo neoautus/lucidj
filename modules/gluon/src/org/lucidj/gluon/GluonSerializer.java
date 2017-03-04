@@ -122,7 +122,7 @@ public class GluonSerializer implements SerializerEngine
         {
             // Our signature -------------------------------------------------------------------
             SerializerInstance se = instance.setProperty (GluonConstants.SERIALIZATION_ENGINE,
-                this.getClass ().getName ());
+                new GluonObject (this.getClass ()));
             se.setProperty ("version", "1.0");
             // ---------------------------------------------------------------------------------
 

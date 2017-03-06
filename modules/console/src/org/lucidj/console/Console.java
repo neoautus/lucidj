@@ -17,11 +17,11 @@
 package org.lucidj.console;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Quark;
 import org.lucidj.api.Renderer;
-import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
 import org.lucidj.renderer.SimpleObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,12 +40,11 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class Console implements Serializer, Quark, Renderer.Observable
+public class Console implements ManagedObject, Quark, Renderer.Observable
 {
     private final transient Logger log = LoggerFactory.getLogger (Console.class);
 
@@ -159,14 +158,19 @@ public class Console implements Serializer, Quark, Renderer.Observable
         observers.notifyNow ();
     }
 
-    public String getContent ()
+    public String getValue ()
     {
         return (contents == null? "": contents.toString ());
     }
 
+    public void setValue (String value)
+    {
+        contents = new StringBuilder (value);
+    }
+
     public String getHtmlContent ()
     {
-        BufferedReader full_content = new BufferedReader (new StringReader (getContent ()));
+        BufferedReader full_content = new BufferedReader (new StringReader (getValue ()));
         ByteArrayOutputStream parsed_content = new ByteArrayOutputStream ();
         // TODO: REQUEST FEATURE CHANGE ON jansi FOR OPTIONAL HTML FILTERING
         AnsiHtmlOutputStream html_content = new AnsiHtmlOutputStream (parsed_content);
@@ -254,26 +258,16 @@ public class Console implements Serializer, Quark, Renderer.Observable
         }
     }
 
-    @Override // Serializer
-    public boolean serializeObject (SerializerInstance instance, Object to_serialize)
+    @Override // ManagedObject
+    public void validate (ManagedObjectInstance instance)
     {
-        // Complete content log including timestamps and tags
-        instance.setValue (contents.toString ());
-        instance.setObjectClass (this.getClass ());
-        return (true);
+        // Do nothing
     }
 
-    @Override // Serializer
-    public Object deserializeObject (SerializerInstance instance)
+    @Override // ManagedObject
+    public void invalidate (ManagedObjectInstance instance)
     {
-        // TODO: SELF SERIALIZER CLASS
-        return null;
-    }
-
-    @Validate
-    private void validate ()
-    {
-        serializer.register (this.getClass (), this);
+        // Do nothing
     }
 }
 

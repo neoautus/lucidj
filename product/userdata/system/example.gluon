@@ -3,7 +3,7 @@ X-Object: org.lucidj.runtime.CompositeTask
 
 -------THINK_BIG_BE_BOLD-------
 X-Object: org.rationalq.smartbox.SmartBox
-output: org.lucidj.console.ConsoleSerializer@1, org.rationalq.vaadin.Vaadin@2
+output: org.lucidj.console.Console@1, org.rationalq.vaadin.Vaadin@2
 View-Mode: "default"
 Long-Value: 31415926535898L
 
@@ -22,7 +22,7 @@ output: org.rationalq.vaadin.Vaadin@3
 new Image (null, new ExternalResource ("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"));
 
 -------THINK_BIG_BE_BOLD-------
-X-Object: org.lucidj.console.ConsoleSerializer@1; embedded
+X-Object: org.lucidj.console.Console@1; embedded
 
 2017-03-06 19:20:22.626 | OUT | Hello world! i=0\n
 2017-03-06 19:20:23.140 | OUT | Hello world! i=1\n

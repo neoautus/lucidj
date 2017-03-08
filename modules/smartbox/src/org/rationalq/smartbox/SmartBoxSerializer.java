@@ -86,18 +86,21 @@ public class SmartBoxSerializer implements Serializer
 
         smartbox.setValue (instance.getValue ());
 
-//        Object obj;
-//        int i = 0;
-//
-//        log.info ("*** deserializeObject: properties={}", properties);
-//
-//        while ((obj = properties.get("output" + i)) != null)
-//        {
-//            log.info ("*** output{} = {}", i, obj);
-//            om.showObject (obj);
-//            i++;
-//        }
+        log.info ("*** deserializeObject: properties={}", properties);
 
+        Object[] output = instance.getArrayProperty ("output");
+
+        if (output != null)
+        {
+            for (Object object: output)
+            {
+                log.info ("*** output = {}", object);
+                if (object != null)
+                {
+                    smartbox.getObjectManager ().showObject (object);
+                }
+            }
+        }
         return (smartbox);
     }
 }

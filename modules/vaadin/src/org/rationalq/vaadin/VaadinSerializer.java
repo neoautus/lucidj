@@ -86,7 +86,8 @@ public class VaadinSerializer implements Serializer, QuarkSerializable
     @Override
     public Object deserializeObject (SerializerInstance instance)
     {
-        return null;
+        Design.setComponentFactory (vcf);
+        return (Design.read (new ByteArrayInputStream (instance.getValue ().getBytes ())));
     }
 
     class VaadinComponentFactory extends Design.DefaultComponentFactory

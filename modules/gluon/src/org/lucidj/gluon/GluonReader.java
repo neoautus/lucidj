@@ -152,7 +152,7 @@ public class GluonReader
                 || attribute.equals ("false")
                 || attribute.equals ("null"))
             {
-                log.info ("# SET VALUE Attribute: {}", attribute);
+                log.debug ("# SET VALUE Attribute: {}", attribute);
                 entry._setRepresentation (attribute);
             }
             else // attr=value | boolean
@@ -162,7 +162,7 @@ public class GluonReader
                 // No '=' leads to special boolean handling
                 if (pos == -1)
                 {
-                    log.info ("# SET SPECIAL Attribute: {}", attribute);
+                    log.debug ("# SET SPECIAL Attribute: {}", attribute);
                     entry._setPropertyRepresentation (attribute, attribute);
                 }
                 else // We have '=', build param name and it's value
@@ -170,7 +170,7 @@ public class GluonReader
                     String attr_name = attribute.substring (0, pos).trim ();
                     String attr_value = attribute.substring (pos + 1).trim ();
 
-                    log.info ("# SET Normal Attribute: {}={}", attr_name, attr_value);
+                    log.debug ("# SET Normal Attribute: {}={}", attr_name, attr_value);
                     entry._setPropertyRepresentation (attr_name, attr_value);
                 }
             }
@@ -180,8 +180,6 @@ public class GluonReader
 
     private boolean read_property_and_attributes (GluonInstance instance, String line)
     {
-        log.info ("====> PROPERTY: {}", line);
-
         if (line.startsWith ("#"))
         {
             return (true);
@@ -197,7 +195,7 @@ public class GluonReader
         String property_name = line.substring(0, pos).trim();
         String right_hand = line.substring(pos + 1).trim();
 
-        log.info ("Reading name=[" + property_name + "] right_hand=[" + right_hand + "]");
+        log.debug ("Reading name=[" + property_name + "] right_hand=[" + right_hand + "]");
 
         List<String> attribute_groups = parseDelimitedString (right_hand, ",", true);
 
@@ -313,9 +311,6 @@ public class GluonReader
             return (false);
         }
 
-        log.info ("BOUNDARY='{}'", boundary);
-        log.info ("FINAL BOUNDARY='{}'", final_boundary);
-
         // Handle the condition of a blank file (properties only).
         // This condition appears when the properties are followed by a final boundary.
         if (boundary.endsWith (GluonConstants.EOF_MARKER))
@@ -348,12 +343,10 @@ public class GluonReader
             {
                 if (line.trim ().equals (boundary))
                 {
-                    log.info ("--BOUNDARY--");
                     break;
                 }
                 else if (line.trim ().equals (final_boundary))
                 {
-                    log.info ("--FINAL BOUNDARY--");
                     line = null;
                     break;
                 }
@@ -371,16 +364,12 @@ public class GluonReader
             // The content was read
             reading_object.setValue (reading_content.toString ());
 
-            log.info ("====> CONTENTS = [{}]", reading_content.toString ());
-
             // End of file?
             if (line == null)
             {
                 break;
             }
         }
-
-        log.info ("READ Finish!");
 
         // We have valid metadata loaded
         return (true);

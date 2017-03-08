@@ -314,13 +314,8 @@ public class GluonInstance implements SerializerInstance
 
         serializer.applySerializer (entry, object);
 
-        log.info ("Added entry {} for {}", entry, object);
-        log.info ("Entry {} containsKey {}", entry, entry.containsKey (GluonConstants.OBJECT_CLASS));
-
         if (this != root && entry.containsKey (GluonConstants.OBJECT_CLASS))
         {
-            log.info ("addObject() PROCESSING OBJECT");
-
             // Remove entry from this instance
             removeEntry (entry);
 

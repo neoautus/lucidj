@@ -53,7 +53,7 @@ public class ConsoleSerializer implements Serializer
     {
         // Complete content log including timestamps and tags
         instance.setValue (((Console)object).getValue ());
-        instance.setObjectClass (this.getClass ());
+        instance.setObjectClass (Console.class);
         return (true);
     }
 

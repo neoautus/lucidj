@@ -129,7 +129,7 @@ public class GluonReader
         return (list);
     }
 
-    private boolean read_attributes (GluonInstance instance, String property_name, String str)
+    private boolean read_attributes (GluonInstance entry, String str)
     {
         // We expect something like:
         //   [value;]attr1=value[;attr2=value2[;attrN=valueN]]
@@ -153,7 +153,7 @@ public class GluonReader
                 || attribute.equals ("null"))
             {
                 log.info ("# SET VALUE Attribute: {}", attribute);
-                instance._setPropertyRepresentation (property_name, attribute);
+                entry._setRepresentation (attribute);
             }
             else // attr=value | boolean
             {
@@ -163,7 +163,7 @@ public class GluonReader
                 if (pos == -1)
                 {
                     log.info ("# SET SPECIAL Attribute: {}", attribute);
-                    instance._setAttributeRepresentation (property_name, attribute, attribute);
+                    entry._setPropertyRepresentation (attribute, attribute);
                 }
                 else // We have '=', build param name and it's value
                 {
@@ -171,7 +171,7 @@ public class GluonReader
                     String attr_value = attribute.substring (pos + 1).trim ();
 
                     log.info ("# SET Normal Attribute: {}={}", attr_name, attr_value);
-                    instance._setAttributeRepresentation (property_name, attr_name, attr_value);
+                    entry._setPropertyRepresentation (attr_name, attr_value);
                 }
             }
         }
@@ -206,20 +206,26 @@ public class GluonReader
             return (false);
         }
 
+        GluonInstance property_entry = instance.getOrCreatePropertyEntry (property_name);
+
         if (attribute_groups.size () == 1)
         {
             // We have a simple property with optional attributes attached
-            read_attributes (instance, property_name, attribute_groups.get (0));
+            read_attributes (property_entry, attribute_groups.get (0));
         }
         else // We have a property with nested objects, like a list, array or set
         {
+            List<GluonInstance> object_list = new ArrayList<> ();
+
             // Cycle all groups
             for (String attributes: attribute_groups)
             {
                 // We add 1 nested object for each attribute group
-                GluonInstance nested_object = instance.getOrCreatePropertyEntry (property_name);
-                read_attributes (nested_object, property_name, attributes.trim ());
+                GluonInstance child = property_entry.newChildInstance ();
+                read_attributes (child, attributes.trim ());
+                object_list.add (child);
             }
+            property_entry._setValueObject (object_list.toArray (new GluonInstance[0]));
         }
         return (true);
     }
@@ -278,6 +284,18 @@ public class GluonReader
         return (true);
     }
 
+    private void check_for_embedded_object (GluonInstance instance)
+    {
+        Boolean embedding = (Boolean)instance.getAttribute (GluonConstants.OBJECT_CLASS, GluonConstants.EMBEDDING_FLAG);
+
+        if (embedding != null && embedding)
+        {
+            // The embedded objects become hidden properties
+            GluonObject object_ref = (GluonObject)instance._getProperty (GluonConstants.OBJECT_CLASS);
+            instance.setPropertyKey (GluonConstants.HIDDEN + object_ref.getValue ());
+        }
+    }
+
     public boolean readRepresentation (GluonInstance instance)
         throws IOException
     {
@@ -319,6 +337,8 @@ public class GluonReader
             {
                 return (false);
             }
+
+            check_for_embedded_object (reading_object);
 
             StringBuilder reading_content = null;
             String line = null;

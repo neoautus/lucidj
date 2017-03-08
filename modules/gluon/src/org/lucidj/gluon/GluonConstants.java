@@ -21,9 +21,10 @@ public interface GluonConstants
     String SERIALIZATION_ENGINE = "X-Serialization-Engine";
     String OBJECT_CLASS = "X-Object";
     String EMBEDDING_FLAG = "embedded";
+    String HIDDEN = ".";
 
     String DEFAULT_BOUNDARY = "-------THINK_BIG_BE_BOLD-------";
-    String CONTENT_BOUNDARY = ".Content-Boundary";
+    String CONTENT_BOUNDARY = HIDDEN + "Content-Boundary";
 
     String MACRO_CHAR = "\r";
     String EOF_MARKER = "//";

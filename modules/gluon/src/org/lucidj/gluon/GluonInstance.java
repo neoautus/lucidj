@@ -29,7 +29,6 @@ public class GluonInstance implements SerializerInstance
 
     private GluonSerializer serializer;
 
-    private boolean is_resolved = false;
     private Object backing_object = null;
     private String object_representation = null;
     private String name = null;
@@ -47,6 +46,11 @@ public class GluonInstance implements SerializerInstance
     {
         this.serializer = parent.serializer;
         this.root = parent.root;
+    }
+
+    public GluonInstance getRoot ()
+    {
+        return (root);
     }
 
     public boolean isObject ()
@@ -73,7 +77,7 @@ public class GluonInstance implements SerializerInstance
         return (new GluonInstance (this));
     }
 
-    private GluonInstance newChildInstance ()
+    public GluonInstance newChildInstance ()
     {
         GluonInstance instance = newInstance ();
 
@@ -188,6 +192,11 @@ public class GluonInstance implements SerializerInstance
         return (entry.setProperty (attribute, object));
     }
 
+    public void _setRepresentation (String representation)
+    {
+        serializer.applyDeserializer (this, representation);
+    }
+
     public SerializerInstance _setPropertyRepresentation (String key, String representation)
     {
         GluonInstance entry = getOrCreatePropertyEntry (key);
@@ -204,7 +213,40 @@ public class GluonInstance implements SerializerInstance
     public Object getProperty (String key)
     {
         GluonInstance property = getPropertyEntry (key);
-        return ((property == null)? null: property.backing_object);
+        return ((property == null)? null: property._resolveObject ());
+    }
+
+    public Object _getProperty (String key)
+    {
+        GluonInstance property = getPropertyEntry (key);
+        return ((property == null)? null: property._getValueObject ());
+    }
+
+    public Object[] getArrayProperty (String key)
+    {
+        GluonInstance property = getPropertyEntry (key);
+
+        if (property == null)
+        {
+            return (null);
+        }
+
+        Object value = property._resolveObject ();
+
+        if (value instanceof GluonInstance[])
+        {
+            List<Object> values = new ArrayList<> ();
+
+            for (GluonInstance entry: (GluonInstance[])value)
+            {
+                values.add (entry._resolveObject ());
+            }
+            return (values.toArray (new Object[0]));
+        }
+        else
+        {
+            return (new Object [] { value });
+        }
     }
 
     public Object getAttribute (String property, String attribute)
@@ -237,6 +279,31 @@ public class GluonInstance implements SerializerInstance
 
     public Object _getValueObject ()
     {
+        return (backing_object);
+    }
+
+    public Object _resolveObject ()
+    {
+        // Resolve Object
+        if (containsKey (GluonConstants.OBJECT_CLASS))
+        {
+            if (backing_object == null)
+            {
+                serializer.applyDeserializer (this, null);
+                log.info ("-----> _resolveObject({}) => {}", name, backing_object);
+            }
+        }
+
+        // Resolve Reference
+        if (backing_object instanceof GluonObject)
+        {
+            GluonObject object_ref = (GluonObject)backing_object;
+
+            if (object_ref.getId () != 0) // Is it an object instance?
+            {
+                return (root.getProperty (GluonConstants.HIDDEN + object_ref.getValue ()));
+            }
+        }
         return (backing_object);
     }
 
@@ -288,7 +355,7 @@ public class GluonInstance implements SerializerInstance
         {
             if (entry.name == null)
             {
-                objects.add (0, entry.backing_object);
+                objects.add (0, entry._resolveObject ());
             }
         }
         return (objects.toArray (new Object[0]));

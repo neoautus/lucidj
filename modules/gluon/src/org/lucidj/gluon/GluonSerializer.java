@@ -177,77 +177,69 @@ public class GluonSerializer implements SerializerEngine
         throw (new IllegalStateException ("No matching serializer for '" + representation + "'"));
     }
 
+    private Object deserialize_object (GluonInstance instance)
+    {
+        GluonObject object_ref = (GluonObject)instance._getProperty (GluonConstants.OBJECT_CLASS);
+        String type_name = object_ref.getClassName ();
+        Serializer serializer = null;
+
+        if (serializer_lookup.containsKey (type_name))
+        {
+            // Easy way... the class have an explicit serializer
+            serializer = serializer_lookup.get (type_name);
+        }
+        else
+        {
+            // Hard way... we need to find some compatible serializer
+            for (Map.Entry<String, Serializer> entry: serializer_lookup.entrySet ())
+            {
+                if (entry.getValue () instanceof GluonPrimitive)
+                {
+                    // Skip all primitives
+                    continue;
+                }
+
+                Class type = classManager.loadClassUsingObject (entry.getValue (), type_name);
+                Class entry_type = classManager.loadClassUsingObject (entry.getValue (), entry.getKey ());
+
+                if (type != null
+                    && entry_type != null
+                    && entry_type.isAssignableFrom (type))
+                {
+                    serializer = entry.getValue ();
+                    serializer_lookup.put (type_name, serializer);
+                    break;
+                }
+            }
+        }
+
+        if (serializer == null)
+        {
+            throw (new IllegalStateException ("No matching serializer for '" + type_name + "'"));
+        }
+        return (serializer.deserializeObject (instance));
+    }
+
     public boolean applyDeserializer (GluonInstance instance, String representation)
         throws IllegalStateException
     {
         try
         {
-            instance._setValueObject (deserialize_primitive (instance, representation));
+            if (representation == null) // An object
+            {
+                instance._setValueObject (deserialize_object (instance));
+            }
+            else // A primitive
+            {
+                instance._setValueObject (deserialize_primitive (instance, representation));
+            }
             return (true);
         }
         catch (IllegalStateException e)
         {
-            log.error ("Exception handling object representation: {}", representation, e);
+            log.error ("Exception handling object deserialization", e);
             return (false);
         }
-    }
-
-    private boolean resolve_object (GluonInstance object)
-    {
-//        boolean object_resolved = true;
-//
-//        for (String key: object.getPropertyKeys ())
-//        {
-//            if (object.getAttribute (key, "embedded") == true)
-//            {
-//
-//            }
-//        }
-
-        GluonObject object_ref = (GluonObject)object.getProperty (GluonConstants.OBJECT_CLASS);
-        Serializer serializer = serializer_lookup.get (object_ref.getClassName ()); // ??????
-
-        log.info ("{} ====> {} serializer={}", object, object_ref.getClassName (), serializer);
-
-        Object obj = serializer.deserializeObject (object);
-
-        log.info ("DESERIALIZED OBJECT: {}", obj);
-        object._setValueObject (obj);
-
-        return (true);
-    }
-
-    private boolean build_object_tree (GluonInstance instance)
-    {
-        HashMap<String, GluonInstance> embedded_objects = new HashMap<> ();
-
-        for (GluonInstance entry: instance.getObjectEntries ())
-        {
-            Boolean embedding = (Boolean)entry.getAttribute (GluonConstants.OBJECT_CLASS, GluonConstants.EMBEDDING_FLAG);
-
-            log.info ("====> FILTER entry={} embedding={}", entry, embedding);
-
-            if (embedding != null && embedding)
-            {
-                GluonObject object_ref = (GluonObject)entry.getProperty (GluonConstants.OBJECT_CLASS);
-                embedded_objects.put (object_ref.getValue (), entry);
-                instance.removeEntry (entry);
-            }
-        }
-
-        // TODO: ITERATIVE RESOLUTION
-        for (GluonInstance entry: instance.getObjectEntries ())
-        {
-            log.info ("====> RESOLVE entry={}", entry);
-
-            if (entry._getValueObject () == null)
-            {
-                resolve_object (entry);
-            }
-        }
-
-        // Return root object resolution
-        return (resolve_object (instance));
     }
 
     @Override
@@ -265,18 +257,18 @@ public class GluonSerializer implements SerializerEngine
                 return (null);
             }
 
-            GluonUtil.dumpRepresentation (instance, "deserialize_dump.txt");
-
-            build_object_tree (instance);
-
-            GluonUtil.dumpRepresentation (instance, "objectree_dump.txt");
+            GluonUtil.dumpRepresentation (instance, "deserialize_read.txt");
         }
         catch (IOException e)
         {
             log.error ("Exception reading {}", reader, e);
             return (null);
         }
-        return (instance._getValueObject ());
+        log.info ("-----> deserializeObject::_resolveObject()");
+        Object obj = instance._resolveObject ();
+        log.info ("-----> deserializeObject::_resolveObject() => {}", obj);
+        GluonUtil.dumpRepresentation (instance, "deserialize_resolved.txt");
+        return (obj);
     }
 
     //------------------------------------------------------------------------------------------------------

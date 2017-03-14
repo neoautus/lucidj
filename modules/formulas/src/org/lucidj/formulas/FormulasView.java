@@ -63,6 +63,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -101,7 +102,8 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     private long last_save = 0;
     private boolean formulae_changed = false;
 
-    private CompositeTask object_list = null;
+    private List object_list = null;
+//    private CompositeTask object_list = null;
     private String task_source = null;
     private Object current_object;
     private Map<Object, Cell> active_cells = new ConcurrentHashMap<> ();
@@ -149,10 +151,10 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
     class Cell extends AbstractCell
     {
-        public Cell (BundleContext ctx, Object object)
+        public Cell (Object object)
         {
             // Cell formatting, decoration and event handling is located at AbstractCell
-            super (ctx, object);
+            super (object);
         }
 
         @Override
@@ -293,7 +295,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
             if (cell == null)
             {
-                cell = new Cell (ctx, source_object);
+                cell = new Cell (source_object);
                 active_cells.put (source_object, cell);
                 log.info ("synchronize_cell_view: NEW cell source_object={} cell={}", source_object, cell);
             }
@@ -867,7 +869,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         build_toolbar();
         build_sidebar ();
 
-        insert_here_cell = new Cell (ctx, null);
+        insert_here_cell = new Cell (null);
 
         HorizontalLayout header = new HorizontalLayout ();
         header.setWidth (100, Unit.PERCENTAGE);

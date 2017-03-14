@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,8 +16,10 @@
 
 package org.lucidj.renderer;
 
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
-import org.lucidj.runtime.Kernel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,62 +28,42 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Label;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-public class ObjectRenderer implements ServiceTrackerCustomizer<Renderer, Renderer>, Observer
+public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Observer
 {
-    private final transient static Logger log = LoggerFactory.getLogger (ObjectRenderer.class);
+    private final transient static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
 
-    private Object source;
-    private ServiceReference<Renderer> current_service;
     private Renderer current_renderer;
     private Component current_component;
     private Label default_component;
 
-    private BundleContext ctx;
-    private ServiceTracker<Renderer, Renderer> tracker;
-    private Map<ServiceReference<Renderer>, Renderer> renderer_map;
+    private DefaultRendererFactory renderer_factory;
 
-    public ObjectRenderer (BundleContext ctx)
+    public DefaultObjectRenderer (DefaultRendererFactory renderer_factory)
     {
-        renderer_map = new HashMap<> ();
-        this.ctx = ctx;
+        this.renderer_factory = renderer_factory;
 
         default_component = new Label ("void");
         default_component.addStyleName ("custom-empty-component");
         default_component.setSizeUndefined ();
-
-        // TODO: MOVE SERVICETRACKER LOGIC AWAY ASAP!!!
-        tracker = new ServiceTracker<> (ctx, Renderer.class, this);
-        tracker.open ();
     }
 
-    public ObjectRenderer ()
-    {
-        // Only valid inside TaskContexts
-        this (Kernel.currentTaskContext ().getBundleContext ());
-    }
-
+    @Override // ObjectRenderer
     public boolean isRendered ()
     {
         return (current_component != null && current_renderer != null);
     }
 
+    @Override // ObjectRenderer
     public Component renderingComponent ()
     {
         return (current_component);
     }
 
     // TODO: ADD LINK/UNLINK NOTIFICATIONS
-
+    @Override // ObjectRenderer
     public <A> A adapt (Class<A> type)
     {
         if (isRendered () &&
@@ -93,74 +75,28 @@ public class ObjectRenderer implements ServiceTrackerCustomizer<Renderer, Render
         return (null);
     }
 
-    private ServiceReference<Renderer> find_renderer (Object obj)
-    {
-        log.info ("find_renderer: obj={}", obj);
-
-        // TODO: APPLY PROPER FILTERING TO SORT MULTIPLE COMPATIBLE RENDERERS
-        for (ServiceReference<Renderer> sref : renderer_map.keySet ())
-        {
-            Renderer r = renderer_map.get (sref);
-
-            log.debug ("Searching renderer: {} {}", sref, r);
-
-            // TODO: IS IT VALID TO USE CACHED renderer LIKE THIS?
-            if (r.compatibleObject (obj))
-            {
-                log.info ("Found: obj={} => {} / {}", obj, sref, r);
-                return (sref);
-            }
-        }
-
-        log.info ("Not Found: obj={}", obj);
-
-        return (null);
-    }
-
-    private Renderer new_renderer_instance (ServiceReference<Renderer> renderer_service)
-    {
-        // TODO: IS THIS VALID? WE ARE SKIPPING ctx.getService() STUFF....
-        Class renderer_class = renderer_map.get (renderer_service).getClass ();
-
-        Renderer new_renderer = null;
-
-        try
-        {
-            // For now, all Renderers MUST have a constructor without args
-            new_renderer = (Renderer)renderer_class.newInstance ();
-        }
-        catch (Exception e)
-        {
-            log.error ("Error creating renderer", e);
-        }
-
-        return (new_renderer);
-    }
-
-    private void apply_renderer (ServiceReference<Renderer> renderer_service, Object obj)
+    private void apply_renderer (Object obj)
     {
         Component new_component = null;
 
-        log.info ("apply_renderer: renderer_service={} obj={}", renderer_service, obj);
+        log.info ("apply_renderer: obj={}", obj);
 
-        if (renderer_service != null)
+        if (obj == null)
         {
-            current_service = renderer_service;
-
-            if ((current_renderer = new_renderer_instance (renderer_service)) != null)
-            {
-                // Link and trigger initial update
-                current_renderer.objectLinked (obj);
-                current_renderer.objectUpdated ();
-                new_component = current_renderer.renderingComponent ();
-            }
+            // Will use the default component to display 'null'
+            current_renderer = null;
+        }
+        else if ((current_renderer = renderer_factory.getCompatibleRenderer (obj)) != null)
+        {
+            // Link and trigger initial update
+            current_renderer.objectLinked (obj);
+            current_renderer.objectUpdated ();
+            new_component = current_renderer.renderingComponent ();
         }
 
         // Fallback to default renderer if we fail to get proper renderer or its instance
-        if (renderer_service == null || current_renderer == null)
+        if (current_renderer == null)
         {
-            current_service = null;
-            current_renderer = null;
             default_component.setValue (obj == null? "null": obj.getClass ().getSimpleName ());
             new_component = default_component;
         }
@@ -185,7 +121,7 @@ public class ObjectRenderer implements ServiceTrackerCustomizer<Renderer, Render
         log.info ("apply_renderer: current_renderer={} current_component={}", current_renderer, current_component);
     }
 
-    private void safe_apply_renderer (ServiceReference<Renderer> serviceReference, Object obj)
+    private void safe_apply_renderer (Object obj)
     {
         VaadinSession current_session = VaadinSession.getCurrent ();
 
@@ -198,7 +134,7 @@ public class ObjectRenderer implements ServiceTrackerCustomizer<Renderer, Render
         try
         {
             // TODO: HANDLE RACING CONDITION WHEN A SESSION STARTS AT THIS POINT
-            apply_renderer (serviceReference, source);
+            apply_renderer (obj);
         }
         finally
         {
@@ -210,18 +146,16 @@ public class ObjectRenderer implements ServiceTrackerCustomizer<Renderer, Render
         }
     }
 
-    public Component link (Object source)
+    @Override // ObjectRenderer
+    public Component link (Object object)
     {
-        this.source = source;
-
         // TODO: WHEN OBJECT IS UNKNOWN, PUBLISH "BINARY" RENDERER AND WAIT FOR RENDERER ACTIVATION
-        ServiceReference<Renderer> renderer_service = find_renderer (source);
-        safe_apply_renderer (renderer_service, source);       // TODO: safe_apply_renderer??
+        safe_apply_renderer (object);
 
-        if (source instanceof Renderer.Observable)
+        if (object instanceof Renderer.Observable)
         {
             // The object can notify us for changes
-            ((Renderer.Observable)source).addObserver (this);
+            ((Renderer.Observable)object).addObserver (this);
         }
 
         // TODO: ADD CALLBACK custom_renderer.objectLinked ()
@@ -230,9 +164,10 @@ public class ObjectRenderer implements ServiceTrackerCustomizer<Renderer, Render
         return (current_component);
     }
 
+    @Override // ObjectRenderer
     public void unlink ()
     {
-        safe_apply_renderer (current_service, null);     // TODO: safe_apply_renderer??
+        safe_apply_renderer (null);     // TODO: safe_apply_renderer??
 
         // No more source
         if (current_renderer != null)
@@ -259,9 +194,9 @@ public class ObjectRenderer implements ServiceTrackerCustomizer<Renderer, Render
                 }
             }
         }
-        source = null;
     }
 
+    @Override // ObjectRenderer
     public void updateComponent ()
     {
         if (current_renderer != null)
@@ -296,44 +231,16 @@ public class ObjectRenderer implements ServiceTrackerCustomizer<Renderer, Render
         updateComponent ();
     }
 
-    @Override // ServiceTrackerCustomizer
-    public Renderer addingService (ServiceReference<Renderer> serviceReference)
+    @Override // ManagedObject
+    public void validate (ManagedObjectInstance instance)
     {
-        Renderer renderer = ctx.getService (serviceReference);
-        renderer_map.put (serviceReference, renderer);
-
-        log.info ("addingService: {}: {}", serviceReference, renderer);
-
-        if (source != null && renderer.compatibleObject (source))
-        {
-            safe_apply_renderer (serviceReference, source);
-        }
-
-        // We need to return the object in order to track it
-        return (renderer);
+        // Nop
     }
 
-    @Override // ServiceTrackerCustomizer
-    public void modifiedService (ServiceReference<Renderer> serviceReference, Renderer renderer)
+    @Override // ManagedObject
+    public void invalidate (ManagedObjectInstance instance)
     {
-        log.info ("modifiedService: {}: {}", serviceReference, renderer);
-        renderer_map.put (serviceReference, renderer);
-        // TODO: REPLACE OLD RENDERER
-    }
-
-    @Override // ServiceTrackerCustomizer
-    public void removedService (ServiceReference<Renderer> serviceReference, Renderer renderer)
-    {
-        // TODO: CLEAR OBSERVERS
-        ctx.ungetService (serviceReference);
-        renderer_map.remove (serviceReference);
-
-        if (source != null && renderer.compatibleObject (source))
-        {
-            safe_apply_renderer (null, source);
-        }
-
-        log.info ("removedService: {}: {}", serviceReference, renderer);
+        // Nop
     }
 }
 

@@ -20,6 +20,7 @@ import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
+import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.shiro.Shiro;
 
@@ -49,6 +50,20 @@ public class Formulas implements MenuProvider, ViewProvider
 
     @Requires
     private SerializerEngine serializer;
+
+    @Requires
+    private RendererFactory rendererFactory;
+    private static RendererFactory static_rendererFactory;
+
+    public Formulas ()
+    {
+        static_rendererFactory = rendererFactory;
+    }
+
+    public static RendererFactory getRendererFactory ()
+    {
+        return (static_rendererFactory);
+    }
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()

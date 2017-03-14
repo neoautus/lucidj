@@ -24,7 +24,8 @@ import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.NavigatorManager;
-import org.lucidj.renderer.ObjectRenderer;
+import org.lucidj.api.ObjectRenderer;
+import org.lucidj.api.RendererFactory;
 import org.lucidj.vaadinui.FancyEmptyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,8 +51,6 @@ import com.vaadin.ui.VerticalLayout;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-
-import org.osgi.framework.BundleContext;
 
 public class GaussUI implements DesktopInterface, MenuInstance.EventListener, ManagedObject
 {
@@ -92,12 +91,12 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
     private Navigator navigator;
 
-    private BundleContext context;
     private MenuManager menu_manager;
     private NavigatorManager nav_manager;
 
     private MenuInstance main_menu;
-    private ObjectRenderer object_renderer;
+    private RendererFactory rendererFactory;
+    private ObjectRenderer objectRenderer;
 
     //=========================================================================================
     // LAYOUTS
@@ -126,8 +125,8 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             main_menu.setEventListener (this);
 
             // Create the menu renderer
-            object_renderer = new ObjectRenderer (context);
-            com.vaadin.ui.Component main_menu_component = object_renderer.link (main_menu);
+            objectRenderer = rendererFactory.newRenderer ();
+            com.vaadin.ui.Component main_menu_component = objectRenderer.link (main_menu);
             main_menu_component.setWidth (100, Unit.PERCENTAGE);
             main_menu_component.setHeightUndefined ();
 
@@ -428,9 +427,9 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     @Override // ManagedObject
     public void validate (ManagedObjectInstance instance)
     {
-        context = instance.getBundle ().getBundleContext ();
         menu_manager = instance.getObject (MenuManager.class);
         nav_manager = instance.getObject (NavigatorManager.class);
+        rendererFactory = instance.getObject (RendererFactory.class);
     }
 
     @Override // ManagedObject

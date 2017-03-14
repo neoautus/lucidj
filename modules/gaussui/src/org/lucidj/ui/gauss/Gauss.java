@@ -22,6 +22,7 @@ import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.NavigatorManager;
+import org.lucidj.api.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +46,13 @@ public class Gauss implements ManagedObjectProvider
     };
 
     @Requires
-    private MenuManager menu_manager;
+    private MenuManager menuManager;
 
     @Requires
-    private NavigatorManager nav_manager;
+    private NavigatorManager navigatorManager;
+
+    @Requires
+    private RendererFactory rendererFactory;
 
     @Validate
     private boolean validate ()
@@ -72,9 +76,9 @@ public class Gauss implements ManagedObjectProvider
     @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        instance.putObject (MenuManager.class, menu_manager);
-        instance.putObject (NavigatorManager.class, nav_manager);
-
+        instance.putObject (MenuManager.class, menuManager);
+        instance.putObject (NavigatorManager.class, navigatorManager);
+        instance.putObject (RendererFactory.class, rendererFactory);
         return (new GaussUI ());
     }
 }

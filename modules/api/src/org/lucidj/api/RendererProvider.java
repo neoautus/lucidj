@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,23 +16,9 @@
 
 package org.lucidj.api;
 
-import com.vaadin.ui.Component;
-
-import java.util.Observer;
-
-public interface Renderer
+public interface RendererProvider
 {
-    boolean compatibleObject (Object object);
-    void objectLinked (Object obj);
-    void objectUnlinked ();
-    Component renderingComponent ();
-    void objectUpdated ();
-
-    interface Observable
-    {
-        void addObserver (Observer observer);
-        void deleteObserver (Observer observer);
-    }
+    Renderer getCompatibleRenderer (Object object);
 }
 
 // EOF

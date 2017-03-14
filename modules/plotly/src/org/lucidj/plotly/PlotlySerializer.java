@@ -14,16 +14,12 @@
  * the License.
  */
 
-package org.lucidj.gluon.serializers;
+package org.lucidj.plotly;
 
 import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
-import org.lucidj.runtime.CompositeTask;
-
-import java.util.List;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -34,7 +30,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class ListSerializer implements Serializer
+public class PlotlySerializer implements Serializer
 {
     @Requires
     private SerializerEngine serializer;
@@ -45,31 +41,19 @@ public class ListSerializer implements Serializer
     @Override
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
-        instance.setObjectClass (object.getClass ());
-        for (Object item: (List)object)
-        {
-            instance.addObject (item);
-        }
-        return (true);
+        return false;
     }
 
     @Override
     public Object deserializeObject (SerializerInstance instance)
     {
-        ManagedObjectInstance object_instance = objectFactory.wrapObject (new CompositeTask ());
-        CompositeTask composite_task = object_instance.adapt (CompositeTask.class);
-
-        for (Object object: instance.getObjects ())
-        {
-            composite_task.add (object);
-        }
-        return (composite_task);
+        return null;
     }
 
     @Validate
     private void validate ()
     {
-        serializer.register (CompositeTask.class, this);
+        serializer.register (Plotly.class, this);
     }
 }
 

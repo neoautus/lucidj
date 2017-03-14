@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,6 +16,8 @@
 
 package org.lucidj.console;
 
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Renderer;
 
 import com.vaadin.server.Sizeable;
@@ -23,14 +25,7 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Label;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-
-@Component (immediate = true)
-@Instantiate
-@Provides
-public class ConsoleRenderer implements Renderer
+public class ConsoleRenderer implements Renderer, ManagedObject
 {
     private Label console_out_err = new Label ();
     private Console console;
@@ -75,6 +70,18 @@ public class ConsoleRenderer implements Renderer
                 console.getHtmlContent () +
             "</div>";
         console_out_err.setValue (html);
+    }
+
+    @Override
+    public void validate (ManagedObjectInstance instance)
+    {
+        // Nop
+    }
+
+    @Override
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        // Nop
     }
 }
 

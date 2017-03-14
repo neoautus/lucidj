@@ -36,7 +36,7 @@ public class DefaultManagedObjectInstance implements ManagedObjectInstance
         this.properties = (properties != null)? properties: new HashMap<String, Object> ();
     }
 
-    public void internalSetManagedObject (ManagedObject managed_object)
+    public void _setManagedObject (ManagedObject managed_object)
     {
         this.managed_object = managed_object;
         source_bundle = FrameworkUtil.getBundle (managed_object.getClass ());

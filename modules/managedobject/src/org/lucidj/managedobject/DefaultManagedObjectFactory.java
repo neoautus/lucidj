@@ -60,6 +60,11 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         log.info ("getManagedObjects clazz={}", clazz);
         log.info ("provider_list = {}", provider_list);
 
+        if (provider_list == null)
+        {
+            return (new ManagedObjectInstance[0]);
+        }
+
         for (ManagedObjectProvider provider: provider_list)
         {
             // TODO: USE org.osgi.framework.Filter (https://osgi.org/javadoc/r5/core/index.html)
@@ -92,7 +97,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         new_instance.setProperty (ManagedObjectInstance.CLASS, managed_object.getClass ().getName ());
 
         // ...set the ManagedObject...
-        new_instance.internalSetManagedObject (managed_object);
+        new_instance._setManagedObject (managed_object);
 
         // ...and register it within the class instance set
         Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (new_instance.getBundle ());
@@ -143,7 +148,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
             ManagedObject new_object = provider.newObject (ref_class, new_instance);
 
             // ...set the ManagedObject...
-            new_instance.internalSetManagedObject (new_object);
+            new_instance._setManagedObject (new_object);
 
             // ...and register it within the class instance set
             Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (provider_bundle);

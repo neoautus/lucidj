@@ -16,32 +16,30 @@
 
 package org.rationalq.smartbox;
 
+import org.lucidj.api.BundleRegistry;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
-import org.lucidj.api.Quark;
-import org.lucidj.api.TaskContext;
 import org.lucidj.objectmanager.DefaultObjectManager;
-import org.lucidj.runtime.Kernel;
 import org.lucidj.console.Console;
 import org.rationalq.vaadin.Vaadin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class SmartBox implements Quark, ManagedObject, ComponentInterface, ObjectManagerProperty, ComponentState
+public class SmartBox implements ManagedObject, ComponentInterface, ObjectManagerProperty, ComponentState
 {
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
 
@@ -54,7 +52,6 @@ public class SmartBox implements Quark, ManagedObject, ComponentInterface, Objec
     private BeanShell sh;
 
     private HashMap<String, Object> properties = new HashMap<>();
-    private TaskContext tctx;
 
     private ObjectManager om;
 
@@ -65,8 +62,17 @@ public class SmartBox implements Quark, ManagedObject, ComponentInterface, Objec
     private Vaadin vaadin;
     private Karaf karaf;
 
+    private BundleRegistry bundleRegistry;
+
     public SmartBox ()
     {
+//        init ();
+    }
+
+    public SmartBox (BundleRegistry bundleRegistry)
+    {
+        this.bundleRegistry = bundleRegistry;
+        log.info ("#### bundleRegistry = {}", bundleRegistry);
         init ();
     }
 
@@ -117,26 +123,19 @@ public class SmartBox implements Quark, ManagedObject, ComponentInterface, Objec
 
     private void init ()
     {
-        tctx = Kernel.currentTaskContext ();
-
-        log.info ("tctx = {}", Kernel.currentTaskContext ());
-
-        if (tctx == null)
-        {
-            log.info ("Will not init environment, no TaskContext available.");
-            return;
-        }
+        log.info ("bundleRegistry = {}", bundleRegistry);
 
         // TODO: FACTORY....
         om = new DefaultObjectManager ();
 
-        bsh = tctx.getObject (BeanShellProvider.class);
+        bsh = bundleRegistry.getObject (BeanShellProvider.class);
 
         if (bsh == null)
         {
-            bsh = new BeanShellProvider (tctx.getClassLoader ());
+            // TODO: COMPONENTIZE BSP, USE CLASSMANAGER
+            bsh = new BeanShellProvider (null);
             bsh.init (null);
-            tctx.putObject (bsh);
+            bundleRegistry.putObject (BeanShellProvider.class, bsh);
         }
 
         log.info("bsh = {}", bsh);
@@ -173,7 +172,7 @@ public class SmartBox implements Quark, ManagedObject, ComponentInterface, Objec
                 {
                     // Set proper ObjectManager and SmartBox _inside_ the new running thread
                     show.setObjectManager (om);
-                    Pipe.setComponentContext (self);
+//                    Pipe.setComponentContext (self);          ---
                     pragma.setSmartBox (self);
                     setState (RUNNING);
                 }
@@ -236,14 +235,14 @@ public class SmartBox implements Quark, ManagedObject, ComponentInterface, Objec
                 {
                     return (self);
                 }
-                else if ("Pipe".equals (varname))
-                {
-                    return (Pipe.pipe ());
-                }
-                else if (Kernel.currentTaskContext ().getPublishedObject (varname) != null)
-                {
-                    return (Kernel.currentTaskContext ().getPublishedObject (varname));
-                }
+//                else if ("Pipe".equals (varname))
+//                {
+//                    return (Pipe.pipe ());
+//                }
+//                else if (Kernel.currentTaskContext ().getPublishedObject (varname) != null)
+//                {
+//                    return (Kernel.currentTaskContext ().getPublishedObject (varname));
+//                }
                 throw new NoSuchFieldException (varname);
             }
         });
@@ -251,9 +250,9 @@ public class SmartBox implements Quark, ManagedObject, ComponentInterface, Objec
 
     private void eventhandler_run ()
     {
-        log.info ("TaskContext before = {}", Kernel.currentTaskContext ());
-        Kernel.bindTaskContext (tctx);
-        log.info ("TaskContext after = {}", Kernel.currentTaskContext ());
+//        log.info ("TaskContext before = {}", Kernel.currentTaskContext ());
+//        Kernel.bindTaskContext (tctx);
+//        log.info ("TaskContext after = {}", Kernel.currentTaskContext ());
 
         log.info (">>> RUN {}", code);
         get_console (false).clear ();
@@ -296,10 +295,10 @@ public class SmartBox implements Quark, ManagedObject, ComponentInterface, Objec
     @Override // ComponentInterface
     public Object getProperty (String name)
     {
-        if (Pipe.PIPE_PROPERTY_NAME.equals (name))
-        {
-            return (om);
-        }
+//        if (Pipe.PIPE_PROPERTY_NAME.equals (name))        // ---
+//        {
+//            return (om);
+//        }
         return (properties.get (name));
     }
 
@@ -325,40 +324,6 @@ public class SmartBox implements Quark, ManagedObject, ComponentInterface, Objec
     public Object getValue ()
     {
         return (code);
-    }
-
-    @Override // Quark
-    public void deserializeObject(Map<String, Object> properties)
-    {
-        this.properties.putAll(properties);
-        code = (String)properties.get("/");
-
-        Object obj;
-        int i = 0;
-
-        log.info ("*** deserializeObject: properties={}", properties);
-
-        while ((obj = properties.get("output" + i)) != null)
-        {
-            log.info ("*** output{} = {}", i, obj);
-            om.showObject (obj);
-            i++;
-        }
-    }
-
-    @Override // Quark
-    public Map<String, Object> serializeObject ()
-    {
-        log.info("serializeObject()");
-        properties.put("/", code);
-
-        //properties.put ("output", om.getObjects ());
-        for (int i = 0; i < om.available (); i++)
-        {
-            properties.put ("output" + i, om.getObject (i));
-        }
-
-        return(properties);
     }
 
     @Override // ObjectManagerProperty

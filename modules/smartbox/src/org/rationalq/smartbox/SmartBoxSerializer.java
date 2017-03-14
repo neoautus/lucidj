@@ -16,6 +16,7 @@
 
 package org.rationalq.smartbox;
 
+import org.lucidj.api.BundleRegistry;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Serializer;
@@ -41,6 +42,9 @@ public class SmartBoxSerializer implements Serializer
 
     @Requires
     private ManagedObjectFactory objectFactory;
+
+    @Requires
+    private BundleRegistry bundleRegistry;
 
     @Requires
     private SerializerEngine serializer;
@@ -75,7 +79,8 @@ public class SmartBoxSerializer implements Serializer
     @Override // Serializer
     public Object deserializeObject (SerializerInstance instance)
     {
-        ManagedObjectInstance smartbox_instance = objectFactory.wrapObject (new SmartBox ());
+        ManagedObjectInstance smartbox_instance =
+            objectFactory.wrapObject (new SmartBox (bundleRegistry));
         SmartBox smartbox = smartbox_instance.adapt (SmartBox.class);
         HashMap<String, Object> properties = smartbox.getProperties ();
 

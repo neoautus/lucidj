@@ -18,8 +18,6 @@ package org.lucidj.top;
 
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.TaskContext;
-import org.lucidj.runtime.Kernel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.lucidj.uiaccess.UIAccess;
@@ -47,34 +45,34 @@ public class TopView extends VerticalLayout implements ManagedObject, View
 
     private void updateView ()
     {
-        Set<String> valid_ctxids = new HashSet<> ();
-        TaskContext[] ctx_list = Kernel.taskManager ().getTaskContexts ();
-
-        for (TaskContext sc: ctx_list)
-        {
-            String ctx_id = sc.toString (); // ...getContextId ();
-            Item item = container.getItem (ctx_id);
-
-            valid_ctxids.add (ctx_id);
-
-            if (item == null)
-            {
-                item = container.addItem (ctx_id);
-            }
-
-            item.getItemProperty ("context_id").setValue (ctx_id);
-            item.getItemProperty ("components").setValue (sc /*.getQuarkContext ()*/.toString ());
-        }
-
-        for (int i = 0; i < container.size (); i++)
-        {
-            String item_id = (String)container.getIdByIndex (i);
-
-            if (!valid_ctxids.contains (item_id))
-            {
-                container.removeItem (item_id);
-            }
-        }
+//        Set<String> valid_ctxids = new HashSet<> ();
+//        TaskContext[] ctx_list = new TaskContext [0];//Kernel.taskManager ().getTaskContexts ();
+//
+//        for (TaskContext sc: ctx_list)
+//        {
+//            String ctx_id = sc.toString (); // ...getContextId ();
+//            Item item = container.getItem (ctx_id);
+//
+//            valid_ctxids.add (ctx_id);
+//
+//            if (item == null)
+//            {
+//                item = container.addItem (ctx_id);
+//            }
+//
+//            item.getItemProperty ("context_id").setValue (ctx_id);
+//            item.getItemProperty ("components").setValue (sc /*.getQuarkContext ()*/.toString ());
+//        }
+//
+//        for (int i = 0; i < container.size (); i++)
+//        {
+//            String item_id = (String)container.getIdByIndex (i);
+//
+//            if (!valid_ctxids.contains (item_id))
+//            {
+//                container.removeItem (item_id);
+//            }
+//        }
     }
 
     private void setup_timer (int delay_ms)

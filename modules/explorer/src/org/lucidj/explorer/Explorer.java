@@ -20,7 +20,7 @@ import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
-import org.lucidj.shiro.Shiro;
+import org.lucidj.api.SecurityEngine;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
@@ -41,7 +41,7 @@ public class Explorer implements MenuProvider, ViewProvider
     private final static String NAVID = "home";
 
     @Requires
-    private Shiro shiro;
+    private SecurityEngine security;
 
     @Requires
     private ManagedObjectFactory object_factory;
@@ -73,7 +73,7 @@ public class Explorer implements MenuProvider, ViewProvider
     {
         if (NAVID.equals (s))
         {
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new ExplorerView (shiro));
+            ManagedObjectInstance view_instance = object_factory.wrapObject (new ExplorerView (security));
             return (view_instance.adapt (View.class));
         }
         return null;

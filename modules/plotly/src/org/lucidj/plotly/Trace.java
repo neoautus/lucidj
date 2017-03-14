@@ -16,12 +16,10 @@
 
 package org.lucidj.plotly;
 
-import org.lucidj.api.Quark;
-
 import java.util.HashMap;
 import java.util.Map;
 
-public class Trace implements Quark
+public class Trace
 {
     private HashMap properties = new HashMap<> ();
 
@@ -46,19 +44,20 @@ public class Trace implements Quark
         return (this);
     }
 
-    @Override
-    public Map<String, Object> serializeObject ()
-    {
-        properties.put ("/", json.toPrettyJson ());
-        return (properties);
-    }
-
-    @Override
-    public void deserializeObject (Map<String, Object> properties)
-    {
-        this.properties.putAll (properties);
-        json.fromJson ((String)properties.get ("/"));
-    }
+    // TODO: GLUON
+//    @Override
+//    public Map<String, Object> serializeObject ()
+//    {
+//        properties.put ("/", json.toPrettyJson ());
+//        return (properties);
+//    }
+//
+//    @Override
+//    public void deserializeObject (Map<String, Object> properties)
+//    {
+//        this.properties.putAll (properties);
+//        json.fromJson ((String)properties.get ("/"));
+//    }
 }
 
 // EOF

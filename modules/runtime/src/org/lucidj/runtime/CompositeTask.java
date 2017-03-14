@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -18,7 +18,6 @@ package org.lucidj.runtime;
 
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Task;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,9 +25,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 
-public class CompositeTask implements Task, List, ManagedObject
+public class CompositeTask implements List, ManagedObject
 {
     private ArrayList<Object> obj_list = new ArrayList<> ();
     private HashMap<String, Object> properties = new HashMap<>();
@@ -38,22 +36,6 @@ public class CompositeTask implements Task, List, ManagedObject
     //==============
 
     //...
-
-    //===============
-    // Quark methods
-    //===============
-
-    @Override
-    public void deserializeObject (Map<String, Object> properties)
-    {
-        this.properties.putAll (properties);
-    }
-
-    @Override
-    public Map<String, Object> serializeObject ()
-    {
-        return(properties);
-    }
 
     //==============
     // List methods

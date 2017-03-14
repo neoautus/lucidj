@@ -24,7 +24,6 @@ import java.util.Observer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.lucidj.api.Quark;
 import org.lucidj.api.Renderer;
 import org.lucidj.renderer.SimpleObservable;
 
@@ -32,7 +31,7 @@ import org.lucidj.renderer.SimpleObservable;
  * Be sure to visit https://plot.ly/ to know more.
  */
 
-public class Plotly implements Quark, Renderer.Observable
+public class Plotly implements Renderer.Observable
 {
     private transient Gson gson = new Gson ();
     private transient Gson pretty = new GsonBuilder ().setPrettyPrinting().create();
@@ -498,40 +497,41 @@ public class Plotly implements Quark, Renderer.Observable
         observers.deleteObserver (observer);
     }
 
-    @Override
-    public Map<String, Object> serializeObject ()
-    {
-        for (int i = 0; i < trace_data.size (); i++)
-        {
-            properties.put ("data" + i, trace_data.get (i));
-        }
-
-        properties.put ("/", layout.toPrettyJson ());
-        return (properties);
-    }
-
-    @Override
-    public void deserializeObject (Map<String, Object> properties)
-    {
-        trace_data.clear ();
-        map_data.clear ();
-
-        this.properties.putAll (properties);
-
-        Object obj;
-        int i = 0;
-
-        while ((obj = properties.get ("data" + i)) != null)
-        {
-            if (obj instanceof Trace)
-            {
-                addTrace ((Trace)obj);
-            }
-            i++;
-        }
-
-        layout.fromJson ((String)properties.get ("/"));
-    }
+    // TODO: GLUON
+//    @Override
+//    public Map<String, Object> serializeObject ()
+//    {
+//        for (int i = 0; i < trace_data.size (); i++)
+//        {
+//            properties.put ("data" + i, trace_data.get (i));
+//        }
+//
+//        properties.put ("/", layout.toPrettyJson ());
+//        return (properties);
+//    }
+//
+//    @Override
+//    public void deserializeObject (Map<String, Object> properties)
+//    {
+//        trace_data.clear ();
+//        map_data.clear ();
+//
+//        this.properties.putAll (properties);
+//
+//        Object obj;
+//        int i = 0;
+//
+//        while ((obj = properties.get ("data" + i)) != null)
+//        {
+//            if (obj instanceof Trace)
+//            {
+//                addTrace ((Trace)obj);
+//            }
+//            i++;
+//        }
+//
+//        layout.fromJson ((String)properties.get ("/"));
+//    }
 }
 
 // EOF

@@ -50,18 +50,11 @@ import org.lucidj.api.ApplicationInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.TaskContext;
-import org.lucidj.runtime.Kernel;
-import org.lucidj.shiro.Shiro;
-import org.lucidj.runtime.CompositeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -70,11 +63,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @StyleSheet ("vaadin://~/formulas_libraries/styles.css")
 public class FormulasView extends VerticalLayout implements ManagedObject, View, ApplicationInterface
 {
-    //==============================
-    //==============================
-    // THIS IS A TaskContext VIEWER
-    //==============================
-    //==============================
+    // Actually this will be some sort of Bundle Renderer
 
     // TODO: CREATE A PROPER NAVIGATION AID
     private String navid = "formulas";
@@ -94,9 +83,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     private ComponentPalette sidebar = null;
 
     private BundleContext ctx;
-    private Shiro shiro;
-
-    private TaskContext tctx;
+    private SecurityEngine security;
 
     private String view_name = null;
     private long last_save = 0;
@@ -112,9 +99,9 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     private Cell insert_here_cell;
     private SerializerEngine serializer;
 
-    public FormulasView (Shiro shiro, SerializerEngine serializer)
+    public FormulasView (SecurityEngine security, SerializerEngine serializer)
     {
-        this.shiro = shiro;
+        this.security = security;
         this.serializer = serializer;
     }
 
@@ -127,7 +114,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     @Override // ManagedObject
     public void invalidate (ManagedObjectInstance instance)
     {
-        shiro = null;
+        security = null;
         serializer = null;
     }
 
@@ -363,35 +350,37 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
     private Object insert_new_object (String canonical_name, int index)
     {
+        // TODO: USE GLUON
         log.info ("insert_new_object: canonical_name={} index={}", canonical_name, index);
-
-        Object new_object = null;
-
-        try
-        {
-            // TODO: LOAD OBJECT FROM CONTEXT CLASSLOADER? tctx.newInstance (cn)?
-            Kernel.bindTaskContext (tctx);
-            Class cls = tctx.getClassLoader ().loadClass (canonical_name);
-            new_object = cls.newInstance ();
-        }
-        catch (Exception e)
-        {
-            // TODO: ERROR NOTIFICATION
-            log.error ("insert_new_object: Error creating {}", canonical_name, e);
-        }
-
-        log.info ("*** insert_new_object: new_object={}", new_object);
-
-        if (index == -1)
-        {
-            object_list.add (new_object);
-        }
-        else
-        {
-            object_list.add (index, new_object);
-        }
-
-        return (new_object);
+//
+//        Object new_object = null;
+//
+//        try
+//        {
+//            // TODO: LOAD OBJECT FROM CONTEXT CLASSLOADER? tctx.newInstance (cn)?
+//            Kernel.bindTaskContext (tctx);
+//            Class cls = tctx.getClassLoader ().loadClass (canonical_name);
+//            new_object = cls.newInstance ();
+//        }
+//        catch (Exception e)
+//        {
+//            // TODO: ERROR NOTIFICATION
+//            log.error ("insert_new_object: Error creating {}", canonical_name, e);
+//        }
+//
+//        log.info ("*** insert_new_object: new_object={}", new_object);
+//
+//        if (index == -1)
+//        {
+//            object_list.add (new_object);
+//        }
+//        else
+//        {
+//            object_list.add (index, new_object);
+//        }
+//
+//        return (new_object);
+        return (null);
     }
 
     //-----------------------------------------------------------------------------------------------------------------
@@ -416,81 +405,6 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         }
     }
 
-    private void test_serialization ()
-    {
-        if (serializer == null)
-        {
-            log.error ("serializer == null, no test available");
-            return;
-        }
-
-        Path userdir = shiro.getDefaultUserDir ();
-        Path destination_path = userdir.resolve ("serialization.txt");
-        Charset cs = Charset.forName ("UTF-8");
-        Writer writer = null;
-
-        try
-        {
-            writer = Files.newBufferedWriter (destination_path, cs);
-
-            log.info ("***> serializeObject ({}) to {} <***", object_list, destination_path);
-            serializer.serializeObject (writer, object_list);
-        }
-        catch (Exception e)
-        {
-            log.error ("Exception on serialization", e);
-        }
-        finally
-        {
-            try
-            {
-                if (writer != null)
-                {
-                    writer.close();
-                }
-            }
-            catch (Exception ignore) {};
-        }
-    }
-
-    private void test_deserialization ()
-    {
-        if (serializer == null)
-        {
-            log.error ("serializer == null, no test available");
-            return;
-        }
-
-        Path userdir = shiro.getDefaultUserDir ();
-        Path destination_path = userdir.resolve ("serialization.txt");
-        Charset cs = Charset.forName ("UTF-8");
-        Reader reader = null;
-
-        try
-        {
-            reader = Files.newBufferedReader (destination_path, cs);
-
-            log.info ("***> deserializeObject ({}) to {} <***", object_list, destination_path);
-            Object obj = serializer.deserializeObject (reader);
-            log.info ("***> obj = {}", obj);
-        }
-        catch (Exception e)
-        {
-            log.error ("Exception on serialization", e);
-        }
-        finally
-        {
-            try
-            {
-                if (reader != null)
-                {
-                    reader.close();
-                }
-            }
-            catch (Exception ignore) {};
-        }
-    }
-
     private void handle_button_click (Button source)
     {
         switch (source.getId())
@@ -499,16 +413,6 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
             {
                 // TODO: EMBED task_source INTO TaskContext
                 save_formulae (task_source);
-                break;
-            }
-            case "test":
-            {
-                test_serialization ();
-                break;
-            }
-            case "test2":
-            {
-                test_deserialization ();
                 break;
             }
             case VM_NOTEBOOK:
@@ -649,10 +553,10 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
         createButton (local_toolbar, "save", FontAwesome.SAVE)
             .addStyleName("ui-toolbar-spacer");
-        createButton (local_toolbar, "test", FontAwesome.MAGIC)
-            .addStyleName("ui-toolbar-spacer");
-        createButton (local_toolbar, "test2", FontAwesome.FLASK)
-                .addStyleName("ui-toolbar-spacer");
+//        createButton (local_toolbar, "test", FontAwesome.MAGIC)
+//            .addStyleName("ui-toolbar-spacer");
+//        createButton (local_toolbar, "test2", FontAwesome.FLASK)
+//                .addStyleName("ui-toolbar-spacer");
 
         CssLayout edition = new CssLayout();
         edition.addStyleName("v-component-group");
@@ -781,7 +685,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
             return (false);
         }
 
-        Path userdir = shiro.getDefaultUserDir ();
+        Path userdir = security.getDefaultUserDir ();
 
         if (userdir == null)
         {
@@ -791,19 +695,18 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
         Path formulae_path = userdir.resolve (formulae_name);
 
-        if (!tctx.save (formulae_path))
+        if (!serializer.serializeObject (formulae_path, object_list))
         {
             return (false);
         }
-
         formulae_changed = false;
         return (true);
     }
 
-    public boolean load_formulae (String formulae_name)
+    public Object load_formulae (String formulae_name)
     {
         // TODO: REGISTER COMPLETE FILE SOURCE INCLUDING SOURCE FILESYSTEM
-        Path userdir = shiro.getDefaultUserDir ();
+        Path userdir = security.getDefaultUserDir ();
 
         if (userdir == null)
         {
@@ -815,7 +718,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
         formulae_changed = false;
 
-        return (tctx.load (formulae_path));
+        return (serializer.deserializeObject (formulae_path));
     }
 
     private Label get_icon (String icon_name)
@@ -861,9 +764,6 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
     private void build_formula_view (String view_mode)
     {
-        // TODO: VERIFICAR SE É MELHOR CHECAR A EXISTÊNCIA DA FORMULA AQUI OU NA CRIAÇÃO DO COMPONENTE
-//////        caption = "Formula: <b>" + task_source + "</b>";   +++++++++++++++
-
         setMargin (new MarginInfo (true, false, true, false));
 
         build_toolbar();
@@ -940,9 +840,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         addComponent (content);
 
         // TODO: RETRIEVE RUNNING TASKS WITHOUT LOAD
-        tctx = Kernel.createTaskContext ();
-        load_formulae (task_source);
-        object_list = tctx.currentTask (CompositeTask.class);
+        object_list = (List)load_formulae (task_source);
 
         log.info ("object_list: {}", object_list);
 

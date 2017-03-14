@@ -18,7 +18,7 @@ package org.lucidj.explorer;
 
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.shiro.Shiro;
+import org.lucidj.api.SecurityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.lucidj.uiaccess.UIAccess;
@@ -42,13 +42,12 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.Map;
 
 public class ExplorerView extends VerticalLayout implements ManagedObject, View, ItemClickEvent.ItemClickListener
 {
     private final transient Logger log = LoggerFactory.getLogger (ExplorerView.class);
 
-    private Shiro shiro;
+    private SecurityEngine security;
     private CssLayout toolbar = null;
 
     private final VerticalLayout self = this;
@@ -58,9 +57,9 @@ public class ExplorerView extends VerticalLayout implements ManagedObject, View,
     private Object[] treetable_visible_columns;
     private transient WatchService watch_service;
 
-    public ExplorerView (Shiro shiro)
+    public ExplorerView (SecurityEngine security)
     {
-        this.shiro = shiro;
+        this.security = security;
     }
 
     private void build_toolbar ()
@@ -298,9 +297,9 @@ public class ExplorerView extends VerticalLayout implements ManagedObject, View,
     {
         log.info ("Enter viewName=" + event.getViewName() + " parameters=" + event.getParameters());
 
-        if (shiro.getSubject ().isAuthenticated ())
+        if (security.getSubject ().isAuthenticated ())
         {
-            userdir = shiro.getDefaultUserDir ();
+            userdir = security.getDefaultUserDir ();
 
             if (getComponentCount() == 0)
             {

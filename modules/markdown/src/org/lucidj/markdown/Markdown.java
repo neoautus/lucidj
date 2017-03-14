@@ -22,12 +22,10 @@ import org.commonmark.html.HtmlRenderer;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.Quark;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -36,7 +34,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class Markdown implements Quark, ComponentInterface
+public class Markdown implements ComponentInterface
 {
     private HashMap<String, Object> properties = new HashMap<>();
 
@@ -101,29 +99,30 @@ public class Markdown implements Quark, ComponentInterface
         return (content);
     }
 
-    @Override // Quark
-    public Map<String, Object> serializeObject ()
-    {
-        properties.put ("/", content);
-        properties.put ("Html", html);
-        return (properties);
-    }
-
-    @Override // Quark
-    public void deserializeObject(Map<String, Object> properties)
-    {
-        this.properties.putAll (properties);
-
-        if ((content = (String)properties.get ("/")) == null)
-        {
-            content = "";
-        }
-
-        if ((html = (String)properties.get ("Html")) == null)
-        {
-            html = "";
-        }
-    }
+    // TODO: GLUON
+//    @Override // Quark
+//    public Map<String, Object> serializeObject ()
+//    {
+//        properties.put ("/", content);
+//        properties.put ("Html", html);
+//        return (properties);
+//    }
+//
+//    @Override // Quark
+//    public void deserializeObject(Map<String, Object> properties)
+//    {
+//        this.properties.putAll (properties);
+//
+//        if ((content = (String)properties.get ("/")) == null)
+//        {
+//            content = "";
+//        }
+//
+//        if ((html = (String)properties.get ("Html")) == null)
+//        {
+//            html = "";
+//        }
+//    }
 }
 
 // EOF

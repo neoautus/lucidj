@@ -19,9 +19,7 @@ package org.lucidj.console;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Quark;
 import org.lucidj.api.Renderer;
-import org.lucidj.api.SerializerEngine;
 import org.lucidj.renderer.SimpleObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,25 +30,14 @@ import java.io.PrintStream;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Observer;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-
-@Component (immediate = true)
-@Instantiate
-@Provides
-public class Console implements ManagedObject, Quark, Renderer.Observable
+public class Console implements ManagedObject, Renderer.Observable
 {
     private final transient Logger log = LoggerFactory.getLogger (Console.class);
 
     private SimpleDateFormat timestamp_format = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss.SSS");
 
-    private HashMap<String, Object> properties = new HashMap<>();
     private SimpleObservable observers = new SimpleObservable ();
     private StringBuilder contents = new StringBuilder ();
 
@@ -58,9 +45,6 @@ public class Console implements ManagedObject, Quark, Renderer.Observable
     private String last_tag;
     private String last_unfinished_tag;
     private int last_unfinished_tag_pos;
-
-    @Requires
-    private SerializerEngine serializer;
 
     public void output (String tag, String text)
     {
@@ -235,27 +219,6 @@ public class Console implements ManagedObject, Quark, Renderer.Observable
     public void deleteObserver (Observer observer)
     {
         observers.deleteObserver (observer);
-    }
-
-    @Override // Quark
-    public Map<String, Object> serializeObject ()
-    {
-        // Complete content log including timestamps and tags
-        properties.put ("/", contents.toString ());
-        return (properties);
-    }
-
-    @Override // Quark
-    public void deserializeObject (Map<String, Object> properties)
-    {
-        this.properties.putAll (properties);
-
-        String stored_contents = (String)properties.get ("/");
-
-        if (stored_contents != null)
-        {
-            contents = new StringBuilder (stored_contents);
-        }
     }
 
     @Override // ManagedObject

@@ -50,7 +50,7 @@ import com.vaadin.ui.VerticalLayout;
 import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.shiro.Shiro;
+import org.lucidj.api.SecurityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,7 +91,7 @@ public class BaseVaadinUI extends UI
     private int default_sidebar_width_pixels = 250;
 
     @Requires
-    private Shiro shiro;
+    private SecurityEngine security;
 
     @Requires
     private ManagedObjectFactory object_factory;
@@ -254,13 +254,13 @@ public class BaseVaadinUI extends UI
             if (remote_addr != null && remote_addr.isLoopbackAddress ())
             {
                 // Autologin into System when browsing from localhost
-                shiro.createSystemSubject ();
+                security.createSystemSubject ();
             }
         }
 
-        if (!shiro.getSubject ().isAuthenticated ())
+        if (!security.getSubject ().isAuthenticated ())
         {
-            setContent (new Login (shiro, new Login.LoginListener ()
+            setContent (new Login (security, new Login.LoginListener ()
             {
                 @Override
                 public void loginSuccessful()

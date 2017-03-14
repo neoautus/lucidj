@@ -18,27 +18,27 @@ package org.rationalq.smartbox;
 
 import bsh.CallStack;
 import bsh.Interpreter;
-import org.lucidj.runtime.Kernel;
 
+// TODO: IMPLEMENT SERVICE REGISTRATION MECHANICS
 public class publish
 {
-    public static String usage()
-    {
-        return ("Usage: pragma (\"directive\" [, \"value\" ] )\n");
-    }
-
-    public static void invoke (Interpreter env, CallStack callstack, String identifier, Object object)
-    {
-        if (object == null)
-        {
-            Kernel.currentTaskContext ().unpublishObject (identifier);
-        }
-        else
-        {
-            Kernel.currentTaskContext ().publishObject (identifier, object);
-            pragma.pragma ("publish");
-        }
-    }
+//    public static String usage()
+//    {
+//        return ("Usage: pragma (\"directive\" [, \"value\" ] )\n");
+//    }
+//
+//    public static void invoke (Interpreter env, CallStack callstack, String identifier, Object object)
+//    {
+//        if (object == null)
+//        {
+//            Kernel.currentTaskContext ().unpublishObject (identifier);
+//        }
+//        else
+//        {
+//            Kernel.currentTaskContext ().publishObject (identifier, object);
+//            pragma.pragma ("publish");
+//        }
+//    }
 }
 
 // EOF

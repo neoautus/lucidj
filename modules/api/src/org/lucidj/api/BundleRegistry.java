@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,9 +16,15 @@
 
 package org.lucidj.api;
 
-public interface System
+public interface BundleRegistry
 {
-
+    String[] getPropertyKeys ();
+    boolean  containsKey     (String key);
+    Object   getProperty     (String key);
+    Class<?> getPropertyType (String key);
+    void     setProperty     (String key, Object value);
+    <T> T    getObject       (Class<T> type);
+    <T> void putObject       (Class<T> type, T obj);
 }
 
 // EOF

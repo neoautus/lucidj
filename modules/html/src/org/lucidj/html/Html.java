@@ -17,21 +17,21 @@
 package org.lucidj.html;
 
 import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.Quark;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 
+// THIS COMPONENT IS INTENDED TO BE AN SIMPLE HTML FORMATTING TOOL
+
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class Html implements Quark, ComponentInterface
+public class Html implements ComponentInterface
 {
     private final transient Logger log = LoggerFactory.getLogger (Html.class);
 
@@ -79,23 +79,23 @@ public class Html implements Quark, ComponentInterface
         return ("Html Text");
     }
 
-    @Override // Quark
-    public Map<String, Object> serializeObject ()
-    {
-        properties.put ("/", content);
-        return (properties);
-    }
-
-    @Override // Quark
-    public void deserializeObject (Map<String, Object> properties)
-    {
-        this.properties.putAll (properties);
-
-        if ((content = (String)properties.get ("/")) == null)
-        {
-            content = "";
-        }
-    }
+//    @Override // Quark
+//    public Map<String, Object> serializeObject ()
+//    {
+//        properties.put ("/", content);
+//        return (properties);
+//    }
+//
+//    @Override // Quark
+//    public void deserializeObject (Map<String, Object> properties)
+//    {
+//        this.properties.putAll (properties);
+//
+//        if ((content = (String)properties.get ("/")) == null)
+//        {
+//            content = "";
+//        }
+//    }
 }
 
 // EOF

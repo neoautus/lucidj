@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,9 +16,17 @@
 
 package org.lucidj.api;
 
-public interface Task extends Quark
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
+
+public interface SecurityEngine
 {
-    // TODO: ADD STATE INVALID
+    SecuritySubject getStoredSubject    (boolean is_system);
+    SecuritySubject getSubject          ();
+    SecuritySubject createSystemSubject ();
+    String          getLocalHome        ();
+    FileSystem      getDefaultUserFS    ();
+    Path            getDefaultUserDir   ();
 }
 
 // EOF

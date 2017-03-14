@@ -31,6 +31,9 @@ import javax.lang.model.type.NullType;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -139,6 +142,35 @@ public class GluonSerializer implements SerializerEngine
             }
         }
         return (false);
+    }
+
+    @Override
+    public boolean serializeObject (Path path, Object obj)
+    {
+        Charset cs = Charset.forName ("UTF-8");
+        Writer writer = null;
+
+        try
+        {
+            writer = Files.newBufferedWriter (path, cs);
+            return (serializeObject (writer, obj));
+        }
+        catch (Exception e)
+        {
+            log.error ("Exception on serialization", e);
+            return (false);
+        }
+        finally
+        {
+            try
+            {
+                if (writer != null)
+                {
+                    writer.close();
+                }
+            }
+            catch (Exception ignore) {};
+        }
     }
 
     //------------------------------------------------------------------------------------------------------
@@ -269,6 +301,35 @@ public class GluonSerializer implements SerializerEngine
         log.info ("-----> deserializeObject::_resolveObject() => {}", obj);
         GluonUtil.dumpRepresentation (instance, "deserialize_resolved.txt");
         return (obj);
+    }
+
+    @Override
+    public Object deserializeObject (Path path)
+    {
+        Charset cs = Charset.forName ("UTF-8");
+        Reader reader = null;
+
+        try
+        {
+            reader = Files.newBufferedReader (path, cs);
+            return (deserializeObject (reader));
+        }
+        catch (Exception e)
+        {
+            log.info ("Exception on deserialization", e);
+            return (null);
+        }
+        finally
+        {
+            try
+            {
+                if (reader != null)
+                {
+                    reader.close();
+                }
+            }
+            catch (Exception ignore) {};
+        }
     }
 
     //------------------------------------------------------------------------------------------------------

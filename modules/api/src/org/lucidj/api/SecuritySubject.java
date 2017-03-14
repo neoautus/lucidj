@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,14 +14,14 @@
  * the License.
  */
 
-package xyz.kuori.dygraphs;
+package org.lucidj.api;
 
-import com.vaadin.shared.ui.JavaScriptComponentState;
-
-public class DygraphsState extends JavaScriptComponentState
+public interface SecuritySubject
 {
-    public String file;
-    public String attrs;
+    boolean isAuthenticated ();
+    boolean login           (String username, String password);
+    String  getPrincipal    ();
+    void    touchSession    ();
 }
 
 // EOF

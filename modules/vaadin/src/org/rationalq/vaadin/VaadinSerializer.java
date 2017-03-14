@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,7 +16,6 @@
 
 package org.rationalq.vaadin;
 
-import org.lucidj.api.QuarkSerializable;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
@@ -29,18 +28,16 @@ import com.vaadin.ui.declarative.DesignContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@org.apache.felix.ipojo.annotations.Component (immediate = true)
+@org.apache.felix.ipojo.annotations.Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class VaadinSerializer implements Serializer, QuarkSerializable
+public class VaadinSerializer implements Serializer
 {
     private final static transient Logger log = LoggerFactory.getLogger (VaadinSerializer.class);
 
@@ -56,13 +53,7 @@ public class VaadinSerializer implements Serializer, QuarkSerializable
         serializer.register (Component.class, this);
     }
 
-    @Override
-    public boolean compatibleClass (Class cls)
-    {
-        return (Component.class.isAssignableFrom (cls));
-    }
-
-    @Override
+    @Override // Serializer
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
         try
@@ -83,7 +74,7 @@ public class VaadinSerializer implements Serializer, QuarkSerializable
         }
     }
 
-    @Override
+    @Override // Serializer
     public Object deserializeObject (SerializerInstance instance)
     {
         Design.setComponentFactory (vcf);
@@ -95,7 +86,6 @@ public class VaadinSerializer implements Serializer, QuarkSerializable
         @Override
         protected Class<? extends Component> resolveComponentClass (String qualifiedClassName, DesignContext context)
         {
-            // TODO: USE CLASSLOADER FROM QuarkContext
             if (Vaadin.class.getCanonicalName ().equals (qualifiedClassName))
             {
                 return (Vaadin.class);
@@ -103,43 +93,6 @@ public class VaadinSerializer implements Serializer, QuarkSerializable
 
             return (super.resolveComponentClass (qualifiedClassName, context));
         }
-    }
-
-    @Override
-    public Map<String, Object> serializeObject (Object to_serialize)
-    {
-        Map<String, Object> properties = new HashMap<> ();
-
-        try
-        {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream ();
-
-            // TODO: BETTER WAY TO SET COMPONENT FACTORY
-            Design.setComponentFactory (vcf);
-            Design.write ((Component)to_serialize, baos);
-            properties.put ("/", baos.toString ("UTF-8"));
-        }
-        catch (Exception e)
-        {
-            // Insert exception into serialization, notify
-            properties.put ("/", e.toString ());
-        }
-
-        return (properties);
-
-    }
-
-    @Override
-    public Object deserializeObject (Map<String, Object> properties)
-    {
-        if (properties.containsKey ("/") && properties.get ("/") instanceof String)
-        {
-            String decls = (String)properties.get ("/");
-            Design.setComponentFactory (vcf);
-            return (Design.read (new ByteArrayInputStream (decls.getBytes ())));
-        }
-
-        return (null);
     }
 }
 

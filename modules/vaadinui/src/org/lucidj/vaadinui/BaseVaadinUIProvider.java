@@ -44,6 +44,7 @@ public class BaseVaadinUIProvider extends UIProvider
 {
     private final static transient Logger log = LoggerFactory.getLogger (BaseVaadinUIProvider.class);
 
+    // TODO: Test default-implementation=MyLogService.class, policy=BindingPolicy.DYNAMIC_PRIORITY
     @Requires (optional = true, specification = com.vaadin.ui.UI.class)
     private UI base_ui;
 

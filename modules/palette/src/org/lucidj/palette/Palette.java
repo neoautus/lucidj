@@ -79,6 +79,7 @@ public class Palette implements ComponentManager
     @Override // ComponentManager
     public boolean register (ComponentInterface component)
     {
+        // TODO: CHECK FOR REPEATED REGISTRATION
         log.info ("{} register: {}", this, component);
         component_map.put (component.toString (), component);
         notify_adding_component (component);
@@ -96,20 +97,7 @@ public class Palette implements ComponentManager
     private void clear_components_by_bundle (Bundle bnd)
     {
         // TODO: THREAD-SAFE
-
-        Iterator<ComponentSet> itl = listeners.iterator ();
-
-        // Remove listeners
-        while (itl.hasNext ())
-        {
-            ComponentSet entry = itl.next ();
-
-            if (FrameworkUtil.getBundle (entry.getClass ()) == bnd)
-            {
-                log.info ("Removing listener: {} for {}", entry, bnd);
-                itl.remove ();
-            }
-        }
+        log.info ("clear_components_by_bundle (bnd={})", bnd);
 
         Iterator<Map.Entry<String, ComponentInterface>> itcm = component_map.entrySet ().iterator ();
 
@@ -119,11 +107,29 @@ public class Palette implements ComponentManager
             Map.Entry<String, ComponentInterface> entry = itcm.next ();
             ComponentInterface component = entry.getValue ();
 
+            log.info ("component: {} bundle={}", component, FrameworkUtil.getBundle (component.getClass ()));
+
             if (FrameworkUtil.getBundle (component.getClass ()) == bnd)
             {
                 log.info ("Removing component: {} for {}", component, bnd);
                 notify_removing_component (component);
                 itcm.remove ();
+            }
+        }
+
+        Iterator<ComponentSet> itl = listeners.iterator ();
+
+        // Remove listeners
+        while (itl.hasNext ())
+        {
+            ComponentSet listener = itl.next ();
+
+            log.info ("listener: {} bundle={}", listener, FrameworkUtil.getBundle (listener.getClass ()));
+
+            if (FrameworkUtil.getBundle (listener.getClass ()) == bnd)
+            {
+                log.info ("Removing listener: {} for {}", listener, bnd);
+                itl.remove ();
             }
         }
     }
@@ -146,7 +152,7 @@ public class Palette implements ComponentManager
     {
         BundleCleanup (BundleContext context)
         {
-            super (context, Bundle.STOPPING, null);
+            super (context, Bundle.ACTIVE, null);
         }
 
         @Override

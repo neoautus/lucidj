@@ -24,9 +24,13 @@ import org.lucidj.uiaccess.UIAccess;
 
 import com.vaadin.event.LayoutEvents;
 import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.DragAndDropWrapper;
 import com.vaadin.ui.Label;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -36,6 +40,8 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
     private final transient static Logger log = LoggerFactory.getLogger (ComponentPalette.class);
     private final ComponentPalette self = this;
     private LayoutEvents.LayoutClickListener layout_click_listener;
+
+    private Map<ComponentInterface, Component> component_to_vaadin = new HashMap<> ();
     private ComponentSet component_set;
 
     public ComponentPalette (ComponentSet component_set)
@@ -85,6 +91,9 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
         icon_dd_wrap.setId (canonical_name);
         icon_label.setId (canonical_name);
 
+        // Remember this association
+        component_to_vaadin.put (component, icon_dd_wrap);
+
         new UIAccess (self)
         {
             @Override
@@ -120,9 +129,19 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
     }
 
     @Override // ComponentInterface.ComponentListener
-    public void removingComponent (ComponentInterface component)
+    public void removingComponent (final ComponentInterface component)
     {
-        // TODO
+        new UIAccess (self)
+        {
+            @Override
+            public void updateUI()
+            {
+                if (component_to_vaadin.containsKey (component))
+                {
+                    self.removeComponent (component_to_vaadin.get (component));
+                }
+            }
+        };
     }
 }
 

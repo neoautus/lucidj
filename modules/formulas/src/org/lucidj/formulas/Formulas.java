@@ -16,6 +16,7 @@
 
 package org.lucidj.formulas;
 
+import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
@@ -50,6 +51,9 @@ public class Formulas implements MenuProvider, ViewProvider
 
     @Requires
     private SerializerEngine serializer;
+
+    @Requires
+    private ComponentManager componentManager;
 
     @Requires
     private RendererFactory rendererFactory;
@@ -99,7 +103,7 @@ public class Formulas implements MenuProvider, ViewProvider
         if (NAVID.equals (s))
         {
             // TODO: wrapObject() IS ANOTHER USE-CASE (FACTORY-LESS ManagedObject)
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new FormulasView (security, serializer));
+            ManagedObjectInstance view_instance = object_factory.wrapObject (new FormulasView (security, serializer, componentManager));
             return (view_instance.adapt (View.class));
         }
         return null;

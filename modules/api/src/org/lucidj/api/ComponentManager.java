@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,22 +16,10 @@
 
 package org.lucidj.api;
 
-public interface ComponentInterface
+public interface ComponentManager
 {
-    Object fireEvent (Object source, Object event);
-
-    void setValue (Object value);
-    Object getValue ();
-    void setProperty (String name, Object value);
-    Object getProperty (String name);
-
-    String getIconTitle ();
-
-    interface ComponentListener
-    {
-        void addingComponent   (ComponentInterface component);
-        void removingComponent (ComponentInterface component);
-    }
+    ComponentSet newComponentSet ();
+    boolean      register        (ComponentInterface component);
 }
 
 // EOF

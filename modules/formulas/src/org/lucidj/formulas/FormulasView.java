@@ -47,6 +47,7 @@ import com.vaadin.ui.VerticalLayout;
 import org.osgi.framework.BundleContext;
 
 import org.lucidj.api.ApplicationInterface;
+import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
@@ -84,6 +85,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
     private BundleContext ctx;
     private SecurityEngine security;
+    private ComponentManager componentManager;
 
     private String view_name = null;
     private long last_save = 0;
@@ -99,10 +101,11 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     private Cell insert_here_cell;
     private SerializerEngine serializer;
 
-    public FormulasView (SecurityEngine security, SerializerEngine serializer)
+    public FormulasView (SecurityEngine security, SerializerEngine serializer, ComponentManager componentManager)
     {
         this.security = security;
         this.serializer = serializer;
+        this.componentManager = componentManager;
     }
 
     @Override // ManagedObject
@@ -622,7 +625,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         acSidebar.setSizeFull ();
         acSidebar.addStyleName ("borderless");
 
-        sidebar = new ComponentPalette (ctx);
+        sidebar = new ComponentPalette (componentManager.newComponentSet ());
         sidebar.setWidth (100, Unit.PERCENTAGE);
         sidebar.setHeightUndefined ();
         sidebar.setPaletteClickListener (new LayoutEvents.LayoutClickListener ()

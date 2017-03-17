@@ -31,14 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-
-@Component (immediate = true)
-@Instantiate
-@Provides
 public class SmartBox implements ManagedObject, ComponentInterface, ObjectManagerProperty, ComponentState
 {
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);

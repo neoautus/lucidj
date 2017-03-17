@@ -16,16 +16,19 @@
 
 package org.lucidj.smartbox_renderer;
 
+import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererFactory;
 import org.lucidj.api.RendererProvider;
+import org.rationalq.smartbox.SmartBox;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
@@ -40,6 +43,9 @@ public class SmartBoxRendererProvider implements RendererProvider
     @Requires
     private RendererFactory rendererFactory;
 
+    @Requires
+    private ComponentManager componentManager;
+
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
@@ -50,6 +56,13 @@ public class SmartBoxRendererProvider implements RendererProvider
             return (object_instance.adapt (SmartBoxRenderer.class));
         }
         return (null);
+    }
+
+    @Validate
+    private void validate ()
+    {
+        // Heck, we should create a proper component descriptor
+        componentManager.register (new SmartBox ());
     }
 }
 

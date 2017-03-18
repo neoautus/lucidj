@@ -16,12 +16,21 @@
 
 package org.lucidj.api;
 
-public interface ComponentManager
+import com.vaadin.server.Resource;
+
+import org.osgi.framework.Bundle;
+
+public interface ComponentDescriptor
 {
-    ComponentSet        newComponentSet        ();
-    ComponentDescriptor newComponentDescriptor ();
-    ComponentDescriptor getComponentDescriptor (String descriptor_id);
-    boolean             register               (ComponentDescriptor component);
+    void     setDescriptorId    (String id);
+    String   getDescriptorId    ();
+    void     setIconTitle       (String title);
+    String   getIconTitle       ();
+    void     setIcon            (Resource icon);
+    Resource getIcon            ();
+    void     setComponentClass  (Class cls);
+    Class    getComponentClass  ();
+    Bundle   getComponentBundle ();
 }
 
 // EOF

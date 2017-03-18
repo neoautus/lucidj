@@ -16,40 +16,36 @@
 
 package org.lucidj.smartbox_renderer;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererFactory;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.ComponentDescriptor;
+import org.lucidj.api.ComponentManager;
+import org.lucidj.smartbox.SmartBox;
+
+import com.vaadin.server.ClassResource;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class SmartBoxRendererProvider implements RendererProvider
+public class SmartBoxRegister
 {
-    private SmartBoxRenderer smartbox_filter = new SmartBoxRenderer (null);
-
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ComponentManager componentManager;
 
-    @Requires
-    private RendererFactory rendererFactory;
-
-    @Override
-    public Renderer getCompatibleRenderer (Object object)
+    @Validate
+    private void validate ()
     {
-        if (smartbox_filter.compatibleObject (object))
-        {
-            SmartBoxRenderer renderer = new SmartBoxRenderer (rendererFactory);
-            ManagedObjectInstance object_instance = objectFactory.wrapObject (renderer);
-            return (object_instance.adapt (SmartBoxRenderer.class));
-        }
-        return (null);
+        ComponentDescriptor desc = componentManager.newComponentDescriptor ();
+
+        // Component description
+        desc.setIcon (new ClassResource (this.getClass (), "public/component-icon.png"));
+        desc.setIconTitle ("SmartBox");
+        desc.setComponentClass (SmartBox.class);
+        componentManager.register (desc);
     }
 }
 

@@ -20,9 +20,9 @@ import java.util.Set;
 
 public interface ComponentSet extends ComponentInterface.ComponentListener
 {
-    Set<ComponentInterface> getComponentSet ();
-    void                    addListener     (ComponentInterface.ComponentListener listener);
-    void                    removeListener  (ComponentInterface.ComponentListener listener);
+    Set<ComponentDescriptor> getComponentSet ();
+    void                     addListener     (ComponentInterface.ComponentListener listener);
+    void                     removeListener  (ComponentInterface.ComponentListener listener);
 }
 
 // EOF

@@ -18,7 +18,6 @@ package org.lucidj.api;
 
 public interface ManagedObjectProvider
 {
-    String[] getProvidedClasses ();
     ManagedObject newObject (String clazz, ManagedObjectInstance instance);
 }
 

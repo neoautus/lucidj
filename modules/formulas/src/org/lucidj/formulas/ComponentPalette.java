@@ -16,6 +16,7 @@
 
 package org.lucidj.formulas;
 
+import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentSet;
 import org.slf4j.Logger;
@@ -41,7 +42,7 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
     private final ComponentPalette self = this;
     private LayoutEvents.LayoutClickListener layout_click_listener;
 
-    private Map<ComponentInterface, Component> component_to_vaadin = new HashMap<> ();
+    private Map<ComponentDescriptor, Component> component_to_vaadin = new HashMap<> ();
     private ComponentSet component_set;
 
     public ComponentPalette (ComponentSet component_set)
@@ -51,7 +52,7 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
         addLayoutClickListener (this);
     }
 
-    private boolean add_component_to_palette (Bundle bnd, ComponentInterface component)
+    private boolean add_component_to_palette (Bundle bnd, ComponentDescriptor component)
     {
         String canonical_name = component.getClass ().getCanonicalName();
         String icon_title = component.getIconTitle ();
@@ -122,14 +123,14 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
     }
 
     @Override // ComponentInterface.ComponentListener
-    public void addingComponent (ComponentInterface component)
+    public void addingComponent (ComponentDescriptor component)
     {
         Bundle bnd = FrameworkUtil.getBundle (component.getClass ());
         add_component_to_palette (bnd, component);
     }
 
     @Override // ComponentInterface.ComponentListener
-    public void removingComponent (final ComponentInterface component)
+    public void removingComponent (final ComponentDescriptor component)
     {
         new UIAccess (self)
         {

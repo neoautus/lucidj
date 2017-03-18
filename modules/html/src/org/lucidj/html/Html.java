@@ -35,6 +35,7 @@ public class Html implements ComponentInterface
 {
     private final transient Logger log = LoggerFactory.getLogger (Html.class);
 
+    private String descriptor_id;
     private HashMap<String, Object> properties = new HashMap<>();
     private String content = "";
 
@@ -48,6 +49,18 @@ public class Html implements ComponentInterface
     public Object getValue ()
     {
         return (content);
+    }
+
+    @Override // ComponentInterface
+    public String getDescriptorId ()
+    {
+        return (descriptor_id);
+    }
+
+    @Override // ComponentInterface
+    public void setDescriptorId (String descriptor_id)
+    {
+        this.descriptor_id = descriptor_id;
     }
 
     @Override // ComponentInterface
@@ -71,12 +84,6 @@ public class Html implements ComponentInterface
     public Object getProperty (String name)
     {
         return (properties.get (name));
-    }
-
-    @Override // ComponentInterface
-    public String getIconTitle ()
-    {
-        return ("Html Text");
     }
 
 //    @Override // Quark

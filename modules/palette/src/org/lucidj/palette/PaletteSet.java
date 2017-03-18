@@ -16,6 +16,7 @@
 
 package org.lucidj.palette;
 
+import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentSet;
 import org.slf4j.Logger;
@@ -29,10 +30,10 @@ public class PaletteSet implements ComponentSet, ComponentInterface.ComponentLis
 {
     private final transient static Logger log = LoggerFactory.getLogger (Palette.class);
 
-    private Set<ComponentInterface> components = new HashSet<> ();
+    private Set<ComponentDescriptor> components = new HashSet<> ();
     private Set<ComponentInterface.ComponentListener> listeners = new HashSet<> ();
 
-    private void notify_adding_component (ComponentInterface component)
+    private void notify_adding_component (ComponentDescriptor component)
     {
         log.info ("notify_adding_component (component={})", component);
         for (ComponentInterface.ComponentListener listener: listeners)
@@ -42,7 +43,7 @@ public class PaletteSet implements ComponentSet, ComponentInterface.ComponentLis
         }
     }
 
-    private void notify_removing_component (ComponentInterface component)
+    private void notify_removing_component (ComponentDescriptor component)
     {
         log.info ("notify_removing_component (component={})", component);
         for (ComponentInterface.ComponentListener listener: listeners)
@@ -53,7 +54,7 @@ public class PaletteSet implements ComponentSet, ComponentInterface.ComponentLis
     }
 
     @Override
-    public Set<ComponentInterface> getComponentSet ()
+    public Set<ComponentDescriptor> getComponentSet ()
     {
         log.info ("getComponentSet() = {}", components);
         return (components);
@@ -66,7 +67,7 @@ public class PaletteSet implements ComponentSet, ComponentInterface.ComponentLis
         listeners.add (listener);
 
         // Add all existing components
-        for (ComponentInterface component: components)
+        for (ComponentDescriptor component: components)
         {
             listener.addingComponent (component);
         }
@@ -80,7 +81,7 @@ public class PaletteSet implements ComponentSet, ComponentInterface.ComponentLis
     }
 
     @Override // ComponentInterface.ComponentListener
-    public void addingComponent (ComponentInterface component)
+    public void addingComponent (ComponentDescriptor component)
     {
         log.info ("addingComponent (component={})", component);
         components.add (component);
@@ -88,7 +89,7 @@ public class PaletteSet implements ComponentSet, ComponentInterface.ComponentLis
     }
 
     @Override // ComponentInterface.ComponentListener
-    public void removingComponent (ComponentInterface component)
+    public void removingComponent (ComponentDescriptor component)
     {
         log.info ("removingComponent (component={})", component);
         notify_removing_component (component);

@@ -16,6 +16,7 @@
 
 package org.lucidj.palette;
 
+import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentSet;
@@ -49,7 +50,7 @@ public class Palette implements ComponentManager
 
     private BundleTracker bundle_cleaner;
     private Set<ComponentSet> listeners = new HashSet<> ();
-    private HashMap<String, ComponentInterface> component_map = new HashMap<> ();
+    private HashMap<String, ComponentDescriptor> component_map = new HashMap<> ();
 
     @Context
     private BundleContext ctx;
@@ -61,14 +62,26 @@ public class Palette implements ComponentManager
         listeners.add (palette_set);
 
         // Populate the ComponentSet initial load
-        for (ComponentInterface component: component_map.values ())
+        for (ComponentDescriptor component: component_map.values ())
         {
             palette_set.addingComponent (component);
         }
         return (palette_set);
     }
 
-    private void notify_adding_component (ComponentInterface component)
+    @Override // ComponentManager
+    public ComponentDescriptor newComponentDescriptor ()
+    {
+        return (new Descriptor ());
+    }
+
+    @Override
+    public ComponentDescriptor getComponentDescriptor (String descriptor_id)
+    {
+        return (component_map.get (descriptor_id));
+    }
+
+    private void notify_adding_component (ComponentDescriptor component)
     {
         for (ComponentInterface.ComponentListener listener: listeners)
         {
@@ -77,16 +90,16 @@ public class Palette implements ComponentManager
     }
 
     @Override // ComponentManager
-    public boolean register (ComponentInterface component)
+    public boolean register (ComponentDescriptor component)
     {
-        // TODO: CHECK FOR REPEATED REGISTRATION
-        log.info ("{} register: {}", this, component);
-        component_map.put (component.toString (), component);
+        // TODO: CHECK FOR REPEATED REGISTRATION WITH PROPER DESCRIPTOR_ID
+        log.info ("{} register: {} as {}", this, component, component.getDescriptorId ());
+        component_map.put (component.getDescriptorId (), component);
         notify_adding_component (component);
         return (true);
     }
 
-    private void notify_removing_component (ComponentInterface component)
+    private void notify_removing_component (ComponentDescriptor component)
     {
         for (ComponentInterface.ComponentListener listener: listeners)
         {
@@ -99,17 +112,17 @@ public class Palette implements ComponentManager
         // TODO: THREAD-SAFE
         log.info ("clear_components_by_bundle (bnd={})", bnd);
 
-        Iterator<Map.Entry<String, ComponentInterface>> itcm = component_map.entrySet ().iterator ();
+        Iterator<Map.Entry<String, ComponentDescriptor>> itcm = component_map.entrySet ().iterator ();
 
         // Remove components
         while (itcm.hasNext ())
         {
-            Map.Entry<String, ComponentInterface> entry = itcm.next ();
-            ComponentInterface component = entry.getValue ();
+            Map.Entry<String, ComponentDescriptor> entry = itcm.next ();
+            ComponentDescriptor component = entry.getValue ();
 
             log.info ("component: {} bundle={}", component, FrameworkUtil.getBundle (component.getClass ()));
 
-            if (FrameworkUtil.getBundle (component.getClass ()) == bnd)
+            if (component.getComponentBundle () == bnd)
             {
                 log.info ("Removing component: {} for {}", component, bnd);
                 notify_removing_component (component);

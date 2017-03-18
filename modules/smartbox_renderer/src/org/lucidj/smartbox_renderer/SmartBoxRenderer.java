@@ -36,8 +36,8 @@ import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererFactory;
+import org.lucidj.smartbox.SmartBox;
 import org.rationalq.aceeditor.AceEditor;
-import org.rationalq.smartbox.SmartBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

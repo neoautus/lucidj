@@ -18,6 +18,7 @@ package org.lucidj.ui.gauss;
 
 import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.MenuManager;
@@ -40,10 +41,8 @@ public class Gauss implements ManagedObjectProvider
 {
     private final static transient Logger log = LoggerFactory.getLogger (Gauss.class);
 
-    private static final String[] provided_classes = new String[]
-    {
-        DesktopInterface.class.getName ()
-    };
+    @Requires
+    private ManagedObjectFactory objectFactory;
 
     @Requires
     private MenuManager menuManager;
@@ -58,6 +57,7 @@ public class Gauss implements ManagedObjectProvider
     private boolean validate ()
     {
         log.info ("Gauss UI Provider started");
+        objectFactory.register (DesktopInterface.class, this, null);
         return (true);
     }
 
@@ -65,12 +65,6 @@ public class Gauss implements ManagedObjectProvider
     private void invalidate ()
     {
         log.info ("Gauss UI Provider stopped");
-    }
-
-    @Override
-    public String[] getProvidedClasses ()
-    {
-        return (provided_classes);
     }
 
     @Override

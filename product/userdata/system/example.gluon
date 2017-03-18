@@ -2,7 +2,7 @@ X-Serialization-Engine: org.lucidj.gluon.GluonSerializer; version="1.0"
 X-Object: org.lucidj.runtime.CompositeTask
 
 -------THINK_BIG_BE_BOLD-------
-X-Object: org.rationalq.smartbox.SmartBox
+X-Object: org.lucidj.smartbox.SmartBox
 output: org.lucidj.console.Console@1, org.rationalq.vaadin.Vaadin@2
 View-Mode: "default"
 Long-Value: 31415926535898L
@@ -16,7 +16,7 @@ for (int i = 0; i < 5; i++)
 Vaadin.addComponent (new Label ("Hello world!"));
 
 -------THINK_BIG_BE_BOLD-------
-X-Object: org.rationalq.smartbox.SmartBox
+X-Object: org.lucidj.smartbox.SmartBox
 output: org.rationalq.vaadin.Vaadin@3
 
 new Image (null, new ExternalResource ("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"));

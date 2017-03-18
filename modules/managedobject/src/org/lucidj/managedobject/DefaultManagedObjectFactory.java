@@ -27,14 +27,18 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.FrameworkUtil;
-import org.apache.felix.ipojo.annotations.Bind;
+import org.osgi.util.tracker.BundleTracker;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -48,8 +52,48 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
 {
     private final static transient Logger log = LoggerFactory.getLogger (DefaultManagedObjectFactory.class);
 
+    private BundleTracker bundle_cleaner;
+
     private final Map<String, Set<ManagedObjectProvider>> class_to_provider = new HashMap<> ();
     private final Map<Bundle, Set<WeakReference<ManagedObjectInstance>>> bundle_to_set = new HashMap<> ();
+
+    @Context
+    BundleContext ctx;
+
+    @Override
+    public ManagedObjectInstance register (String clazz, ManagedObjectProvider provider, Map<String, Object> properties)
+    {
+        synchronized (class_to_provider)
+        {
+            log.info ("register: Adding {} for {}", provider, clazz);
+
+            if (!class_to_provider.containsKey (clazz))
+            {
+                class_to_provider.put (clazz, new HashSet<ManagedObjectProvider> ());
+            }
+
+            Set<ManagedObjectProvider> provider_set = class_to_provider.get (clazz);
+            provider_set.add (provider);
+
+            Bundle provider_bundle = FrameworkUtil.getBundle (provider.getClass ());
+
+            if (!bundle_to_set.containsKey (provider_bundle))
+            {
+                bundle_to_set.put (provider_bundle, new HashSet<WeakReference<ManagedObjectInstance>> ());
+            }
+        }
+
+        ManagedObjectInstance ref = new DefaultManagedObjectInstance (null);
+        ref.setProperty (ManagedObjectInstance.PROVIDER, provider);
+        ref.setProperty (ManagedObjectInstance.CLASS, clazz);
+        return (ref);
+    }
+
+    @Override
+    public ManagedObjectInstance register (Class clazz, ManagedObjectProvider provider, Map<String, Object> properties)
+    {
+        return (register (clazz.getName (), provider, properties));
+    }
 
     @Override // ManagedObjectFactory
     public ManagedObjectInstance[] getManagedObjects (String clazz, String filter)
@@ -187,68 +231,43 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         return (newInstance (clazz.getName (), properties));
     }
 
-    @Validate
-    private boolean validate ()
+    private void clear_components_by_bundle (Bundle provider_bundle)
     {
-        log.info ("ManagedObjectFactory started.");
-        return (true);
-    }
+        log.info ("clear_components_by_bundle");
 
-    @Invalidate
-    private void invalidate ()
-    {
-        log.info ("ManagedObjectFactory terminated.");
-    }
-
-    @Bind (aggregate=true, optional=true, specification = ManagedObjectProvider.class)
-    private void bindManagedObjectProvider (ManagedObjectProvider provider)
-    {
         synchronized (class_to_provider)
         {
-            String[] provided_classes = provider.getProvidedClasses ();
-
-            for (String clazz: provided_classes)
+            // Remove all providers/classes originated from provider_bundle
+            for (Map.Entry<String, Set<ManagedObjectProvider>> clazz: class_to_provider.entrySet ())
             {
-                log.info ("bindManagedObjectProvider: Adding {} for {}", provider, clazz);
+                log.info ("Scanning: {}", clazz.getKey ());
 
-                if (!class_to_provider.containsKey (clazz))
+                Set<ManagedObjectProvider> providers = clazz.getValue ();
+                Iterator<ManagedObjectProvider> it = providers.iterator ();
+
+                // Remove all providers originated from provider_bundle
+                while (it.hasNext ())
                 {
-                    class_to_provider.put (clazz, new HashSet<ManagedObjectProvider> ());
+                    ManagedObjectProvider provider = it.next ();
+                    log.info ("Verifying {}: {}", clazz, provider);
+
+                    if (FrameworkUtil.getBundle (provider.getClass ()) == provider_bundle)
+                    {
+                        log.info ("Removing provider: {} for {}", provider, provider_bundle);
+                        it.remove ();
+                    }
                 }
 
-                Set<ManagedObjectProvider> provider_set = class_to_provider.get (clazz);
-                provider_set.add (provider);
-            }
-
-            Bundle provider_bundle = FrameworkUtil.getBundle (provider.getClass ());
-
-            if (!bundle_to_set.containsKey (provider_bundle))
-            {
-                 bundle_to_set.put (provider_bundle, new HashSet<WeakReference<ManagedObjectInstance>> ());
-            }
-        }
-    }
-
-    @Unbind
-    private void unbindManagedObjectProvider (ManagedObjectProvider provider)
-    {
-        String[] removed_classes = provider.getProvidedClasses ();
-
-        synchronized (class_to_provider)
-        {
-            for (String clazz: removed_classes)
-            {
-                Set<ManagedObjectProvider> provider_set = class_to_provider.get (clazz);
-
-                if (provider_set != null)
+                // Check whether the set is empty
+                if (providers.isEmpty ())
                 {
-                    provider_set.remove (provider);
-                    log.info ("unbindManagedObjectProvider: Removing {} for {}", provider, clazz);
+                    // We don't have any providers for the class
+                    class_to_provider.remove (clazz.getKey ());
+                    log.info ("Removed class registration: {}", clazz.getKey ());
                 }
             }
         }
 
-        Bundle provider_bundle = FrameworkUtil.getBundle (provider.getClass ());
         Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (provider_bundle);
 
         // Invalidate all orphaned instances
@@ -272,6 +291,36 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
             }
 
             bundle_to_set.remove (provider_bundle);
+        }
+    }
+
+    @Validate
+    private void validate ()
+    {
+        log.info ("ManagedObjectFactory started.");
+        bundle_cleaner = new BundleCleanup (ctx);
+        bundle_cleaner.open ();
+    }
+
+    @Invalidate
+    private void invalidate ()
+    {
+        bundle_cleaner.close ();
+        bundle_cleaner = null;
+        log.info ("ManagedObjectFactory terminated.");
+    }
+
+    class BundleCleanup extends BundleTracker
+    {
+        BundleCleanup (BundleContext context)
+        {
+            super (context, Bundle.ACTIVE, null);
+        }
+
+        @Override
+        public void removedBundle (Bundle bundle, BundleEvent event, Object object)
+        {
+            clear_components_by_bundle (bundle);
         }
     }
 }

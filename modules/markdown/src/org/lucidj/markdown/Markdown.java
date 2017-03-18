@@ -38,6 +38,7 @@ public class Markdown implements ComponentInterface
 {
     private HashMap<String, Object> properties = new HashMap<>();
 
+    private String descriptor_id;
     private Parser parser;
     private HtmlRenderer renderer;
 
@@ -75,10 +76,16 @@ public class Markdown implements ComponentInterface
         return (properties.get (name));
     }
 
-    @Override // ComponentInterface
-    public String getIconTitle ()
+    @Override
+    public String getDescriptorId ()
     {
-        return ("Markdown");
+        return (descriptor_id);
+    }
+
+    @Override
+    public void setDescriptorId (String descriptor_id)
+    {
+        this.descriptor_id = descriptor_id;
     }
 
     @Override // ComponentInterface

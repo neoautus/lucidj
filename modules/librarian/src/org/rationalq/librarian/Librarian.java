@@ -37,6 +37,7 @@ public class Librarian implements ComponentInterface
 {
     private final transient Logger log = LoggerFactory.getLogger (Librarian.class);
 
+    private String descriptor_id;
     private HashMap<String, Object> properties = new HashMap<>();
     private String jar_file_path;
 
@@ -93,10 +94,16 @@ public class Librarian implements ComponentInterface
         return (properties.get (name));
     }
 
-    @Override
-    public String getIconTitle ()
+    @Override // ComponentInterface
+    public String getDescriptorId ()
     {
-        return ("Jar Libraries");
+        return (descriptor_id);
+    }
+
+    @Override // ComponentInterface
+    public void setDescriptorId (String descriptor_id)
+    {
+        this.descriptor_id = descriptor_id;
     }
 
     @Override

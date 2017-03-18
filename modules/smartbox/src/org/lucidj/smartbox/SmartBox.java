@@ -17,6 +17,7 @@
 package org.lucidj.smartbox;
 
 import org.lucidj.api.BundleRegistry;
+import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
@@ -36,6 +37,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
 
     private final SmartBox self = this;
+    private String descriptor_id;
 
     private int component_state = ACTIVE;
     private ComponentState.ChangeListener state_listener;
@@ -255,6 +257,18 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     }
 
     @Override // ComponentInterface
+    public String getDescriptorId ()
+    {
+        return (descriptor_id);
+    }
+
+    @Override // ComponentInterface
+    public void setDescriptorId (String descriptor_id)
+    {
+        this.descriptor_id = descriptor_id;
+    }
+
+    @Override // ComponentInterface
     public Object fireEvent (Object source, Object event)
     {
         if (event instanceof String)
@@ -297,13 +311,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     public HashMap<String, Object> getProperties ()
     {
         return (properties);
-    }
-
-    @Override
-    public String getIconTitle ()
-    {
-        // TODO: MOVE THIS AWAY TO A PROPER VISUAL COMPONENT
-        return "BeanShell";
     }
 
     @Override // ComponentInterface

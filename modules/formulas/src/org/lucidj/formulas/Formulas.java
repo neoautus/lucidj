@@ -54,6 +54,7 @@ public class Formulas implements MenuProvider, ViewProvider
 
     @Requires
     private ComponentManager componentManager;
+    private static ComponentManager static_componentManager;
 
     @Requires
     private RendererFactory rendererFactory;
@@ -62,11 +63,17 @@ public class Formulas implements MenuProvider, ViewProvider
     public Formulas ()
     {
         static_rendererFactory = rendererFactory;
+        static_componentManager = componentManager;
     }
 
     public static RendererFactory getRendererFactory ()
     {
         return (static_rendererFactory);
+    }
+
+    public static ComponentManager getComponentManager ()
+    {
+        return (static_componentManager);
     }
 
     @Override // MenuProvider

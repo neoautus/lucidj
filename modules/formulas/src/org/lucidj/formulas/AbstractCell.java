@@ -17,6 +17,7 @@
 package org.lucidj.formulas;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.EditorInterface;
@@ -45,7 +46,6 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutClickListener, ComponentState.ChangeListener
 {
@@ -139,12 +139,13 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         {
             // If it is a valid component, displays its icon on the top left corner of the cell
             ComponentInterface ci = (ComponentInterface)source_object;
-            Bundle bnd = FrameworkUtil.getBundle (ci.getClass ());
+            ComponentDescriptor cd = Formulas.getComponentManager ().getComponentDescriptor (ci.getDescriptorId ());
 
-            if (bnd != null)
+            if (cd != null)
             {
-                icon_url = "/VAADIN/~/" + bnd.getSymbolicName () + "/component-icon.png";
-                icon_title = ci.getIconTitle ();
+                Bundle bnd = cd.getComponentBundle ();
+                icon_url = "/VAADIN/~/" + bnd.getSymbolicName () + "/component-icon.png"; // <-- getIcon() instead
+                icon_title = cd.getIconTitle ();
             }
         }
 

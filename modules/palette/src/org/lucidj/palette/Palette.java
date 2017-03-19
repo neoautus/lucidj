@@ -76,9 +76,36 @@ public class Palette implements ComponentManager
     }
 
     @Override
-    public ComponentDescriptor getComponentDescriptor (String descriptor_id)
+    public ComponentDescriptor getComponentDescriptor (Object component)
     {
-        return (component_map.get (descriptor_id));
+        log.info ("getComponentDescriptor (component={})", component);
+
+        if (component instanceof ComponentInterface)
+        {
+            log.info ("getComponentDescriptor (component={}) is ComponentInterface", component);
+
+            String descriptor_id = ((ComponentInterface)component).getDescriptorId ();
+
+            if (descriptor_id != null && component_map.containsKey (descriptor_id))
+            {
+                log.info ("getComponentDescriptor (descriptor_id={}) ==> ", descriptor_id, component_map.get (descriptor_id));
+                return (component_map.get (descriptor_id));
+            }
+        }
+
+        String component_class = component.getClass ().getName ();
+
+        for (ComponentDescriptor descriptor: component_map.values ())
+        {
+            log.info ("getComponentDescriptor (descriptor_id={}) compare with {}", component_class, component);
+
+            if (descriptor.getComponentClass ().getName ().equals (component_class))
+            {
+                log.info ("getComponentDescriptor (descriptor_id={}) ==> ", component, descriptor);
+                return (descriptor);
+            }
+        }
+        return (null);
     }
 
     private void notify_adding_component (ComponentDescriptor component)

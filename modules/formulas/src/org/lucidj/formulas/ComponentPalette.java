@@ -33,9 +33,6 @@ import com.vaadin.ui.Label;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-
 public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutClickListener, ComponentInterface.ComponentListener
 {
     private final transient static Logger log = LoggerFactory.getLogger (ComponentPalette.class);
@@ -52,11 +49,11 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
         addLayoutClickListener (this);
     }
 
-    private boolean add_component_to_palette (Bundle bnd, ComponentDescriptor component)
+    private boolean add_component_to_palette (ComponentDescriptor component)
     {
-        String canonical_name = component.getClass ().getCanonicalName();
+        String canonical_name = component.getComponentClass ().getName ();
         String icon_title = component.getIconTitle ();
-        String bundle_symbolic_name = bnd.getSymbolicName ();
+        String bundle_symbolic_name = component.getComponentBundle ().getSymbolicName ();
 
         log.info ("*** => ADDING component {} ({})", canonical_name, component);
 
@@ -125,8 +122,7 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
     @Override // ComponentInterface.ComponentListener
     public void addingComponent (ComponentDescriptor component)
     {
-        Bundle bnd = FrameworkUtil.getBundle (component.getClass ());
-        add_component_to_palette (bnd, component);
+        add_component_to_palette (component);
     }
 
     @Override // ComponentInterface.ComponentListener

@@ -138,14 +138,13 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         if (source_object instanceof ComponentInterface)
         {
             // If it is a valid component, displays its icon on the top left corner of the cell
-            ComponentInterface ci = (ComponentInterface)source_object;
-            ComponentDescriptor cd = Formulas.getComponentManager ().getComponentDescriptor (ci.getDescriptorId ());
+            ComponentDescriptor descriptor = Formulas.getComponentManager ().getComponentDescriptor (source_object);
 
-            if (cd != null)
+            if (descriptor != null)
             {
-                Bundle bnd = cd.getComponentBundle ();
+                Bundle bnd = descriptor.getComponentBundle ();
                 icon_url = "/VAADIN/~/" + bnd.getSymbolicName () + "/component-icon.png"; // <-- getIcon() instead
-                icon_title = cd.getIconTitle ();
+                icon_title = descriptor.getIconTitle ();
             }
         }
 

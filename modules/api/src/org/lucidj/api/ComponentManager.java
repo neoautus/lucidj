@@ -20,8 +20,8 @@ public interface ComponentManager
 {
     ComponentSet        newComponentSet        ();
     ComponentDescriptor newComponentDescriptor ();
-    ComponentDescriptor getComponentDescriptor (String descriptor_id);
-    boolean             register               (ComponentDescriptor component);
+    ComponentDescriptor getComponentDescriptor (Object component);
+    boolean             register               (ComponentDescriptor descriptor);
 }
 
 // EOF

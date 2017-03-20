@@ -219,7 +219,11 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         if (available_providers.length > 0 && available_providers [0] instanceof DefaultManagedObjectInstance)
         {
             DefaultManagedObjectInstance descriptor = (DefaultManagedObjectInstance)available_providers [0];
-            descriptor.internalGetProperties ().putAll (properties);
+
+            if (properties != null)
+            {
+                descriptor.internalGetProperties ().putAll (properties);
+            }
             return (newInstance (descriptor));
         }
         return (null);

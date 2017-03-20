@@ -47,7 +47,8 @@ public class Formulas implements MenuProvider, ViewProvider
     private SecurityEngine security;
 
     @Requires
-    private ManagedObjectFactory object_factory;
+    private ManagedObjectFactory objectFactory;
+    private static ManagedObjectFactory static_objectFactory;
 
     @Requires
     private SerializerEngine serializer;
@@ -62,8 +63,14 @@ public class Formulas implements MenuProvider, ViewProvider
 
     public Formulas ()
     {
+        static_objectFactory = objectFactory;
         static_rendererFactory = rendererFactory;
         static_componentManager = componentManager;
+    }
+
+    public static ManagedObjectFactory getObjectFactory ()
+    {
+        return (static_objectFactory);
     }
 
     public static RendererFactory getRendererFactory ()
@@ -110,7 +117,7 @@ public class Formulas implements MenuProvider, ViewProvider
         if (NAVID.equals (s))
         {
             // TODO: wrapObject() IS ANOTHER USE-CASE (FACTORY-LESS ManagedObject)
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new FormulasView (security, serializer, componentManager));
+            ManagedObjectInstance view_instance = objectFactory.wrapObject (new FormulasView (security, serializer, componentManager));
             return (view_instance.adapt (View.class));
         }
         return null;

@@ -353,37 +353,23 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
     private Object insert_new_object (String canonical_name, int index)
     {
-        // TODO: USE GLUON
         log.info ("insert_new_object: canonical_name={} index={}", canonical_name, index);
-//
-//        Object new_object = null;
-//
-//        try
-//        {
-//            // TODO: LOAD OBJECT FROM CONTEXT CLASSLOADER? tctx.newInstance (cn)?
-//            Kernel.bindTaskContext (tctx);
-//            Class cls = tctx.getClassLoader ().loadClass (canonical_name);
-//            new_object = cls.newInstance ();
-//        }
-//        catch (Exception e)
-//        {
-//            // TODO: ERROR NOTIFICATION
-//            log.error ("insert_new_object: Error creating {}", canonical_name, e);
-//        }
-//
-//        log.info ("*** insert_new_object: new_object={}", new_object);
-//
-//        if (index == -1)
-//        {
-//            object_list.add (new_object);
-//        }
-//        else
-//        {
-//            object_list.add (index, new_object);
-//        }
-//
-//        return (new_object);
-        return (null);
+
+        ManagedObjectInstance object_instance = Formulas.getObjectFactory ().newInstance (canonical_name, null);
+        ManagedObject object = object_instance.adapt (ManagedObject.class);
+
+        log.info ("*** insert_new_object: object={}", object);
+
+        if (index == -1)
+        {
+            object_list.add (object);
+        }
+        else
+        {
+            object_list.add (index, object);
+        }
+
+        return (object);
     }
 
     //-----------------------------------------------------------------------------------------------------------------

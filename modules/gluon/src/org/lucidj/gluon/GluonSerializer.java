@@ -23,7 +23,6 @@ import org.lucidj.api.SerializerInstance;
 import org.lucidj.gluon.serializers.DefaultArraySerializers;
 import org.lucidj.gluon.serializers.DefaultSerializers;
 import org.lucidj.gluon.serializers.GluonObjectSerializer;
-import org.lucidj.gluon.serializers.ListSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -434,7 +433,7 @@ public class GluonSerializer implements SerializerEngine
         register (Double.class, new DefaultSerializers.DoubleSerializer ());
 
         register (Object[].class, new DefaultArraySerializers.ObjectArraySerializer ());
-        register (List.class, new ListSerializer ());
+//        register (List.class, new ListSerializer ());   ---cleanup
 
         log.info ("ObjectSerializer started");
     }

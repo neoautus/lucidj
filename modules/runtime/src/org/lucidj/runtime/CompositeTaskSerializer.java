@@ -14,14 +14,16 @@
  * the License.
  */
 
-package org.lucidj.gluon.serializers;
+package org.lucidj.runtime;
 
+import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
-import org.lucidj.runtime.CompositeTask;
+import org.lucidj.console.Console;
 
 import java.util.List;
 
@@ -34,7 +36,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class ListSerializer implements Serializer
+public class CompositeTaskSerializer implements Serializer, ManagedObjectProvider
 {
     @Requires
     private SerializerEngine serializer;
@@ -56,7 +58,7 @@ public class ListSerializer implements Serializer
     @Override
     public Object deserializeObject (SerializerInstance instance)
     {
-        ManagedObjectInstance object_instance = objectFactory.wrapObject (new CompositeTask ());
+        ManagedObjectInstance object_instance = objectFactory.newInstance (CompositeTask.class, null);
         CompositeTask composite_task = object_instance.adapt (CompositeTask.class);
 
         for (Object object: instance.getObjects ())
@@ -69,7 +71,14 @@ public class ListSerializer implements Serializer
     @Validate
     private void validate ()
     {
+        objectFactory.register (CompositeTask.class, this, null);
         serializer.register (CompositeTask.class, this);
+    }
+
+    @Override
+    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
+    {
+        return (new CompositeTask ());
     }
 }
 

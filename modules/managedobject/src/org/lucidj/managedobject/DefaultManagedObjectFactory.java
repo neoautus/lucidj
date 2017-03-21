@@ -242,6 +242,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         synchronized (class_to_provider)
         {
             // Remove all providers/classes originated from provider_bundle
+            // TODO: MAKE IT THREAD SAFE
             for (Map.Entry<String, Set<ManagedObjectProvider>> clazz: class_to_provider.entrySet ())
             {
                 log.info ("Scanning: {}", clazz.getKey ());

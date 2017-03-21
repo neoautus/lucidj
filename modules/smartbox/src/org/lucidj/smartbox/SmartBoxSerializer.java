@@ -114,7 +114,7 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        return (new SmartBox (bundleRegistry));
+        return (new SmartBox (bundleRegistry, objectFactory));
     }
 }
 

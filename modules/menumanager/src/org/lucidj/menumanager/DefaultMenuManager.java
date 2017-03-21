@@ -16,6 +16,7 @@
 
 package org.lucidj.menumanager;
 
+import org.lucidj.api.EventHelper;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.MenuProvider;
@@ -33,6 +34,7 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
@@ -45,6 +47,9 @@ public class DefaultMenuManager implements MenuManager
 
     private List<MenuProvider> menu_provider_list = new ArrayList<> ();
     private List<WeakReference<MenuInstance>> menu_instance_listeners = new ArrayList<> ();
+
+    @Requires
+    private EventHelper.Factory eventHelperFactory;
 
     private void notify_changes (MenuProvider provider)
     {
@@ -81,7 +86,7 @@ public class DefaultMenuManager implements MenuManager
     @Override // MenuManager
     public MenuInstance newMenuInstance (Map<String, Object> properties)
     {
-        MenuInstance new_menu = new DefaultMenuInstance ();
+        MenuInstance new_menu = new DefaultMenuInstance (eventHelperFactory.newInstance ());
 
         // TODO: MANAGE MenuInstance DISPOSAL AND CLEANUP
 

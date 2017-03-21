@@ -16,8 +16,11 @@
 
 package org.lucidj.console;
 
+import org.lucidj.api.EventHelper;
+import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
@@ -32,7 +35,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides
-public class ConsoleSerializer implements Serializer
+public class ConsoleSerializer implements Serializer, ManagedObjectProvider
 {
     private final static transient Logger log = LoggerFactory.getLogger (ConsoleSerializer.class);
 
@@ -42,9 +45,13 @@ public class ConsoleSerializer implements Serializer
     @Requires
     private SerializerEngine serializer;
 
+    @Requires
+    private EventHelper.Factory eventHelperFactory;
+
     @Validate
     private void validate ()
     {
+        objectFactory.register (Console.class, this, null);
         serializer.register (Console.class, this);
     }
 
@@ -60,10 +67,16 @@ public class ConsoleSerializer implements Serializer
     @Override // Serializer
     public Object deserializeObject (SerializerInstance instance)
     {
-        ManagedObjectInstance console_instance = objectFactory.wrapObject (new Console ());
+        ManagedObjectInstance console_instance = objectFactory.newInstance (Console.class, null);
         Console console = console_instance.adapt (Console.class);
         console.setValue (instance.getValue ());
         return (console);
+    }
+
+    @Override
+    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
+    {
+        return (new Console (eventHelperFactory.newInstance ()));
     }
 }
 

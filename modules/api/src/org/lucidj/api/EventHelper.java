@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,36 +14,22 @@
  * the License.
  */
 
-package org.lucidj.renderer;
+package org.lucidj.api;
 
-import java.util.Observable;
-
-public class SimpleObservable extends Observable
+public interface EventHelper
 {
-    // A very mundane Observable class
+    void     publish         (Object event);
+    void     subscribe       (Subscriber handler);
+    void     unsubscribe     (Subscriber handler);
 
-    public void notifyNow ()
+    interface Subscriber
     {
-        setChanged ();
-        notifyObservers ();
+        void event (Object event);
     }
 
-    public void notifyNow (Object arg)
+    interface Factory
     {
-        setChanged ();
-        notifyObservers (arg);
-    }
-
-    @Override
-    public void setChanged ()
-    {
-        super.setChanged ();
-    }
-
-    @Override
-    public void clearChanged ()
-    {
-        super.clearChanged ();
+        EventHelper newInstance ();
     }
 }
 

@@ -21,6 +21,7 @@ import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
@@ -57,15 +58,17 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     private Karaf karaf;
 
     private BundleRegistry bundleRegistry;
+    private ManagedObjectFactory objectFactory;
 
     public SmartBox ()
     {
 //        init ();
     }
 
-    public SmartBox (BundleRegistry bundleRegistry)
+    public SmartBox (BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
     {
         this.bundleRegistry = bundleRegistry;
+        this.objectFactory = objectFactory;
         log.info ("#### bundleRegistry = {}", bundleRegistry);
         init ();
     }
@@ -75,7 +78,8 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     {
         if (console == null)
         {
-            console = new Console ();
+            ManagedObjectInstance console_instance = objectFactory.newInstance (Console.class, null);
+            console = console_instance.adapt (Console.class);
         }
 
         if (show && om.getObject (Console.class.getCanonicalName ()) == null)

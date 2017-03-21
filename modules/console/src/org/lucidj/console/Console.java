@@ -17,10 +17,10 @@
 package org.lucidj.console;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import org.lucidj.api.EventHelper;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Renderer;
-import org.lucidj.renderer.SimpleObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,6 @@ import java.io.PrintStream;
 import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Observer;
 
 public class Console implements ManagedObject, Renderer.Observable
 {
@@ -38,13 +37,18 @@ public class Console implements ManagedObject, Renderer.Observable
 
     private SimpleDateFormat timestamp_format = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss.SSS");
 
-    private SimpleObservable observers = new SimpleObservable ();
+    private EventHelper event_helper;
     private StringBuilder contents = new StringBuilder ();
 
     private boolean append_line;
     private String last_tag;
     private String last_unfinished_tag;
     private int last_unfinished_tag_pos;
+
+    public Console (EventHelper event_helper)
+    {
+        this.event_helper = event_helper;
+    }
 
     public void output (String tag, String text)
     {
@@ -131,7 +135,7 @@ public class Console implements ManagedObject, Renderer.Observable
 
         log.debug ("contents={}", contents.toString ());
 
-        observers.notifyNow ();
+        event_helper.publish (this);
     }
 
     public void clear ()
@@ -139,7 +143,7 @@ public class Console implements ManagedObject, Renderer.Observable
         contents = null;
         append_line = false;
         last_unfinished_tag = null;
-        observers.notifyNow ();
+        event_helper.publish (this);
     }
 
     public String getValue ()
@@ -210,27 +214,27 @@ public class Console implements ManagedObject, Renderer.Observable
     }
 
     @Override // Renderer.Observable
-    public void addObserver (Observer observer)
+    public void addObserver (EventHelper.Subscriber observer)
     {
-        observers.addObserver (observer);
+        event_helper.subscribe (observer);
     }
 
     @Override // Renderer.Observable
-    public void deleteObserver (Observer observer)
+    public void deleteObserver (EventHelper.Subscriber observer)
     {
-        observers.deleteObserver (observer);
+        event_helper.unsubscribe (observer);
     }
 
     @Override // ManagedObject
     public void validate (ManagedObjectInstance instance)
     {
-        // Do nothing
+        // Nop
     }
 
     @Override // ManagedObject
     public void invalidate (ManagedObjectInstance instance)
     {
-        // Do nothing
+        // Nop
     }
 }
 

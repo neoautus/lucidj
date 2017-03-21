@@ -16,6 +16,7 @@
 
 package org.lucidj.renderer;
 
+import org.lucidj.api.EventHelper;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectRenderer;
@@ -28,10 +29,7 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Label;
 
-import java.util.Observable;
-import java.util.Observer;
-
-public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Observer
+public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, EventHelper.Subscriber
 {
     private final transient static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
 
@@ -225,8 +223,8 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Obs
         }
     }
 
-    @Override // Observer
-    public void update (Observable o, Object arg)
+    @Override // EventHelper.Subscriber
+    public void event (Object event)
     {
         updateComponent ();
     }

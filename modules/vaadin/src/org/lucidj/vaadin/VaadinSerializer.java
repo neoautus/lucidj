@@ -14,8 +14,11 @@
  * the License.
  */
 
-package org.rationalq.vaadin;
+package org.lucidj.vaadin;
 
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
@@ -37,7 +40,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @org.apache.felix.ipojo.annotations.Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class VaadinSerializer implements Serializer
+public class VaadinSerializer implements Serializer, ManagedObjectProvider
 {
     private final static transient Logger log = LoggerFactory.getLogger (VaadinSerializer.class);
 
@@ -79,6 +82,12 @@ public class VaadinSerializer implements Serializer
     {
         Design.setComponentFactory (vcf);
         return (Design.read (new ByteArrayInputStream (instance.getValue ().getBytes ())));
+    }
+
+    @Override // ManagedObjectProvider
+    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
+    {
+        return (new Vaadin ());
     }
 
     class VaadinComponentFactory extends Design.DefaultComponentFactory

@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.rationalq.vaadin;
+package org.lucidj.vaadin;
 
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;

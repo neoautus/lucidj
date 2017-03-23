@@ -14,16 +14,31 @@
  * the License.
  */
 
-package org.rationalq.vaadin;
+package org.lucidj.vaadin;
+
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 
 import com.vaadin.ui.VerticalLayout;
 
-public class Vaadin extends VerticalLayout
+public class Vaadin extends VerticalLayout implements ManagedObject
 {
     public Vaadin ()
     {
         setWidth (100, Unit.PERCENTAGE);
         setHeightUndefined ();
+    }
+
+    @Override
+    public void validate (ManagedObjectInstance instance)
+    {
+        // Nop
+    }
+
+    @Override
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        // Nop
     }
 }
 

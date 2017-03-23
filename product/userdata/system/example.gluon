@@ -3,7 +3,7 @@ X-Object: org.lucidj.runtime.CompositeTask
 
 -------THINK_BIG_BE_BOLD-------
 X-Object: org.lucidj.smartbox.SmartBox
-output: org.lucidj.console.Console@1, org.rationalq.vaadin.Vaadin@2
+output: org.lucidj.console.Console@1, org.lucidj.vaadin.Vaadin@2
 View-Mode: "default"
 Long-Value: 31415926535898L
 
@@ -17,7 +17,7 @@ Vaadin.addComponent (new Label ("Hello world!"));
 
 -------THINK_BIG_BE_BOLD-------
 X-Object: org.lucidj.smartbox.SmartBox
-output: org.rationalq.vaadin.Vaadin@3
+output: org.lucidj.vaadin.Vaadin@3
 
 new Image (null, new ExternalResource ("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"));
 
@@ -31,23 +31,23 @@ X-Object: org.lucidj.console.Console@1; embedded
 2017-03-06 19:20:24.642 | OUT | Hello world! i=4\n
 
 -------THINK_BIG_BE_BOLD-------
-X-Object: org.rationalq.vaadin.Vaadin@2; embedded
+X-Object: org.lucidj.vaadin.Vaadin@2; embedded
 
 <!doctype html>
 <html>
     <head>
-        <meta name="package-mapping" content="org_rationalq_vaadin:org.rationalq.vaadin">
+        <meta name="package-mapping" content="org_lucidj_vaadin:org.lucidj.vaadin">
     </head>
     <body>
-        <org_rationalq_vaadin-vaadin>
+        <org_lucidj_vaadin-vaadin>
             <vaadin-label plain-text>
                 Hello world!
             </vaadin-label>
-        </org_rationalq_vaadin-vaadin>
+        </org_lucidj_vaadin-vaadin>
     </body>
 </html>
 -------THINK_BIG_BE_BOLD-------
-X-Object: org.rationalq.vaadin.Vaadin@3; embedded
+X-Object: org.lucidj.vaadin.Vaadin@3; embedded
 
 <!doctype html>
 <html>

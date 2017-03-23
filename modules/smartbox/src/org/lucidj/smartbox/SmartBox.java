@@ -17,7 +17,6 @@
 package org.lucidj.smartbox;
 
 import org.lucidj.api.BundleRegistry;
-import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
@@ -27,7 +26,7 @@ import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
 import org.lucidj.objectmanager.DefaultObjectManager;
 import org.lucidj.console.Console;
-import org.rationalq.vaadin.Vaadin;
+import org.lucidj.vaadin.Vaadin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

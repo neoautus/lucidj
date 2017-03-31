@@ -94,7 +94,8 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     {
         if (vaadin == null)
         {
-            vaadin = new Vaadin ();
+            ManagedObjectInstance console_instance = objectFactory.newInstance (Vaadin.class, null);
+            vaadin = console_instance.adapt (Vaadin.class);
         }
 
         if (show && om.getObject (Vaadin.class.getCanonicalName ()) == null)
@@ -130,7 +131,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         if (bsh == null)
         {
             // TODO: COMPONENTIZE BSP, USE CLASSMANAGER
-            bsh = new BeanShellProvider (null);
+            bsh = new BeanShellProvider ();
             bsh.init (null);
             bundleRegistry.putObject (BeanShellProvider.class, bsh);
         }

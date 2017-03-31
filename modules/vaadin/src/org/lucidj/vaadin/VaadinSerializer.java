@@ -17,6 +17,7 @@
 package org.lucidj.vaadin;
 
 import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
@@ -47,11 +48,15 @@ public class VaadinSerializer implements Serializer, ManagedObjectProvider
     private VaadinComponentFactory vcf = new VaadinComponentFactory ();
 
     @Requires
+    private ManagedObjectFactory objectFactory;
+
+    @Requires
     private SerializerEngine serializer;
 
     @Validate
     private void validate ()
     {
+        objectFactory.register (Vaadin.class, this, null);
         serializer.register (Vaadin.class, this);
         serializer.register (Component.class, this);
     }
@@ -81,6 +86,7 @@ public class VaadinSerializer implements Serializer, ManagedObjectProvider
     public Object deserializeObject (SerializerInstance instance)
     {
         Design.setComponentFactory (vcf);
+        // TODO: WRAP MANAGED OBJECT
         return (Design.read (new ByteArrayInputStream (instance.getValue ().getBytes ())));
     }
 

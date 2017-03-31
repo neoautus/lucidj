@@ -17,6 +17,8 @@
 package org.lucidj.smartbox;
 
 import org.lucidj.api.BundleRegistry;
+import org.lucidj.api.CodeEngineContext;
+import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
@@ -30,6 +32,8 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.osgi.framework.BundleContext;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -42,6 +46,9 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
 {
     private final static transient Logger log = LoggerFactory.getLogger (SmartBoxSerializer.class);
 
+    @Context
+    private BundleContext context;
+
     @Requires
     private ManagedObjectFactory objectFactory;
 
@@ -51,11 +58,17 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     @Requires
     private SerializerEngine serializer;
 
+    @Requires
+    private CodeEngineManager codeEngine;
+
+    private CodeEngineContext code_context;
+
     @Validate
     private void validate ()
     {
         objectFactory.register (SmartBox.class, this, null);
         serializer.register (SmartBox.class, this);
+        code_context = codeEngine.newContext (context.getBundle ());
     }
 
     @Override // Serializer
@@ -114,7 +127,7 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        return (new SmartBox (bundleRegistry, objectFactory));
+        return (new SmartBox (code_context, bundleRegistry, objectFactory));
     }
 }
 

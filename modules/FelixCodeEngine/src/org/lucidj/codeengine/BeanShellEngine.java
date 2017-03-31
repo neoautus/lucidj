@@ -135,14 +135,14 @@ public class BeanShellEngine implements CodeEngine
     }
 
     @Override
-    public void dynamicVariableListener (CodeEngine.DynamicVariableListener listener) throws NoSuchFieldError
+    public void dynamicVariableListener (CodeEngine.DynamicVariableListener listener)
     {
         dynamicvariable_listener = listener;
     }
 
     @Override
     public Object dynamicVariableLookup (String name)
-            throws NoSuchFieldError
+        throws NoSuchFieldError
     {
         return (dynamicvariable_listener.getDynamicVariable (name));
     }

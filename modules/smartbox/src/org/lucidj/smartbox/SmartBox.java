@@ -17,6 +17,8 @@
 package org.lucidj.smartbox;
 
 import org.lucidj.api.BundleRegistry;
+import org.lucidj.api.CodeEngine;
+import org.lucidj.api.CodeEngineContext;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
@@ -42,9 +44,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     private int component_state = ACTIVE;
     private ComponentState.ChangeListener state_listener;
 
-    private BeanShellProvider bsh;
-    private BeanShell sh;
-
     private HashMap<String, Object> properties = new HashMap<>();
 
     private ObjectManager om;
@@ -58,16 +57,22 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
     private BundleRegistry bundleRegistry;
     private ManagedObjectFactory objectFactory;
+    private CodeEngineContext code_context;
+    private CodeEngine code_engine;
 
     public SmartBox ()
     {
 //        init ();
     }
 
-    public SmartBox (BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
+    public SmartBox (CodeEngineContext code_context, BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
     {
         this.bundleRegistry = bundleRegistry;
         this.objectFactory = objectFactory;
+        this.code_context = code_context;
+
+        code_engine = code_context.getEngineByName ("beanshell");
+
         log.info ("#### bundleRegistry = {}", bundleRegistry);
         init ();
     }
@@ -126,24 +131,24 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         // TODO: FACTORY....
         om = new DefaultObjectManager ();
 
-        bsh = bundleRegistry.getObject (BeanShellProvider.class);
+//        bsh = bundleRegistry.getObject (BeanShellProvider.class);
+//
+//        if (bsh == null)
+//        {
+//            // TODO: COMPONENTIZE BSP, USE CLASSMANAGER
+//            bsh = new BeanShellProvider ();
+//            bsh.init (null);
+//            bundleRegistry.putObject (BeanShellProvider.class, bsh);
+//        }
+//
+//        log.info("bsh = {}", bsh);
+//
+//        sh = bsh.getInstance ();
 
-        if (bsh == null)
-        {
-            // TODO: COMPONENTIZE BSP, USE CLASSMANAGER
-            bsh = new BeanShellProvider ();
-            bsh.init (null);
-            bundleRegistry.putObject (BeanShellProvider.class, bsh);
-        }
-
-        log.info("bsh = {}", bsh);
-
-        sh = bsh.getInstance ();
-
-        log.info ("sh = {}", sh);
+        log.info ("code_engine = {}", code_engine);
 
         // TODO: CREATE Console RENDERER
-        sh.outListener (new BeanShell.PrintStreamListener ()
+        code_engine.setStdoutListener (new CodeEngine.PrintListener ()
         {
             @Override
             public void print (String output)
@@ -152,7 +157,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             }
         });
 
-        sh.errListener (new BeanShell.PrintStreamListener ()
+        code_engine.setStderrListener (new CodeEngine.PrintListener ()
         {
             @Override
             public void print (String output)
@@ -161,7 +166,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             }
         });
 
-        sh.stateListener (new BeanShell.StateListener ()
+        code_engine.stateListener (new CodeEngine.StateListener ()
         {
             @Override
             public void state (Thread.State s)
@@ -180,12 +185,12 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
                     setState (TERMINATED);
 
-                    if ((obj = sh.getResult ()) != null)
+                    if (code_engine.haveOutput ())
                     {
-                        om.showObject (obj);
+                        om.showObject (code_engine.getOutput ());
                     }
 
-                    if ((obj = sh.getException ()) != null)
+                    if ((obj = code_engine.getException ()) != null)
                     {
                         if (s == Thread.State.BLOCKED)
                         {
@@ -207,11 +212,10 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             }
         });
 
-        sh.dynamicVariableListener (new BeanShell.DynamicVariableListener ()
+        code_engine.dynamicVariableListener (new CodeEngine.DynamicVariableListener ()
         {
             @Override
             public Object getDynamicVariable (String varname)
-                throws NoSuchFieldException
             {
                 log.debug ("getDynamicVariable {}", varname);
 
@@ -241,7 +245,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 //                {
 //                    return (Kernel.currentTaskContext ().getPublishedObject (varname));
 //                }
-                throw new NoSuchFieldException (varname);
+                throw new NoSuchFieldError (varname);
             }
         });
     }
@@ -257,7 +261,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         get_vaadin (false).removeAllComponents ();
         om.restrain ();
         om.clearObjects ();
-        sh.exec (code + ";");
+        code_engine.exec (code + ";");
     }
 
     @Override // ComponentInterface
@@ -288,7 +292,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
                 }
                 case "stop":
                 {
-                    sh.requestBreak ();
+                    code_engine.requestBreak ();
                     break;
                 }
             }
@@ -360,7 +364,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     {
         if (signal == SIGTERM && component_state == RUNNING)
         {
-            sh.requestBreak ();
+            code_engine.requestBreak ();
             return (true);
         }
         else if (signal == SIGSTART && component_state != RUNNING)

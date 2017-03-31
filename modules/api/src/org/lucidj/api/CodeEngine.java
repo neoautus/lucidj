@@ -30,8 +30,7 @@ public interface CodeEngine extends ManagedObject
     void setStdoutListener (PrintListener listener);
     void setStderrListener (PrintListener listener);
     void stateListener (StateListener listener);
-    void dynamicVariableListener (DynamicVariableListener listener)
-        throws NoSuchFieldError;
+    void dynamicVariableListener (DynamicVariableListener listener);
     Object dynamicVariableLookup (String name);
 
     void setStatements (String statements);

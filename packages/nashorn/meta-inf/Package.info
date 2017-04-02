@@ -1,0 +1,14 @@
+X-Package-Icon: rhino-icon-128x128.png
+X-Package-FullName: Nashorn JavaScript Plugin
+X-Package-FullName-ptBR: Extensão JavaScript Nashorn
+X-Package-ShortName: Nashorn
+X-Package-ShortDescription: Nashorn JavaScript Engine for OSGi.
+X-Package-ShortDescription.ptBR: Extensão JavaScript Nashorn compatível com OSGi.
+X-Package-Release: 0.9.0, experimental
+X-Package-ReleaseDate: ${currenttime} ${now}
+X-Package-Licencing: free, GPLv2, http://openjdk.java.net/legal/gplv2+ce.html
+X-Package-Tags: utility, plugins
+X-Package-Languages: en, ptBR
+X-Package-StoreIcon: rhino-store.png
+X-Package-Origin: http://openjdk.java.net/projects/nashorn/
+# Add dependencies for extension fragment (jdk.internal.*)

@@ -899,6 +899,42 @@
 
     </target>
 
+    <!-- Extension Bundle exposes Java packages using fragments -->
+    <target name="build.extension.bundle">
+        <property name="ext.dir" value="${basedir}/extras/extension"/>
+        <local name="bundle"/>
+        <property name="bundle" value="Extension_bundle"/>
+        <fileset dir="${ext.dir}" id="extension.packages">
+            <exclude name="manifest.mf"/>
+        </fileset>
+        <pathconvert pathsep="," dirsep="/" refid="extension.packages" property="extension.packages.list">
+            <map from="${ext.dir}/" to=""/>
+        </pathconvert>
+        <property name="extension.packages.list" refid="extension.packages"/>
+        <echo message="Extension packages: ${extension.packages.list}"/>
+        <mkdir dir="${build.dir}/extension"/>
+        <copy file="${ext.dir}/manifest.mf" overwrite="true"
+              tofile="${build.dir}/extension/MANIFEST.MF">
+            <filterset>
+                <filter token="EXPORTS" value="${extension.packages.list}"/>
+            </filterset>
+        </copy>
+
+        <property name="bnd.jar" value="${dist.dir}/Extension_bundle.jar"/>
+        <jar destfile="${bnd.jar}"
+             manifest="${build.dir}/extension/MANIFEST.MF"/>
+
+        <available file="${system.dir}" property="autodeploy.flag"/>
+        <if><isset property="autodeploy.flag"/>
+            <then>
+                <copy file="${bnd.jar}" todir="${system.dir}" overwrite="true"/>
+                <delete dir="${build.dir}/jars/${bundle}"/>
+                <mkdir dir="${build.dir}/jars/${bundle}"/>
+                <unjar src="${bnd.jar}" dest="${build.dir}/jars/${bundle}"/>
+            </then>
+        </if>
+    </target>
+
     <target name="build.vaadin.static">
 
         <property name="bundle" value="${vaadin.static}"/>
@@ -1043,6 +1079,9 @@
 
         <!-- Build Karaf deployment bootstrap -->
         <ant target="build.bootstrap"/>
+
+        <!-- Expose needed classes -->
+        <ant target="build.extension.bundle"/>
 
         <!-- Copy support libraries directly to deploy dir,
              should figure out better placement -->

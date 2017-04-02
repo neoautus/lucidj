@@ -1,0 +1,5 @@
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: Extension_bundle
+Export-Package: @EXPORTS@
+Fragment-Host: system.bundle; extension:=framework
+Manifest-Version: 1.0

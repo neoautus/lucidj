@@ -16,42 +16,38 @@
 
 package org.lucidj.api;
 
+import java.io.Reader;
+
 public interface CodeEngine extends ManagedObject
 {
-    Object getOutput ();
-    boolean haveOutput ();
-    Exception getException ();
-    Object eval ();
+    CodeEngineProvider getProvider ();
+    void               setContext (CodeContext context);
+    CodeContext        getContext ();
 
-    void exec (String statements);
-    boolean isRunning ();
-    void requestBreak ();
+    Object             eval       (String script, CodeContext context);
+    Object             eval       (Reader reader, CodeContext context);
 
-    void setStdoutListener (PrintListener listener);
-    void setStderrListener (PrintListener listener);
-    void stateListener (StateListener listener);
-    void dynamicVariableListener (DynamicVariableListener listener);
-    Object dynamicVariableLookup (String name);
-
-    void setStatements (String statements);
-//    void setStdin (InputStream stdin);        --> inside execution instance?
-//    void setStdout (PrintStream stdout);
-//    void setStderr (PrintStream stderr);
-
-    interface StateListener
+    interface Mt
     {
-        void state (Thread.State s);
+        CodeContext exec (String script, CodeContext context);
+        CodeContext exec (Reader reader, CodeContext context);
+        Thread getThread ();
     }
 
-    interface PrintListener
-    {
-        void print (String output);
-    }
+//    Object getOutput ();
+//    boolean haveOutput ();
+//    Object eval (String statements, PrintStream capture_out, PrintStream capture_err) throws Exception;
+//    void setCode (String code);
+//    void run ();
 
-    interface DynamicVariableListener
-    {
-        Object getDynamicVariable (String varname) throws NoSuchFieldError;
-    }
+//    void addCallbacksListener (Callbacks listener);
+//    void removeCallbacksListener (Callbacks listener);
+//
+//    interface Callbacks
+//    {
+//        void outputObject (Object obj);
+//        Object getVariable (String varname) throws NoSuchFieldError;
+//    }
 }
 
 // EOF

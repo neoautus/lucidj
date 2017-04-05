@@ -17,8 +17,8 @@
 package org.lucidj.smartbox;
 
 import org.lucidj.api.BundleRegistry;
+import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
-import org.lucidj.api.CodeEngineContext;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
@@ -57,21 +57,27 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
     private BundleRegistry bundleRegistry;
     private ManagedObjectFactory objectFactory;
-    private CodeEngineContext code_context;
     private CodeEngine code_engine;
+    private CodeEngine.Mt code_engine_mt;
+    private CodeContext code_context;
 
     public SmartBox ()
     {
 //        init ();
     }
 
-    public SmartBox (CodeEngineContext code_context, BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
+    public SmartBox (CodeEngine code_engine, BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
     {
         this.bundleRegistry = bundleRegistry;
         this.objectFactory = objectFactory;
-        this.code_context = code_context;
 
-        code_engine = code_context.getEngineByName ("beanshell");
+        this.code_engine = code_engine;
+        code_context = code_engine.getContext ();
+
+        if (code_engine instanceof CodeEngine.Mt)
+        {
+            code_engine_mt = (CodeEngine.Mt)code_engine;
+        }
 
         log.info ("#### bundleRegistry = {}", bundleRegistry);
         init ();
@@ -131,91 +137,74 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         // TODO: FACTORY....
         om = new DefaultObjectManager ();
 
-//        bsh = bundleRegistry.getObject (BeanShellProvider.class);
-//
-//        if (bsh == null)
-//        {
-//            // TODO: COMPONENTIZE BSP, USE CLASSMANAGER
-//            bsh = new BeanShellProvider ();
-//            bsh.init (null);
-//            bundleRegistry.putObject (BeanShellProvider.class, bsh);
-//        }
-//
-//        log.info("bsh = {}", bsh);
-//
-//        sh = bsh.getInstance ();
-
         log.info ("code_engine = {}", code_engine);
 
-        // TODO: CREATE Console RENDERER
-        code_engine.setStdoutListener (new CodeEngine.PrintListener ()
+        code_context.addCallbacksListener (new CodeContext.Callbacks ()
         {
             @Override
-            public void print (String output)
+            public void stdoutPrint (String str)
             {
-                get_console (true).output ("OUT", output);
+                get_console (true).output ("OUT", str);
             }
-        });
 
-        code_engine.setStderrListener (new CodeEngine.PrintListener ()
-        {
             @Override
-            public void print (String output)
+            public void stderrPrint (String str)
             {
-                get_console (true).output ("ERR", output);
+                get_console (true).output ("ERR", str);
             }
-        });
 
-        code_engine.stateListener (new CodeEngine.StateListener ()
-        {
             @Override
-            public void state (Thread.State s)
+            public void outputObject (Object obj)
             {
-                if (s == Thread.State.RUNNABLE)
-                {
-                    // Set proper ObjectManager and SmartBox _inside_ the new running thread
-                    show.setObjectManager (om);
+                om.showObject (obj);
+            }
+
+            @Override
+            public void started ()
+            {
+                // Set proper ObjectManager and SmartBox _inside_ the new running thread
+                show.setObjectManager (om);
 //                    Pipe.setComponentContext (self);          ---
-                    pragma.setSmartBox (self);
-                    setState (RUNNING);
-                }
-                else if (s == Thread.State.TERMINATED || s == Thread.State.BLOCKED)
-                {
-                    Object obj;
-
-                    setState (TERMINATED);
-
-                    if (code_engine.haveOutput ())
-                    {
-                        om.showObject (code_engine.getOutput ());
-                    }
-
-                    if ((obj = code_engine.getException ()) != null)
-                    {
-                        if (s == Thread.State.BLOCKED)
-                        {
-                            setState (INTERRUPTED);
-                        }
-                        else
-                        {
-                            setState (ABORTED);
-                        }
-                        om.showObject (obj);
-                    }
-
-                    // Release screen update if not already done
-                    om.release ();
-
-                    // TODO: ADD LATER SOME AUTO UPDATE
-                    //update_pragmas ();
-                }
+                pragma.setSmartBox (self);
+                setState (RUNNING);
             }
-        });
 
-        code_engine.dynamicVariableListener (new CodeEngine.DynamicVariableListener ()
-        {
             @Override
-            public Object getDynamicVariable (String varname)
+            public void terminated ()
+            {
+                setState (TERMINATED);
+
+                if (code_context.haveOutput ())
+                {
+                    Object obj = code_context.getOutput ();
+
+                    om.showObject (obj);
+
+                    if (obj instanceof Throwable)
+                    {
+//                        if (s == Thread.State.BLOCKED)
+//                        {
+//                            setState (INTERRUPTED);
+//                        }
+//                        else
+//                        {
+                            setState (ABORTED);
+//                        }
+                    }
+                }
+
+                // Release screen update if not already done
+                om.release ();
+
+                // TODO: ADD LATER SOME AUTO UPDATE
+                //update_pragmas ();
+            }
+
+            // TODO: ALL THIS SHOULD GO TO CodeBindings
+/*
+            @Override
+            public Object getVariable (String varname)
+                throws NoSuchFieldError
             {
                 log.debug ("getDynamicVariable {}", varname);
 
@@ -247,6 +236,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 //                }
                 throw new NoSuchFieldError (varname);
             }
+*/
         });
     }
 
@@ -261,7 +251,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         get_vaadin (false).removeAllComponents ();
         om.restrain ();
         om.clearObjects ();
-        code_engine.exec (code + ";");
+        code_engine_mt.exec (code + ";", null);
     }
 
     @Override // ComponentInterface
@@ -292,7 +282,10 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
                 }
                 case "stop":
                 {
-                    code_engine.requestBreak ();
+                    if (code_engine_mt != null)
+                    {
+                        code_engine_mt.getThread ().interrupt ();
+                    }
                     break;
                 }
             }
@@ -364,7 +357,10 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     {
         if (signal == SIGTERM && component_state == RUNNING)
         {
-            code_engine.requestBreak ();
+            if (code_engine_mt != null)
+            {
+                code_engine_mt.getThread ().interrupt ();
+            }
             return (true);
         }
         else if (signal == SIGSTART && component_state != RUNNING)

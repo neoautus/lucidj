@@ -74,9 +74,9 @@ public class LocalNameSpace extends NameSpace
 
                 try
                 {
-                    Object obj = bsl.dynamicVariableLookup (name);
-                    v = createVariable(name, obj, null/*modifiers*/);
-                    var_map.put (name, v);
+//                    Object obj = bsl.dynamicVariableLookup (name);        ---
+//                    v = createVariable(name, obj, null/*modifiers*/);     ---
+//                    var_map.put (name, v);                                ---
                 }
                 catch (Exception ignore) {}; // v stays null
             }

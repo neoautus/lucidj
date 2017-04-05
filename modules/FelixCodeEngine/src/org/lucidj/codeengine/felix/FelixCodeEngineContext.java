@@ -16,64 +16,172 @@
 
 package org.lucidj.codeengine.felix;
 
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.CodeEngineContext;
+import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ManagedObjectInstance;
 
+import javax.lang.model.type.TypeKind;
+import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
 
-public class FelixCodeEngineContext implements CodeEngineContext
+public class FelixCodeEngineContext implements CodeContext, CodeContext.Callbacks
 {
     private Map<String, Object> properties = new HashMap<> ();
 
+    private PrintStream stdout, stderr;
+    private Object output = TypeKind.NONE;
+
     private Bundle bundle;
     private FelixCodeEngineManager engineManager;
+
+    private List<Callbacks> listeners = new ArrayList<> ();
 
     public FelixCodeEngineContext (Bundle bundle, CodeEngineManager engineManager)
     {
         this.bundle = bundle;
         this.engineManager = (FelixCodeEngineManager)engineManager;
+        stdout = System.out; // Not that sane defaults...
+        stderr = System.err;
     }
 
     @Override
+    public String getContextId ()
+    {
+        return ("<" + this.toString () + ">");
+    }
+
+    @Override // CodeContext
+    public void setStdout (PrintStream stdout)
+    {
+        this.stdout = stdout;
+    }
+
+    @Override // CodeContext
+    public PrintStream getStdout ()
+    {
+        return (stdout);
+    }
+
+    @Override // CodeContext
+    public void setStderr (PrintStream stderr)
+    {
+        this.stderr = stderr;
+    }
+
+    @Override // CodeContext
+    public PrintStream getStderr ()
+    {
+        return (stderr);
+    }
+
+    @Override // CodeContext
     public Bundle getBundle ()
     {
         return (bundle);
     }
 
-    @Override
+    @Override // CodeContext
     public <T> T getObject (Class<T> type)
     {
         return (type.cast (properties.get (type.getName ())));
     }
 
-    @Override
+    @Override // CodeContext
     public <T> void putObject (Class<T> type, T obj)
     {
         properties.put (type.getName (), obj);
     }
 
-    @Override
-    public CodeEngine getEngineByName (String shortName)
+    @Override // CodeContext
+    public Object getOutput ()
     {
-        // Create a CodeEngine tied to this context
-        return (engineManager._getEngineByName (shortName, this));
+        return (output);
     }
 
-    @Override
+    @Override // CodeContext
+    public boolean haveOutput ()
+    {
+        return (!TypeKind.NONE.equals (output));
+    }
+
+    @Override // ManagedObject
     public void validate (ManagedObjectInstance instance)
     {
         // Nop
     }
 
-    @Override
+    @Override // ManagedObject
     public void invalidate (ManagedObjectInstance instance)
     {
         // Nop
+    }
+
+    //-----------------------------------------------------------------------------------------------------------------
+    // Callbacks
+    //-----------------------------------------------------------------------------------------------------------------
+
+    // TODO: THIS IS A GREAT PLACE TO ADD LISTENERS!!
+
+    @Override // CodeContext
+    public void addCallbacksListener (Callbacks listener)
+    {
+        if (!listeners.contains (listener))
+        {
+            listeners.add (listener);
+        }
+    }
+
+    @Override // CodeContext
+    public void removeCallbacksListener (Callbacks listener)
+    {
+        listeners.remove (listener);
+    }
+
+    @Override // CodeContext.Callbacks
+    public void stdoutPrint (String str)
+    {
+        for (CodeContext.Callbacks listener: listeners)
+        {
+            listener.stdoutPrint (str);
+        }
+    }
+
+    @Override // CodeContext.Callbacks
+    public void stderrPrint (String str)
+    {
+        for (Callbacks listener: listeners)
+        {
+            listener.stderrPrint (str);
+        }
+    }
+
+    @Override // CodeContext.Callbacks
+    public void outputObject (Object obj)
+    {
+        output = obj;
+    }
+
+    @Override // CodeContext.Callbacks
+    public void started ()
+    {
+        for (Callbacks listener: listeners)
+        {
+            listener.started ();
+        }
+    }
+
+    @Override // CodeContext.Callbacks
+    public void terminated ()
+    {
+        for (Callbacks listener: listeners)
+        {
+            listener.terminated ();
+        }
     }
 }
 

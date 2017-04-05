@@ -17,7 +17,7 @@
 package org.lucidj.smartbox;
 
 import org.lucidj.api.BundleRegistry;
-import org.lucidj.api.CodeEngineContext;
+import org.lucidj.api.CodeEngine;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
@@ -59,16 +59,13 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     private SerializerEngine serializer;
 
     @Requires
-    private CodeEngineManager codeEngine;
-
-    private CodeEngineContext code_context;
+    private CodeEngineManager engineManager;
 
     @Validate
     private void validate ()
     {
         objectFactory.register (SmartBox.class, this, null);
         serializer.register (SmartBox.class, this);
-        code_context = codeEngine.newContext (context.getBundle ());
     }
 
     @Override // Serializer
@@ -127,7 +124,8 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        return (new SmartBox (code_context, bundleRegistry, objectFactory));
+        CodeEngine engine = engineManager.getEngineByName ("nashorn");
+        return (new SmartBox (engine, bundleRegistry, objectFactory));
     }
 }
 

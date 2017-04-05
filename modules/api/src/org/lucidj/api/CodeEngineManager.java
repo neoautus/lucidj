@@ -16,13 +16,34 @@
 
 package org.lucidj.api;
 
+import javax.script.ScriptEngineFactory;
+
+import java.util.List;
+
 import org.osgi.framework.Bundle;
 
 public interface CodeEngineManager
 {
-    CodeEngineContext newContext         (Bundle parentBundle);
-    void              registerEngineName (String shortName, CodeEngineProvider provider);
-//    CodeEngine        _getEngineByName   (String shortName, CodeEngineContext context);
+//    void registerEngineExtension (String extension, CodeEngineProvider factory);
+//    void registerEngineMimeType (String type, CodeEngineProvider factory);
+    void registerEngineName (String name, CodeEngineProvider factory);
+    void registerEngine (ScriptEngineFactory factory);
+
+    // Get/set the value for the specified key in the Global Scope
+//    Object get (String key);
+//    void put (String key, Object value);
+
+    // getBindings returns the value of the globalScope field.
+//    CodeBindings getBindings ();
+//    void setBindings (CodeBindings bindings);
+
+    // Look up and create a ScriptEngine for a given extension
+//    ScriptEngine getEngineByExtension (String extension);
+//    ScriptEngine getEngineByMimeType (String mimeType);
+    CodeEngine getEngineByName (String shortName);
+    List<String> getEngines ();
+
+    CodeContext newContext (Bundle parentBundle);
 }
 
 // EOF

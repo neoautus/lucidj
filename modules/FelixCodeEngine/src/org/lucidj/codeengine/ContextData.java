@@ -18,7 +18,7 @@ package org.lucidj.codeengine;
 
 import bsh.Interpreter;
 import bsh.NameSpace;
-import org.lucidj.api.CodeEngineContext;
+import org.lucidj.api.CodeContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ public class ContextData
         return (this.getClass ().getSimpleName () + "-" + instance_count++);
     }
 
-    public ContextData (CodeEngineContext context)
+    public ContextData (CodeContext context)
     {
         // Create an interpreter instance with a null inputstream,
         // the capture out/err stream, non-interactive
@@ -86,3 +86,5 @@ public class ContextData
         return (bsh);
     }
 }
+
+// EOF

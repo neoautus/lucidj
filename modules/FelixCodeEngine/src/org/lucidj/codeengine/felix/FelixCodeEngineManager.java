@@ -16,19 +16,22 @@
 
 package org.lucidj.codeengine.felix;
 
+import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
-import org.lucidj.api.CodeEngineContext;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.CodeEngineProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.script.ScriptEngineFactory;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.util.tracker.BundleTracker;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
@@ -67,13 +70,8 @@ public class FelixCodeEngineManager implements CodeEngineManager
         log.info ("FelixCodeEngineManager terminated.");
     }
 
-    private void clear_components_by_bundle (Bundle provider_bundle)
-    {
-        log.info ("clear_components_by_bundle (provider_bundle={})", provider_bundle);
-    }
-
     @Override
-    public CodeEngineContext newContext (Bundle parentBundle)
+    public CodeContext newContext (Bundle parentBundle)
     {
         // TODO: STORE CREATED CONTEXT FOR FURTHER QUERIES
         return (new FelixCodeEngineContext (parentBundle, this));
@@ -85,14 +83,56 @@ public class FelixCodeEngineManager implements CodeEngineManager
         name_to_provider.put (shortName, provider);
     }
 
-    public CodeEngine _getEngineByName (String shortName, CodeEngineContext context)
+    @Override
+    public void registerEngine (ScriptEngineFactory factory)
+    {
+        String[] name_list = factory.getNames ().toArray (new String [0]);
+
+        log.info ("Registering script engine '{} {}' providing {}",
+            factory.getEngineName (), factory.getEngineVersion (), name_list);
+
+        // Just one factory for all names
+        CodeEngineProvider factory_wrapper = new ScriptEngineFactoryWrapper (factory);
+
+        for (String name: name_list)
+        {
+            registerEngineName (name, factory_wrapper);
+        }
+    }
+
+    @Override
+    public List<String> getEngines ()
+    {
+        // TODO: Name+version
+        return null;
+    }
+
+    @Override
+    public CodeEngine getEngineByName (String shortName)
     {
         if (name_to_provider.containsKey (shortName))
         {
+            // Create engine instance
             CodeEngineProvider provider = name_to_provider.get (shortName);
-            return (provider.newCodeEngine (shortName, context));
+            CodeContext context = newContext (FrameworkUtil.getBundle (provider.getClass ()));
+            CodeEngine engine = provider.newCodeEngine (shortName, context);
+
+            // Upgrade instance if needed
+            if (!(engine instanceof CodeEngine.Mt))
+            {
+                engine = new CodeEngineMtWrapper (engine);
+            }
+
+            // Default context
+            engine.setContext (context);
+            return (engine);
         }
         return (null);
+    }
+
+    private void clear_components_by_bundle (Bundle provider_bundle)
+    {
+        log.info ("clear_components_by_bundle (provider_bundle={})", provider_bundle);
     }
 
     class BundleCleanup extends BundleTracker

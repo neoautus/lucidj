@@ -16,15 +16,9 @@
 
 package org.lucidj.api;
 
-import org.osgi.framework.Bundle;
-
-public interface CodeEngineContext extends ManagedObject
+public interface CodeBindings
 {
-    CodeEngine getEngineByName (String shortName);
-    Bundle getBundle ();
 
-    <T> T getObject (Class<T> type);
-    <T> void putObject (Class<T> type, T obj);
 }
 
 // EOF

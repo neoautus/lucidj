@@ -16,7 +16,6 @@
 
 package org.lucidj.codeengine.felix;
 
-import org.lucidj.api.CodeEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +31,7 @@ public class PipeListener extends Thread
     private PipedOutputStream pipe_output;
     private PrintStream print_stream;
     private PipedInputStream sink = null;
-    private volatile CodeEngine.PrintListener listener = null;
+    private volatile PrintListener listener = null;
     private byte[] buffer = new byte [512];
 
     public PipeListener ()
@@ -54,7 +53,7 @@ public class PipeListener extends Thread
         return (print_stream);
     }
 
-    public void setPrintListener (CodeEngine.PrintListener listener)
+    public void setPrintListener (PrintListener listener)
     {
         this.listener = listener;
     }
@@ -107,6 +106,11 @@ public class PipeListener extends Thread
             super.write (b);
             flush ();
         }
+    }
+
+    interface PrintListener
+    {
+        void print (String str);
     }
 }
 

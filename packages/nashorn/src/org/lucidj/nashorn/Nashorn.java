@@ -59,13 +59,8 @@ public class Nashorn
             if (FrameworkUtil.getBundle (factory.getClass ()).equals (this_bundle))
             {
                 String[] name_list = factory.getNames ().toArray (new String [0]);
-
-                log.info ("Found script engine '{}' providing {}", factory.getEngineName (), name_list);
-
-                for (String name: name_list)
-                {
-                    engineManager.registerEngineName (name, factory);
-                }
+                log.info ("Registering {} {} {}", factory.getEngineName (), factory.getEngineVersion (), name_list);
+                engineManager.registerEngine (factory);
             }
         }
     }

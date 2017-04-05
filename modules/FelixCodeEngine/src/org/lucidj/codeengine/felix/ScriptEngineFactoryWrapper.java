@@ -14,11 +14,28 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.codeengine.felix;
 
-public interface CodeEngineProvider
+import org.lucidj.api.CodeContext;
+import org.lucidj.api.CodeEngine;
+import org.lucidj.api.CodeEngineProvider;
+
+import javax.script.ScriptEngineFactory;
+
+public class ScriptEngineFactoryWrapper implements CodeEngineProvider
 {
-    CodeEngine newCodeEngine (String shortName, CodeContext context);
+    private ScriptEngineFactory factory; // JSR223 factory
+
+    public ScriptEngineFactoryWrapper (ScriptEngineFactory factory)
+    {
+        this.factory = factory;
+    }
+
+    @Override
+    public CodeEngine newCodeEngine (String shortName, CodeContext context)
+    {
+        return (new ScriptEngineWrapper (this, factory.getScriptEngine ()));
+    }
 }
 
 // EOF

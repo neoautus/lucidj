@@ -17,7 +17,7 @@
 package org.lucidj.codeengine;
 
 import org.lucidj.api.CodeEngine;
-import org.lucidj.api.CodeEngineContext;
+import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.CodeEngineProvider;
 import org.slf4j.Logger;
@@ -41,7 +41,7 @@ public class BeanShellEngineProvider implements CodeEngineProvider
     private CodeEngineManager engineFactory;
 
 
-    private ContextData init_context (CodeEngineContext context)
+    private ContextData init_context (CodeContext context)
     {
         ContextData context_data = context.getObject (ContextData.class);
 
@@ -54,9 +54,9 @@ public class BeanShellEngineProvider implements CodeEngineProvider
     }
 
     @Override
-    public CodeEngine newCodeEngine (String shortName, CodeEngineContext context)
+    public CodeEngine newCodeEngine (String shortName, CodeContext context)
     {
-        return (new BeanShellEngine (context, init_context (context)));
+        return (new BeanShellEngine (this, init_context (context)));
     }
 
     @Validate

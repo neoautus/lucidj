@@ -18,11 +18,14 @@ package org.lucidj.api;
 
 import java.io.Reader;
 
-public interface CodeEngine extends CodeEngineBase
+public interface CodeEngineBase extends ManagedObject
 {
-    CodeContext exec      (String script, CodeContext context);
-    CodeContext exec      (Reader reader, CodeContext context);
-    Thread      getThread ();
+    CodeEngineProvider getProvider ();
+    void               setContext  (CodeContext context);
+    CodeContext        getContext  ();
+
+    Object             eval        (String script, CodeContext context);
+    Object             eval        (Reader reader, CodeContext context);
 }
 
 // EOF

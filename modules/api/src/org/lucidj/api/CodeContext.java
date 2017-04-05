@@ -16,6 +16,7 @@
 
 package org.lucidj.api;
 
+import javax.script.ScriptContext;
 import java.io.PrintStream;
 
 import org.osgi.framework.Bundle;
@@ -29,7 +30,11 @@ public interface CodeContext extends ManagedObject
     void setStderr (PrintStream stderr);
     PrintStream getStderr ();
 
+    void setBindings (CodeBindings bindings);
+    CodeBindings getBindings ();
     Bundle getBundle ();
+    void linkContext (ScriptContext jsr223_context);
+    ScriptContext getLinkedContext ();
 
     <T> T getObject (Class<T> type);
     <T> void putObject (Class<T> type, T obj);

@@ -58,7 +58,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     private BundleRegistry bundleRegistry;
     private ManagedObjectFactory objectFactory;
     private CodeEngine code_engine;
-    private CodeEngine.Mt code_engine_mt;
     private CodeContext code_context;
 
     public SmartBox ()
@@ -73,11 +72,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
         this.code_engine = code_engine;
         code_context = code_engine.getContext ();
-
-        if (code_engine instanceof CodeEngine.Mt)
-        {
-            code_engine_mt = (CodeEngine.Mt)code_engine;
-        }
 
         log.info ("#### bundleRegistry = {}", bundleRegistry);
         init ();
@@ -251,7 +245,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         get_vaadin (false).removeAllComponents ();
         om.restrain ();
         om.clearObjects ();
-        code_engine_mt.exec (code + ";", null);
+        code_engine.exec (code, null);
     }
 
     @Override // ComponentInterface
@@ -282,10 +276,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
                 }
                 case "stop":
                 {
-                    if (code_engine_mt != null)
-                    {
-                        code_engine_mt.getThread ().interrupt ();
-                    }
+                    code_engine.getThread ().interrupt ();
                     break;
                 }
             }
@@ -357,10 +348,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     {
         if (signal == SIGTERM && component_state == RUNNING)
         {
-            if (code_engine_mt != null)
-            {
-                code_engine_mt.getThread ().interrupt ();
-            }
+            code_engine.getThread ().interrupt ();
             return (true);
         }
         else if (signal == SIGSTART && component_state != RUNNING)

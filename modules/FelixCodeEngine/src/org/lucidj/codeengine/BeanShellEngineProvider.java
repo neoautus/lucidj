@@ -16,7 +16,7 @@
 
 package org.lucidj.codeengine;
 
-import org.lucidj.api.CodeEngine;
+import org.lucidj.api.CodeEngineBase;
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.CodeEngineProvider;
@@ -54,7 +54,7 @@ public class BeanShellEngineProvider implements CodeEngineProvider
     }
 
     @Override
-    public CodeEngine newCodeEngine (String shortName, CodeContext context)
+    public CodeEngineBase newCodeEngine (String shortName, CodeContext context)
     {
         return (new BeanShellEngine (this, init_context (context)));
     }

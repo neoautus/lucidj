@@ -16,7 +16,9 @@
 
 package org.lucidj.api;
 
-public interface CodeBindings
+import javax.script.Bindings;
+
+public interface CodeBindings extends Bindings
 {
 
 }

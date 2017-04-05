@@ -17,7 +17,7 @@
 package org.lucidj.codeengine.felix;
 
 import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngine;
+import org.lucidj.api.CodeEngineBase;
 import org.lucidj.api.CodeEngineProvider;
 
 import javax.script.ScriptEngineFactory;
@@ -32,7 +32,7 @@ public class ScriptEngineFactoryWrapper implements CodeEngineProvider
     }
 
     @Override
-    public CodeEngine newCodeEngine (String shortName, CodeContext context)
+    public CodeEngineBase newCodeEngine (String shortName, CodeContext context)
     {
         return (new ScriptEngineWrapper (this, factory.getScriptEngine ()));
     }

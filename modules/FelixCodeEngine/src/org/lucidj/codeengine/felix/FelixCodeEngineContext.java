@@ -16,12 +16,15 @@
 
 package org.lucidj.codeengine.felix;
 
+import org.lucidj.api.CodeBindings;
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ManagedObjectInstance;
 
 import javax.lang.model.type.TypeKind;
+import javax.script.ScriptContext;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +41,9 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
 
     private Bundle bundle;
     private FelixCodeEngineManager engineManager;
+    private CodeBindings bindings;
+
+    private ScriptContext linked_context;
 
     private List<Callbacks> listeners = new ArrayList<> ();
 
@@ -45,6 +51,7 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
     {
         this.bundle = bundle;
         this.engineManager = (FelixCodeEngineManager)engineManager;
+//        this.bindings = ???;
         stdout = System.out; // Not that sane defaults...
         stderr = System.err;
     }
@@ -58,6 +65,10 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
     @Override // CodeContext
     public void setStdout (PrintStream stdout)
     {
+        if (linked_context != null)
+        {
+            linked_context.setWriter (new PrintWriter (stdout));
+        }
         this.stdout = stdout;
     }
 
@@ -70,6 +81,10 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
     @Override // CodeContext
     public void setStderr (PrintStream stderr)
     {
+        if (linked_context != null)
+        {
+            linked_context.setErrorWriter (new PrintWriter (stderr));
+        }
         this.stderr = stderr;
     }
 
@@ -79,10 +94,42 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
         return (stderr);
     }
 
+    @Override
+    public void setBindings (CodeBindings bindings)
+    {
+        if (linked_context != null)
+        {
+            linked_context.setBindings (bindings, ScriptContext.ENGINE_SCOPE); // Which is the correct scope???
+        }
+        this.bindings = bindings;
+    }
+
+    @Override
+    public CodeBindings getBindings ()
+    {
+        return (bindings);
+    }
+
     @Override // CodeContext
     public Bundle getBundle ()
     {
         return (bundle);
+    }
+
+    @Override
+    public void linkContext (ScriptContext jsr223_context)
+    {
+        linked_context = jsr223_context;
+
+        // Copy some volatile parameters
+        linked_context.setWriter (new PrintWriter (stdout));
+        linked_context.setErrorWriter (new PrintWriter (stderr));
+    }
+
+    @Override
+    public ScriptContext getLinkedContext ()
+    {
+        return (linked_context);
     }
 
     @Override // CodeContext

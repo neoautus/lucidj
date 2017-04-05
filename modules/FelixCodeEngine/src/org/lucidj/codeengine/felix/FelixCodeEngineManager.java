@@ -16,8 +16,10 @@
 
 package org.lucidj.codeengine.felix;
 
+import org.lucidj.api.CodeBindings;
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
+import org.lucidj.api.CodeEngineBase;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.CodeEngineProvider;
 import org.slf4j.Logger;
@@ -50,6 +52,7 @@ public class FelixCodeEngineManager implements CodeEngineManager
     private BundleTracker bundle_cleaner;
 
     private final Map<String, CodeEngineProvider> name_to_provider = new HashMap<> ();
+    private final Map<Bundle, CodeBindings> bundle_to_bindings = new HashMap<> ();
 
     @Context
     private BundleContext ctx;
@@ -75,6 +78,22 @@ public class FelixCodeEngineManager implements CodeEngineManager
     {
         // TODO: STORE CREATED CONTEXT FOR FURTHER QUERIES
         return (new FelixCodeEngineContext (parentBundle, this));
+    }
+
+    @Override
+    public CodeBindings getBundleBindings (Bundle parentBundle)
+    {
+        if (bundle_to_bindings.containsKey (parentBundle))
+        {
+            return (bundle_to_bindings.get (parentBundle));
+        }
+
+        CodeBindings new_bindings = new FelixCodeBindings ();
+        bundle_to_bindings.put (parentBundle, new_bindings);
+
+        new_bindings.put ("hello", "Hello world!");
+
+        return (new_bindings);
     }
 
     @Override
@@ -115,17 +134,23 @@ public class FelixCodeEngineManager implements CodeEngineManager
             // Create engine instance
             CodeEngineProvider provider = name_to_provider.get (shortName);
             CodeContext context = newContext (FrameworkUtil.getBundle (provider.getClass ()));
-            CodeEngine engine = provider.newCodeEngine (shortName, context);
+            CodeEngineBase new_engine = provider.newCodeEngine (shortName, context);
+            CodeEngine full_engine;
 
-            // Upgrade instance if needed
-            if (!(engine instanceof CodeEngine.Mt))
+            if (new_engine instanceof CodeEngine)
             {
-                engine = new CodeEngineMtWrapper (engine);
+                // Engine is fully featured
+                full_engine = (CodeEngine)new_engine;
+            }
+            else
+            {
+                // Upgrade base engine to full engine
+                full_engine = new CodeEngineThreading (new_engine);
             }
 
             // Default context
-            engine.setContext (context);
-            return (engine);
+            full_engine.setContext (context);
+            return (full_engine);
         }
         return (null);
     }

@@ -18,14 +18,14 @@ package org.lucidj.codeengine;
 
 import bsh.Interpreter;
 import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngine;
+import org.lucidj.api.CodeEngineBase;
 import org.lucidj.api.CodeEngineProvider;
 import org.lucidj.api.ManagedObjectInstance;
 
 import java.io.Reader;
 import java.io.StringReader;
 
-public class BeanShellEngine implements CodeEngine
+public class BeanShellEngine implements CodeEngineBase
 {
     private CodeEngineProvider provider;
     private CodeContext context;
@@ -83,7 +83,7 @@ public class BeanShellEngine implements CodeEngine
     @Override
     public Object eval (String code, CodeContext context)
     {
-        return (eval (new StringReader (code), context));
+        return (eval (new StringReader (code + ";"), context));
     }
 
     @Override

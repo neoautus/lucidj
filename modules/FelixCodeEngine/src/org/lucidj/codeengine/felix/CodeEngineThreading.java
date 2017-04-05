@@ -19,6 +19,7 @@ package org.lucidj.codeengine.felix;
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
+import org.lucidj.api.CodeEngineBase;
 import org.lucidj.api.CodeEngineProvider;
 import org.lucidj.api.ManagedObjectInstance;
 import org.slf4j.Logger;
@@ -29,16 +30,16 @@ import java.io.PrintStream;
 import java.io.Reader;
 
 // TODO: CodeRunner MAY BE RUNNING!!!!
-public class CodeEngineMtWrapper implements CodeEngine, CodeEngine.Mt
+public class CodeEngineThreading implements CodeEngine
 {
-    private final transient Logger log = LoggerFactory.getLogger (CodeEngineMtWrapper.class);
+    private final transient Logger log = LoggerFactory.getLogger (CodeEngineThreading.class);
 
-    private final CodeEngine code_engine;
+    private final CodeEngineBase code_engine;
     private ExecThread exec_thread;
     private Object output = TypeKind.NONE;
     private boolean interrupt_requested;
 
-    public CodeEngineMtWrapper (CodeEngine code_engine)
+    public CodeEngineThreading (CodeEngineBase code_engine)
     {
         this.code_engine = code_engine;
     }
@@ -96,19 +97,19 @@ public class CodeEngineMtWrapper implements CodeEngine, CodeEngine.Mt
     // CodeEngine Multithread
     //-----------------------------------------------------------------------------------------------------------------
 
-    @Override // CodeEngine.Mt
+    @Override // CodeEngine
     public CodeContext exec (String code, CodeContext context)
     {
         return (perform_exec (code, context));
     }
 
-    @Override // CodeEngine.Mt
+    @Override // CodeEngine
     public CodeContext exec (Reader code, CodeContext context)
     {
         return (perform_exec (code, context));
     }
 
-    @Override
+    @Override // CodeEngine
     public Thread getThread ()
     {
         return (exec_thread);
@@ -118,31 +119,31 @@ public class CodeEngineMtWrapper implements CodeEngine, CodeEngine.Mt
     // CodeEngine wrapping
     //-----------------------------------------------------------------------------------------------------------------
 
-    @Override // CodeEngine
+    @Override // CodeEngineBase
     public Object eval (String script, CodeContext context)
     {
         return (code_engine.eval (script, context));
     }
 
-    @Override // CodeEngine
+    @Override // CodeEngineBase
     public Object eval (Reader reader, CodeContext context)
     {
         return (code_engine.eval (reader, context));
     }
 
-    @Override // CodeEngine
+    @Override // CodeEngineBase
     public CodeContext getContext ()
     {
         return (code_engine.getContext ());
     }
 
-    @Override // CodeEngine
+    @Override // CodeEngineBase
     public void setContext (CodeContext context)
     {
         code_engine.setContext (context);
     }
 
-    @Override // CodeEngine
+    @Override // CodeEngineBase
     public CodeEngineProvider getProvider ()
     {
         return (code_engine.getProvider ());

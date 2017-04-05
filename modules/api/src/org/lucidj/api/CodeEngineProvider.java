@@ -18,7 +18,7 @@ package org.lucidj.api;
 
 public interface CodeEngineProvider
 {
-    CodeEngine newCodeEngine (String shortName, CodeContext context);
+    CodeEngineBase newCodeEngine (String shortName, CodeContext context);
 }
 
 // EOF

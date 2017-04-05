@@ -17,16 +17,17 @@
 package org.lucidj.codeengine.felix;
 
 import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngine;
+import org.lucidj.api.CodeEngineBase;
 import org.lucidj.api.CodeEngineProvider;
 import org.lucidj.api.ManagedObjectInstance;
 
+import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import java.io.PrintWriter;
 import java.io.Reader;
 
-public class ScriptEngineWrapper implements CodeEngine
+public class ScriptEngineWrapper implements CodeEngineBase
 {
     private CodeEngineProvider provider;
     private CodeContext default_context;
@@ -38,26 +39,20 @@ public class ScriptEngineWrapper implements CodeEngine
         this.engine = engine;
     }
 
-    private ScriptContext get_jsr223_context (CodeContext context, boolean copy_std)
+    private ScriptContext get_jsr223_context (CodeContext context)
     {
         if (context == null)
         {
             context = default_context;
         }
 
-        ScriptContext jsr223_context = context.getObject (ScriptContext.class);
+        ScriptContext jsr223_context = context.getLinkedContext ();
 
         if (jsr223_context == null)
         {
-            // Extract and map the JSR223 context
+            // Extract and link the JSR223 context
             jsr223_context = engine.getContext ();
-            context.putObject (ScriptContext.class, jsr223_context);
-        }
-
-        if (copy_std)
-        {
-            jsr223_context.setWriter (new PrintWriter (context.getStdout ()));
-            jsr223_context.setErrorWriter (new PrintWriter (context.getStderr ()));
+            context.linkContext (jsr223_context);
         }
         return (jsr223_context);
     }
@@ -67,7 +62,7 @@ public class ScriptEngineWrapper implements CodeEngine
     {
         try
         {
-            return (engine.eval (code, get_jsr223_context (context, true)));
+            return (engine.eval (code, get_jsr223_context (context)));
         }
         catch (Throwable t)
         {
@@ -88,7 +83,7 @@ public class ScriptEngineWrapper implements CodeEngine
 //        return stdOut.getBuffer().toString();
         try
         {
-            return (engine.eval (code, get_jsr223_context (context, true)));
+            return (engine.eval (code, get_jsr223_context (context)));
         }
         catch (Throwable t)
         {
@@ -106,9 +101,7 @@ public class ScriptEngineWrapper implements CodeEngine
     public void setContext (CodeContext context)
     {
         default_context = context;
-
-        // Extract and map the JSR223 context
-        default_context.putObject (ScriptContext.class, engine.getContext ());
+        default_context.linkContext (engine.getContext ());
     }
 
     @Override

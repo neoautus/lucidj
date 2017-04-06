@@ -267,6 +267,7 @@
                 <include name="**/*.class"/>
                 <exclude name="code/**"/>
             </fileset>
+            <local name="packages"/>
             <pathconvert dirsep="/" refid="classes" property="packages" pathsep=",">
                 <mapper type="regexp" from="@{dir}/(.*)/.*\.class" to="\1" />
             </pathconvert>
@@ -1402,11 +1403,16 @@
         <attribute name="bundleType"/>
         <sequential>
 
+            <local name="bundle.name"/>
             <basename property="bundle.name" file="@{bundleFile}"/>
+            <local name="deploy.dir"/>
             <property name="deploy.dir" value="${runtime.dir}/@{bundleType}"/>
             <if><available file="${deploy.dir}" type="dir"/>
                 <then>
                     <copy file="@{bundleFile}" todir="${deploy.dir}" overwrite="true" taskname="autodeploy"/>
+                    <delete dir="${build.dir}/jars/${bundle.name}"/>
+                    <mkdir dir="${build.dir}/jars/${bundle.name}"/>
+                    <unjar src="@{bundleFile}" dest="${build.dir}/jars/${bundle.name}"/>
                 </then>
             </if>
 
@@ -1418,22 +1424,36 @@
         <attribute name="classpath"/>
         <sequential>
 
-            <echo message="Building package @{packageDir}"/>
+            <echo>
+    Building package @{packageDir}
+    ================================================================================
+            </echo>
 
             <!-- Build time properties -->
-            <basename property="bnd.name" file="@{packageDir}"/>
-            <property name="bnd.src.dir" value="@{packageDir}/src"/>
-            <property name="bnd.meta-inf.dir" value="@{packageDir}/meta-inf"/>
-            <property name="bnd.build.dir" value="${build.dir}/app/${bnd.name}"/>
-            <property name="bnd.file" value="${bnd.build.dir}/bundle.bnd"/>
-            <property name="bnd.dist.jar" value="${dist.dir}/${bnd.name}.jar"/>
+            <local name="bnd.name"/>
+                <basename property="bnd.name" file="@{packageDir}"/>
+            <local name="bnd.src.dir"/>
+                <property name="bnd.src.dir" value="@{packageDir}/src"/>
+            <local name="bnd.meta-inf.dir"/>
+                <property name="bnd.meta-inf.dir" value="@{packageDir}/meta-inf"/>
+            <local name="bnd.build.dir"/>
+                <property name="bnd.build.dir" value="${build.dir}/app/${bnd.name}"/>
+            <local name="bnd.file"/>
+                <property name="bnd.file" value="${bnd.build.dir}/bundle.bnd"/>
+            <local name="bnd.dist.jar"/>
+                <property name="bnd.dist.jar" value="${dist.dir}/${bnd.name}.jar"/>
 
             <!-- Package structure properties -->
-            <property name="bundles.dirname" value="Bundles"/>
-            <property name="resources.dirname" value="Resources"/>
-            <property name="pkg.contents.dir" value="@{packageDir}/contents"/>
-            <property name="pkg.bundles.dir" value="${pkg.contents.dir}/${bundles.dirname}"/>
-            <property name="pkg.resources.dir" value="${pkg.contents.dir}/${resources.dirname}"/>
+            <local name="bundles.dirname"/>
+                <property name="bundles.dirname" value="Bundles"/>
+            <local name="resources.dirname"/>
+                <property name="resources.dirname" value="Resources"/>
+            <local name="pkg.contents.dir"/>
+                <property name="pkg.contents.dir" value="@{packageDir}/contents"/>
+            <local name="pkg.bundles.dir"/>
+                <property name="pkg.bundles.dir" value="${pkg.contents.dir}/${bundles.dirname}"/>
+            <local name="pkg.resources.dir"/>
+                <property name="pkg.resources.dir" value="${pkg.contents.dir}/${resources.dirname}"/>
 
             <delete dir="${bnd.build.dir}"/><!-- Ensures only new .class -->
             <mkdir dir="${bnd.build.dir}"/>
@@ -1444,7 +1464,8 @@
                     <include name="contents/${bundles.dirname}/**/*.jar"/>
                 </fileset>
             </path>
-            <property name="embedded.bundles.cp.literal" refid="embedded.bundles.cp"/>
+            <local name="embedded.bundles.cp.literal"/>
+                <property name="embedded.bundles.cp.literal" refid="embedded.bundles.cp"/>
 
             <!-- Include all embedded libraries found inside Resources/ -->
             <path id="private.cp">
@@ -1452,11 +1473,13 @@
                     <include name="contents/${resources.dirname}/**/*.jar"/>
                 </fileset>
             </path>
-            <property name="private.cp.literal" refid="private.cp"/>
+            <local name="private.cp.literal"/>
+                <property name="private.cp.literal" refid="private.cp"/>
 
             <!-- This is the classpath used to build the component -->
-            <property name="bnd.classpath"
-                value="${private.cp.literal}:${embedded.bundles.cp.literal}:${bnd.build.dir}:@{classpath}"/>
+            <local name="bnd.classpath"/>
+                <property name="bnd.classpath"
+                    value="${private.cp.literal}:${embedded.bundles.cp.literal}:${bnd.build.dir}:@{classpath}"/>
 
             <!-- Build time! Build component with given classpath and local private libraries -->
             <javac srcdir="${bnd.src.dir}" destdir="${bnd.build.dir}"
@@ -1502,9 +1525,10 @@
             <!-- Create a proper Bundle-ClassPath for included libraries -->
             <if><resourcecount refid="private.cp" when="greater" count="0"/>
                 <then>
-                    <pathconvert refid="private.cp" property="private.cp.bnd" dirsep="/" pathsep=",">
-                        <map from="${pkg.contents.dir}/" to=""/>
-                    </pathconvert>
+                    <local name="private.cp.bnd"/>
+                        <pathconvert refid="private.cp" property="private.cp.bnd" dirsep="/" pathsep=",">
+                            <map from="${pkg.contents.dir}/" to=""/>
+                        </pathconvert>
                     <echo file="${bnd.file}" append="true"
                           message="Bundle-ClassPath: .,${private.cp.bnd}${line.separator}"/>
                     <echo file="${bnd.file}" append="true"
@@ -1520,9 +1544,10 @@
             <!-- ================ -->
             <!-- Find all exports -->
             <!-- ================ -->
-            <listpackages dir="${bnd.build.dir}" property="package.list"/>
+            <local name="package.list"/>
+                <listpackages dir="${bnd.build.dir}" property="package.list"/>
             <echo file="${bnd.file}" append="true"
-                  message="Export-Package: ${package.list}${line.separator}"/>
+                message="Export-Package: ${package.list}${line.separator}"/>
 
             <!-- ================== -->
             <!-- Include activators -->
@@ -1530,6 +1555,7 @@
             <fileset dir="${bnd.build.dir}" id="classes">
                 <include name="**/*Activator.class"/>
             </fileset>
+            <local name="activator.list"/>
             <pathconvert dirsep="." refid="classes" property="activator.list" pathsep=", " setonempty="false">
                 <mapper type="regexp" from="${bnd.build.dir}/(.*).class" to="\1" />
             </pathconvert>
@@ -1557,7 +1583,8 @@
                 <file name="${bnd.meta-inf.dir}/Package.info"/>
             </concat>
 
-            <loadfile property="bnd.file.contents" srcFile="${bnd.file}"/>
+            <local name="bnd.file.contents"/>
+                <loadfile property="bnd.file.contents" srcFile="${bnd.file}"/>
             <echo taskname="bnd.file" message="${bnd.file.contents}"/>
 
             <mkdir dir="${dist.dir}"/>

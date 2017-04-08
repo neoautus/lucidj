@@ -23,19 +23,18 @@ import org.osgi.framework.Bundle;
 
 public interface CodeContext extends ManagedObject
 {
+    ScriptContext wrapContext (ScriptContext jsr223_context);
     String getContextId ();
+
 
     void setStdout (PrintStream stdout);
     PrintStream getStdout ();
     void setStderr (PrintStream stderr);
     PrintStream getStderr ();
 
-    void setBindings (CodeBindings bindings);
-    CodeBindings getBindings ();
     Bundle getBundle ();
-    void linkContext (ScriptContext jsr223_context);
-    ScriptContext getLinkedContext ();
 
+    Object getServiceObject (String name);
     <T> T getObject (Class<T> type);
     <T> void putObject (Class<T> type, T obj);
 
@@ -43,16 +42,6 @@ public interface CodeContext extends ManagedObject
     void removeCallbacksListener (Callbacks listener);
     Object getOutput ();
     boolean haveOutput ();
-
-//
-//    interface Callbacks
-//    {
-//        void outputObject (Object obj);
-//        Object getVariable (String varname) throws NoSuchFieldError;
-//    }
-
-//    boolean isRunning ();
-//    void requestBreak ();
 
     interface Callbacks
     {

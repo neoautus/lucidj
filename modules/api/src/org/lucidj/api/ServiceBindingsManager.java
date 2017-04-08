@@ -16,11 +16,11 @@
 
 package org.lucidj.api;
 
-import javax.script.Bindings;
-
-public interface CodeBindings extends Bindings
+public interface ServiceBindingsManager
 {
-
+    void register (ServiceBinding binding);
+    ServiceBinding getService (String name);
+    boolean serviceExists (String name);
 }
 
 // EOF

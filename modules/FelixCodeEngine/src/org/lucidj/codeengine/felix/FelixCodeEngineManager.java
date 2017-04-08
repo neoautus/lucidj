@@ -16,12 +16,12 @@
 
 package org.lucidj.codeengine.felix;
 
-import org.lucidj.api.CodeBindings;
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
 import org.lucidj.api.CodeEngineBase;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.CodeEngineProvider;
+import org.lucidj.api.ServiceBindingsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +40,7 @@ import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
@@ -52,10 +53,12 @@ public class FelixCodeEngineManager implements CodeEngineManager
     private BundleTracker bundle_cleaner;
 
     private final Map<String, CodeEngineProvider> name_to_provider = new HashMap<> ();
-    private final Map<Bundle, CodeBindings> bundle_to_bindings = new HashMap<> ();
 
     @Context
     private BundleContext ctx;
+
+    @Requires
+    ServiceBindingsManager bindingsManager;
 
     @Validate
     private void validate ()
@@ -77,23 +80,7 @@ public class FelixCodeEngineManager implements CodeEngineManager
     public CodeContext newContext (Bundle parentBundle)
     {
         // TODO: STORE CREATED CONTEXT FOR FURTHER QUERIES
-        return (new FelixCodeEngineContext (parentBundle, this));
-    }
-
-    @Override
-    public CodeBindings getBundleBindings (Bundle parentBundle)
-    {
-        if (bundle_to_bindings.containsKey (parentBundle))
-        {
-            return (bundle_to_bindings.get (parentBundle));
-        }
-
-        CodeBindings new_bindings = new FelixCodeBindings ();
-        bundle_to_bindings.put (parentBundle, new_bindings);
-
-        new_bindings.put ("hello", "Hello world!");
-
-        return (new_bindings);
+        return (new FelixCodeEngineContext (parentBundle, bindingsManager));
     }
 
     @Override
@@ -148,7 +135,7 @@ public class FelixCodeEngineManager implements CodeEngineManager
                 full_engine = new CodeEngineThreading (new_engine);
             }
 
-            // Default context
+            // Default context and optional JSR223 context wrapping
             full_engine.setContext (context);
             return (full_engine);
         }

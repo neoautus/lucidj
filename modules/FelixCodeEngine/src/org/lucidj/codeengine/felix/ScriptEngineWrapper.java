@@ -21,40 +21,21 @@ import org.lucidj.api.CodeEngineBase;
 import org.lucidj.api.CodeEngineProvider;
 import org.lucidj.api.ManagedObjectInstance;
 
-import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import java.io.PrintWriter;
 import java.io.Reader;
 
 public class ScriptEngineWrapper implements CodeEngineBase
 {
     private CodeEngineProvider provider;
-    private CodeContext default_context;
-    private ScriptEngine engine; // The wrapped JSR223 engine
+    private CodeContext code_context;
+    private ScriptEngine script_engine;      // The wrapped JSR223 engine
+    private ScriptContext script_context;    // The wrapped JSR223 context
 
-    public ScriptEngineWrapper (CodeEngineProvider provider, ScriptEngine engine)
+    public ScriptEngineWrapper (CodeEngineProvider provider, ScriptEngine script_engine)
     {
         this.provider = provider;
-        this.engine = engine;
-    }
-
-    private ScriptContext get_jsr223_context (CodeContext context)
-    {
-        if (context == null)
-        {
-            context = default_context;
-        }
-
-        ScriptContext jsr223_context = context.getLinkedContext ();
-
-        if (jsr223_context == null)
-        {
-            // Extract and link the JSR223 context
-            jsr223_context = engine.getContext ();
-            context.linkContext (jsr223_context);
-        }
-        return (jsr223_context);
+        this.script_engine = script_engine;
     }
 
     @Override
@@ -62,7 +43,7 @@ public class ScriptEngineWrapper implements CodeEngineBase
     {
         try
         {
-            return (engine.eval (code, get_jsr223_context (context)));
+            return (script_engine.eval (code, script_context));
         }
         catch (Throwable t)
         {
@@ -73,17 +54,9 @@ public class ScriptEngineWrapper implements CodeEngineBase
     @Override
     public Object eval (String code, CodeContext context)
     {
-//        javax.script.ScriptEngineManager manager = new ScriptEngineManager();
-//        javax.script.ScriptEngine engine = manager.getEngineByName("groovy");
-//        StringWriter stdOut = new StringWriter();
-//        engine.getContext().setWriter(new PrintWriter(stdOut));
-//        engine.eval("def myFunction() { print("Hello World!"); }");
-//        Invocable invoker = (Invocable) engine;
-//        invoker.invokeFunction("myFunction", new Object[0]);
-//        return stdOut.getBuffer().toString();
         try
         {
-            return (engine.eval (code, get_jsr223_context (context)));
+            return (script_engine.eval (code, script_context));
         }
         catch (Throwable t)
         {
@@ -100,14 +73,14 @@ public class ScriptEngineWrapper implements CodeEngineBase
     @Override
     public void setContext (CodeContext context)
     {
-        default_context = context;
-        default_context.linkContext (engine.getContext ());
+        code_context = context;
+        script_context = context.wrapContext (script_engine.getContext ());
     }
 
     @Override
     public CodeContext getContext ()
     {
-        return (default_context);
+        return (code_context);
     }
 
     @Override

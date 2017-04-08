@@ -16,15 +16,18 @@
 
 package org.lucidj.codeengine.felix;
 
-import org.lucidj.api.CodeBindings;
 import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.ServiceBinding;
+import org.lucidj.api.ServiceBindingsManager;
 
 import javax.lang.model.type.TypeKind;
+import javax.script.Bindings;
 import javax.script.ScriptContext;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,31 +35,31 @@ import java.util.Map;
 
 import org.osgi.framework.Bundle;
 
-public class FelixCodeEngineContext implements CodeContext, CodeContext.Callbacks
+public class FelixCodeEngineContext implements CodeContext, CodeContext.Callbacks, ScriptContext
 {
+    private final int HACKISH_SERVICE_SCOPE = 0;
+
     private Map<String, Object> properties = new HashMap<> ();
 
-    private PrintStream stdout, stderr;
+    private PrintStream ps_stdout, ps_stderr;
     private Object output = TypeKind.NONE;
 
     private Bundle bundle;
-    private FelixCodeEngineManager engineManager;
-    private CodeBindings bindings;
+    private ServiceBindingsManager bindingsManager;
 
-    private ScriptContext linked_context;
+    private ScriptContext wrapped_context;
 
     private List<Callbacks> listeners = new ArrayList<> ();
 
-    public FelixCodeEngineContext (Bundle bundle, CodeEngineManager engineManager)
+    public FelixCodeEngineContext (Bundle bundle, ServiceBindingsManager bindingsManager)
     {
         this.bundle = bundle;
-        this.engineManager = (FelixCodeEngineManager)engineManager;
-//        this.bindings = ???;
-        stdout = System.out; // Not that sane defaults...
-        stderr = System.err;
+        this.bindingsManager = bindingsManager;
+        setStdout (System.out); // Not that sane defaults...
+        setStderr (System.err);
     }
 
-    @Override
+    @Override // CodeContext
     public String getContextId ()
     {
         return ("<" + this.toString () + ">");
@@ -65,49 +68,33 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
     @Override // CodeContext
     public void setStdout (PrintStream stdout)
     {
-        if (linked_context != null)
+        if (wrapped_context != null)
         {
-            linked_context.setWriter (new PrintWriter (stdout));
+            setWriter (new PrintWriter (stdout));
         }
-        this.stdout = stdout;
+        this.ps_stdout = stdout;
     }
 
     @Override // CodeContext
     public PrintStream getStdout ()
     {
-        return (stdout);
+        return (ps_stdout);
     }
 
     @Override // CodeContext
     public void setStderr (PrintStream stderr)
     {
-        if (linked_context != null)
+        if (wrapped_context != null)
         {
-            linked_context.setErrorWriter (new PrintWriter (stderr));
+            setErrorWriter (new PrintWriter (stderr));
         }
-        this.stderr = stderr;
+        ps_stderr = stderr;
     }
 
     @Override // CodeContext
     public PrintStream getStderr ()
     {
-        return (stderr);
-    }
-
-    @Override
-    public void setBindings (CodeBindings bindings)
-    {
-        if (linked_context != null)
-        {
-            linked_context.setBindings (bindings, ScriptContext.ENGINE_SCOPE); // Which is the correct scope???
-        }
-        this.bindings = bindings;
-    }
-
-    @Override
-    public CodeBindings getBindings ()
-    {
-        return (bindings);
+        return (ps_stderr);
     }
 
     @Override // CodeContext
@@ -116,20 +103,26 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
         return (bundle);
     }
 
-    @Override
-    public void linkContext (ScriptContext jsr223_context)
+    @Override // CodeContext
+    public Object getServiceObject (String name)
     {
-        linked_context = jsr223_context;
+        ServiceBinding service = bindingsManager.getService (name);
 
-        // Copy some volatile parameters
-        linked_context.setWriter (new PrintWriter (stdout));
-        linked_context.setErrorWriter (new PrintWriter (stderr));
+        if (service != null)
+        {
+            // Pass this context allowing the service to be customized for us
+            return (service.getService (this));
+        }
+        return (null);
     }
 
-    @Override
-    public ScriptContext getLinkedContext ()
+    @Override // CodeContext
+    public ScriptContext wrapContext (ScriptContext jsr223_context)
     {
-        return (linked_context);
+        wrapped_context = jsr223_context;
+        setWriter (new PrintWriter (ps_stdout));
+        setErrorWriter (new PrintWriter (ps_stderr));
+        return (this);
     }
 
     @Override // CodeContext
@@ -171,8 +164,6 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
     //-----------------------------------------------------------------------------------------------------------------
     // Callbacks
     //-----------------------------------------------------------------------------------------------------------------
-
-    // TODO: THIS IS A GREAT PLACE TO ADD LISTENERS!!
 
     @Override // CodeContext
     public void addCallbacksListener (Callbacks listener)
@@ -229,6 +220,119 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
         {
             listener.terminated ();
         }
+    }
+
+    //-----------------------------------------------------------------------------------------------------------------
+    // ScriptContext wrapping
+    //-----------------------------------------------------------------------------------------------------------------
+
+    @Override // ScriptContext
+    public void setBindings (Bindings bindings, int scope)
+    {
+        wrapped_context.setBindings (bindings, scope);
+    }
+
+    @Override // ScriptContext
+    public Bindings getBindings (int scope)
+    {
+        return (wrapped_context.getBindings (scope));
+    }
+
+    @Override // ScriptContext
+    public int getAttributesScope (String name)
+    {
+        int scope = wrapped_context.getAttributesScope (name);
+
+        if (scope == -1 && bindingsManager.serviceExists (name))
+        {
+            // See [1] getAttribute(name,scope)
+            scope = HACKISH_SERVICE_SCOPE;
+        }
+        return (scope);
+    }
+
+    @Override // ScriptContext
+    public Object getAttribute (String name, int scope)
+    {
+        if (scope == HACKISH_SERVICE_SCOPE)
+        {
+            // [1] Nashorn Global.__noSuchProperty__() tries to find the missing
+            // attribute by retrieving the scope and issuing getAttribute(name,scope).
+            // So we need to return strictly this service object here, or else we end
+            // up into a stack overflow.
+            return (getServiceObject (name));
+        }
+        else
+        {
+            // Try the context first...
+            Object obj = wrapped_context.getAttribute (name, scope);
+
+            // ...then fall back into a service object. This way we can
+            // override locally a service (if ever needed).
+            return ((obj != null)? obj: getServiceObject (name));
+        }
+    }
+
+    @Override // ScriptContext
+    public Object getAttribute (String name)
+    {
+        // Local objects might override bound services
+        Object obj = wrapped_context.getAttribute (name);
+        return ((obj != null)? obj: getServiceObject (name));
+    }
+
+    @Override // ScriptContext
+    public void setAttribute (String name, Object value, int scope)
+    {
+        wrapped_context.setAttribute (name, value, scope);
+    }
+
+    @Override // ScriptContext
+    public Object removeAttribute (String name, int scope)
+    {
+        return (wrapped_context.removeAttribute (name, scope));
+    }
+
+    @Override // ScriptContext
+    public Writer getWriter ()
+    {
+        return (wrapped_context.getWriter ());
+    }
+
+    @Override // ScriptContext
+    public Writer getErrorWriter ()
+    {
+        return (wrapped_context.getErrorWriter ());
+    }
+
+    @Override // ScriptContext
+    public void setWriter (Writer writer)
+    {
+        wrapped_context.setWriter (new PrintWriter (writer));
+    }
+
+    @Override // ScriptContext
+    public void setErrorWriter (Writer writer)
+    {
+        wrapped_context.setErrorWriter (new PrintWriter (writer));
+    }
+
+    @Override // ScriptContext
+    public Reader getReader ()
+    {
+        return (wrapped_context.getReader ());
+    }
+
+    @Override // ScriptContext
+    public void setReader (Reader reader)
+    {
+        wrapped_context.setReader (reader);
+    }
+
+    @Override // ScriptContext
+    public List<Integer> getScopes ()
+    {
+        return (wrapped_context.getScopes ());
     }
 }
 

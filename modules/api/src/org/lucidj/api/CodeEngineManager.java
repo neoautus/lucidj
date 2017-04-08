@@ -44,7 +44,6 @@ public interface CodeEngineManager
     List<String> getEngines ();
 
     CodeContext newContext (Bundle parentBundle);
-    CodeBindings getBundleBindings (Bundle parentBundle);
 }
 
 // EOF

@@ -1,0 +1,15 @@
+X-Package-Icon: quercus-icon-64x64.png
+X-Package-FullName: Caucho Quercus PHP Plugin
+X-Package-FullName-ptBR: Extensão Quercus PHP
+X-Package-ShortName: Quercus
+X-Package-ShortDescription: Caucho Quercus PHP Engine for OSGi.
+X-Package-ShortDescription.ptBR: Extensão Caucho Quercus PHP compatível com OSGi.
+X-Package-Release: 4.0.39, experimental
+X-Package-ReleaseDate: ${currenttime} ${now}
+X-Package-Licencing: free, GPLv2, http://quercus.caucho.com/
+X-Package-Tags: utility, plugins, language
+X-Package-Languages: en, ptBR
+X-Package-StoreIcon: quercus-store.png
+X-Package-StoreIcon.ptBR: quercus-store-ptbr.png
+X-Package-Origin: http://quercus.caucho.com/
+# Add dependencies for extension fragment (jdk.internal.*)

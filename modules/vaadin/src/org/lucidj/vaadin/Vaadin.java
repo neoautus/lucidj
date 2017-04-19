@@ -19,14 +19,70 @@ package org.lucidj.vaadin;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
 
+import com.vaadin.data.Property;
+import com.vaadin.server.VaadinSession;
+import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
-public class Vaadin extends VerticalLayout implements ManagedObject
+import java.util.concurrent.locks.Lock;
+
+public class Vaadin extends VerticalLayoutEx implements ManagedObject
 {
     public Vaadin ()
     {
         setWidth (100, Unit.PERCENTAGE);
         setHeightUndefined ();
+    }
+
+    public static void lock ()
+    {
+        VaadinSession session = VaadinSession.getCurrent ();
+        Lock lock = session.getLockInstance ();
+        lock.lock(); // NOT session.unlock() to avois push changes
+    }
+
+    public static void unlock ()
+    {
+        VaadinSession session = VaadinSession.getCurrent ();
+        Lock lock = session.getLockInstance ();
+        lock.unlock();
+    }
+
+    public static Label newLabel ()
+    {
+        return (new LabelEx ());
+    }
+
+    public static Label newLabel (Property contentSource)
+    {
+        return (new LabelEx (contentSource));
+    }
+
+    public static Label newLabel (Property contentSource, ContentMode contentMode)
+    {
+        return (new LabelEx (contentSource, contentMode));
+    }
+
+    public static Label newLabel(String content)
+    {
+        return (new LabelEx (content));
+    }
+
+    public static Label newLabel (String content, ContentMode contentMode)
+    {
+        return (new LabelEx (content, contentMode));
+    }
+
+    public static VerticalLayout newVerticalLayout ()
+    {
+        return (new VerticalLayoutEx ());
+    }
+
+    public static VerticalLayout newVerticalLayout (Component... children)
+    {
+        return (new VerticalLayoutEx (children));
     }
 
     @Override

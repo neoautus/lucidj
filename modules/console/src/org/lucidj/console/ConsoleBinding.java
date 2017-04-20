@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.codeengine.felix;
+package org.lucidj.console;
 
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.ServiceBinding;
@@ -28,16 +28,12 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-//====================
-// FOR TEST PURPOSES!
-//====================
-
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class ConsoleBinding implements ServiceBinding
 {
-    private final static transient Logger log = LoggerFactory.getLogger (FelixCodeEngineManager.class);
+    private final static transient Logger log = LoggerFactory.getLogger (ConsoleBinding.class);
 
     @Requires
     ServiceBindingsManager bindings;

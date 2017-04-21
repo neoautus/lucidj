@@ -25,7 +25,8 @@ public interface CodeContext extends ManagedObject
 {
     ScriptContext wrapContext (ScriptContext jsr223_context);
     String getContextId ();
-
+    void setClassLoader (ClassLoader classLoader);
+    ClassLoader getClassLoader ();
 
     void setStdout (PrintStream stdout);
     PrintStream getStdout ();
@@ -47,6 +48,7 @@ public interface CodeContext extends ManagedObject
     {
         void stdoutPrint (String str);
         void stderrPrint (String str);
+        void fetchService (String svcName, Object svcObject);
         void outputObject (Object obj);
         void started ();
         void terminated ();

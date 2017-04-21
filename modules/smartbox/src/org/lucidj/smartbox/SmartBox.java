@@ -95,22 +95,22 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         return (console);
     }
 
-    private Vaadin get_vaadin (boolean show)
-    {
-        if (vaadin == null)
-        {
-            ManagedObjectInstance console_instance = objectFactory.newInstance (Vaadin.class, null);
-            vaadin = console_instance.adapt (Vaadin.class);
-        }
-
-        if (show && om.getObject (Vaadin.class.getCanonicalName ()) == null)
-        {
-            om.showObject (vaadin);
-            om.setObjectTag (vaadin, Vaadin.class.getCanonicalName ());
-        }
-
-        return (vaadin);
-    }
+//    private Vaadin get_vaadin (boolean show)
+//    {
+//        if (vaadin == null)
+//        {
+//            ManagedObjectInstance console_instance = objectFactory.newInstance (Vaadin.class, null);
+//            vaadin = console_instance.adapt (Vaadin.class);
+//        }
+//
+//        if (show && om.getObject (Vaadin.class.getCanonicalName ()) == null)
+//        {
+//            om.showObject (vaadin);
+//            om.setObjectTag (vaadin, Vaadin.class.getCanonicalName ());
+//        }
+//
+//        return (vaadin);
+//    }
 
 
     private Karaf get_karaf ()
@@ -148,6 +148,21 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             }
 
             @Override
+            public void fetchService (String svcName, Object svcObject)
+            {
+                log.info ("fetchService(svcName={}, svcObject={})", svcName, svcObject);
+                if (svcObject instanceof Vaadin) // TODO: OTHER KIND OF OBJECT
+                {
+                    if (om.getObject (svcName) == null)
+                    {
+                        log.info ("fetchService: will show");
+                        om.showObject (svcObject);
+                        om.setObjectTag (svcObject, svcName);
+                    }
+                }
+            }
+
+            @Override
             public void outputObject (Object obj)
             {
                 om.showObject (obj);
@@ -176,6 +191,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
                     if (obj instanceof Throwable)
                     {
+                        log.error ("THROWABLE", obj);
 //                        if (s == Thread.State.BLOCKED)
 //                        {
 //                            setState (INTERRUPTED);
@@ -242,7 +258,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
         log.info (">>> RUN {}", code);
         get_console (false).clear ();
-        get_vaadin (false).removeAllComponents ();
+//        get_vaadin (false).removeAllComponents ();
         om.restrain ();
         om.clearObjects ();
         code_engine.exec (code, null);

@@ -81,7 +81,9 @@ public class CodeEngineThreading implements CodeEngine
 
         // Setup beanshell thread
         exec_thread = new ExecThread (code, context);
-//        exec_thread.setContextClassLoader (cld);
+
+        // Set classloader from CodeContext
+        exec_thread.setContextClassLoader (context.getClassLoader ());
 
         // Start the gang
         interrupt_requested = false;

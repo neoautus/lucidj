@@ -45,6 +45,7 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
     private Object output = TypeKind.NONE;
 
     private Bundle bundle;
+    private ClassLoader class_loader;
     private ServiceBindingsManager bindingsManager;
 
     private ScriptContext wrapped_context;
@@ -63,6 +64,18 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
     public String getContextId ()
     {
         return ("<" + this.toString () + ">");
+    }
+
+    @Override
+    public void setClassLoader (ClassLoader classLoader)
+    {
+        this.class_loader = classLoader;
+    }
+
+    @Override
+    public ClassLoader getClassLoader ()
+    {
+        return (class_loader);
     }
 
     @Override // CodeContext
@@ -111,7 +124,9 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
         if (service != null)
         {
             // Pass this context allowing the service to be customized for us
-            return (service.getService (this));
+            Object service_object = service.getService (this);
+            fetchService (name, service_object);
+            return (service_object);
         }
         return (null);
     }
@@ -195,6 +210,15 @@ public class FelixCodeEngineContext implements CodeContext, CodeContext.Callback
         for (Callbacks listener: listeners)
         {
             listener.stderrPrint (str);
+        }
+    }
+
+    @Override // CodeContext.Callbacks
+    public void fetchService (String svcName, Object svcObject)
+    {
+        for (Callbacks listener: listeners)
+        {
+            listener.fetchService (svcName, svcObject);
         }
     }
 

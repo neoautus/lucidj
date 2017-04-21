@@ -16,6 +16,7 @@
 
 package org.lucidj.codeengine.felix;
 
+import org.lucidj.api.ClassManager;
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
 import org.lucidj.api.CodeEngineBase;
@@ -59,6 +60,9 @@ public class FelixCodeEngineManager implements CodeEngineManager
 
     @Requires
     ServiceBindingsManager bindingsManager;
+
+    @Requires
+    ClassManager classManager;
 
     @Validate
     private void validate ()
@@ -134,6 +138,9 @@ public class FelixCodeEngineManager implements CodeEngineManager
                 // Upgrade base engine to full engine
                 full_engine = new CodeEngineThreading (new_engine);
             }
+
+            // Set default bundle/service-aware classloader
+            context.setClassLoader (classManager.getClassLoader ());
 
             // Default context and optional JSR223 context wrapping
             full_engine.setContext (context);

@@ -43,6 +43,7 @@ public class ScriptEngineWrapper implements CodeEngineBase
     {
         try
         {
+            // TODO: SET CLASSLOADER FROM CodeContext?
             return (script_engine.eval (code, script_context));
         }
         catch (Throwable t)
@@ -56,6 +57,7 @@ public class ScriptEngineWrapper implements CodeEngineBase
     {
         try
         {
+            // TODO: SET CLASSLOADER FROM CodeContext?
             return (script_engine.eval (code, script_context));
         }
         catch (Throwable t)

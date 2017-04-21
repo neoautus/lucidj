@@ -43,12 +43,12 @@ public class MappingClassManager implements ClassManager
     private List<Bundle> source_bundles = new ArrayList<> ();
     private Map<String, Class> class_cache = new HashMap<> ();
     private Map<String, Bundle> package_to_bundle = new HashMap<> ();
+    private ClassLoader class_loader = new MappingClassLoader ();
 
     @Context
     private BundleContext context;
 
-    @Override
-    public Class loadClass (String name)
+    private Class locate_and_load_class (String name)
     {
         log.info ("===> loadClass {} from {}", name, this);
 
@@ -105,6 +105,12 @@ public class MappingClassManager implements ClassManager
     }
 
     @Override
+    public Class loadClass (String name)
+    {
+        return (locate_and_load_class (name));
+    }
+
+    @Override
     public Class loadClassUsingClass (Class clazz, String name)
     {
         try
@@ -131,6 +137,37 @@ public class MappingClassManager implements ClassManager
     public Map<String, Bundle> getPackageMap ()
     {
         return (package_to_bundle);
+    }
+
+    @Override
+    public ClassLoader getClassLoader ()
+    {
+        return (class_loader);
+    }
+
+    public class MappingClassLoader extends ClassLoader
+    {
+//        public QuarkClassLoader (BundleContext bundle_context)
+//        {
+//            ctx = bundle_context;
+//            bnd = bundle_context.getBundle ();
+//            cld = bnd.adapt(BundleWiring.class).getClassLoader();
+//        }
+
+        public Class loadClass(String name)
+            throws ClassNotFoundException
+        {
+            Class cls = locate_and_load_class (name);
+
+            if (cls != null)
+            {
+                return (cls);
+            }
+            else
+            {
+                throw (new ClassNotFoundException ("Class " + name + " not found on any bundle"));
+            }
+        }
     }
 }
 

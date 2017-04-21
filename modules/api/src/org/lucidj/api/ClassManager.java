@@ -26,6 +26,7 @@ public interface ClassManager
     Class loadClassUsingClass (Class clazz, String name);
     Class loadClassUsingObject (Object obj, String name);
     Map<String, Bundle> getPackageMap ();
+    ClassLoader getClassLoader ();
 }
 
 // EOF

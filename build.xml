@@ -134,6 +134,10 @@
         <fileset dir="${libcache.dir}" includes="jansi/jar/*.jar"/>
     </path>
 
+    <path id="javassist.cp">
+        <fileset dir="${libcache.dir}" includes="javassist/bundle/*.jar"/>
+    </path>
+
     <!--path id="vaadin-widgets.cp">
         <fileset dir="${basedir}" includes="build/widgetset/temp-widgetset.jar"/>
     </path-->
@@ -151,6 +155,7 @@
         <path refid="kryo.cp"/>
         <path refid="markdown.cp"/>
         <path refid="jansi.cp"/>
+        <path refid="javassist.cp"/>
 
         <!-- jsoup -->
         <!--fileset dir="${lib.dir}/static/jsoup-1.8.x">
@@ -1124,6 +1129,7 @@
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
                 <include name="jansi/jar/*.jar"/>
+                <include name="javassist/bundle/*.jar"/>
 
                 <!-- iPOJO -->
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>

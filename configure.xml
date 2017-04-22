@@ -188,6 +188,11 @@
             <ivy:dependency org="org.fusesource.jansi" name="jansi" rev="1.14" />
         </pathdep>
 
+        <pathdep group="javassist">
+            <!-- https://mvnrepository.com/artifact/org.javassist/javassist -->
+            <ivy:dependency org="org.javassist" name="javassist" rev="3.21.0-GA"/>
+        </pathdep>
+
         <!-- For <propertyregex/> -->
         <taskdef resource="net/sf/antcontrib/antlib.xml">
             <classpath>

@@ -205,7 +205,7 @@
         <pathelement location="${libraries.class}"/>
 
         <!-- Compiled widgets -->
-        <pathelement location="${widgetset.root.dir}"/>
+        <pathelement path="${vaadin.static.jar}"/>
 
         <path refid="classpath.runtime"/>
 
@@ -229,15 +229,8 @@
         <!-- Vaadin -->
         <path refid="classpath.vaadin.server"/>
 
-        <!-- TODO: SPLIT CORE LIBRARIES FROM COMMON LIBRARIES! -->
-        <!-- THE LUCIDJ API -->
-        <fileset dir="${basedir}">
-            <include name="dist/libraries_api.jar"/>
-            <include name="dist/libraries_runtime.jar"/>
-
-            <!-- TODO: REFACTOR -->
-            <include name="dist/libraries_uiaccess.jar"/>
-        </fileset>
+        <!-- The LucidJ API -->
+        <pathelement path="${dist.dir}/libraries_api.jar"/>
 
     </path>
 
@@ -287,12 +280,27 @@
       Targets do Control Center
      ********************************************************************** -->
 
-    <target name="clean">
+    <target name="zero">
+        <!-- Everything including static vaadin/gwt stuff -->
         <delete dir="${build.dir}"/>
         <delete dir="${dist.dir}"/>
+        <delete dir="${stage.dir}"/>
+        <delete dir="${vaadin.static.dir}"/>
         <delete>
             <fileset dir="${basedir}" defaultexcludes="no">
                <include name="**/*~"/>
+            </fileset>
+        </delete>
+    </target>
+
+    <target name="clean">
+        <!-- Everything except static build -->
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+        <delete dir="${stage.dir}"/>
+        <delete>
+            <fileset dir="${basedir}" defaultexcludes="no">
+                <include name="**/*~"/>
             </fileset>
         </delete>
     </target>
@@ -304,9 +312,14 @@
     <target name="build">
         <if><not><available file="${vaadin.static.jar}"/></not>
             <then>
+                <ant target="zero"/>
+                <ant target="build.vaadin.static"/>
+            </then>
+        </if>
+        <if><not><available file="${stage.log.dir}" type="dir"/></not>
+            <then>
                 <ant target="clean"/>
                 <ant target="build.stage"/>
-                <ant target="build.vaadin.static"/>
             </then>
         </if>
         <!--ant target="build.theme"/-->
@@ -947,7 +960,8 @@
 
         <delete dir="${widgetset.root.dir}"/><!-- Ensures only new .class -->
         <mkdir dir="${widgetset.root.dir}"/>
-        <mkdir dir="${dist.dir}"/>
+        <delete dir="${vaadin.static.dir}"/>
+        <mkdir dir="${vaadin.static.dir}"/>
 
         <!-- We include vaadin-themes so theme resources can be found from vaadin-server -->
         <echo message="Extracting themes to ${widgetset.root.dir} ..."/>
@@ -975,20 +989,10 @@
         <echo file="${bnd.file}" append="true"
             message="Export-Package: ${package.list}${line.separator}"/>
 
-        <!-- Make resources available through APP/PUBLISHED -->
-        <!-- TODO: Is there a better way to make them visible to APP/PUBLISHED??? -->
-        <!--echo file="${bnd.file}" append="true"
-            message="Fragment-Host: com.vaadin.server;bundle-version=&quot;[7.1.0,8.0.0)&quot;${line.separator}"/-->
-
         <!-- Create an OSGi-compliant MANIFEST.MF with empty jar -->
         <bnd files="${bnd.file}" output="${vaadin.static.jar}"
              classpath="${widgetset.root.dir}"
              eclipse="false" failok="false" exceptions="true"/>
-
-        <mkdir dir="${widgetset.root.dir}/WEB-INF/lib"/>
-        <copy todir="${widgetset.root.dir}/WEB-INF/lib">
-            <fileset dir="${dist.dir}" includes="AceEditor.jar"/>
-        </copy>
 
         <!-- Add the theme files -->
         <jar destfile="${vaadin.static.jar}" update="true" filesonly="true">
@@ -1030,7 +1034,7 @@
         <mkdir dir="${system.dir}"/>
         <mkdir dir="${applications.dir}"/>
 
-	<!-- Apache Karaf is unziped first so it can be overwritten if needed -->
+	    <!-- Apache Karaf is unziped first so it can be overwritten if needed -->
         <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${runtime.dir}"/>
 
         <copy todir="${stage.dir}" overwrite="true">
@@ -1140,7 +1144,15 @@
             <fileset dir="${wrapped-jars.dir}">
                 <include name="gwt-user-*.jar"/>
             </fileset>
+
+            <!-- Vaadin static stuff from cache -->
+            <fileset dir="${vaadin.static.dir}">
+                <include name="*.jar"/>
+            </fileset>
         </copy>
+
+        <!-- Create the log dir, which also acts as a 'stage ok' flag -->
+        <mkdir dir="${stage.log.dir}"/>
 
     </target>
 

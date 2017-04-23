@@ -50,6 +50,7 @@ public class Console implements ManagedObject, Renderer.Observable
         this.event_helper = event_helper;
     }
 
+    // TODO: AUTODISCOVERY DATA STRUCTURE FROM TEXT (EX. CSV, TABLE, SERIES, ETC)
     public void output (String tag, String text)
     {
         if (text.isEmpty ())

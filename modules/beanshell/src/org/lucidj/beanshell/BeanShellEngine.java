@@ -40,6 +40,7 @@ public class BeanShellEngine implements CodeEngineBase
     private CodeContext context;
     private Interpreter parent_interpreter;
     private LocalNameSpace local_namespace;
+    private Map<String, Variable> service_vars = new HashMap<> ();
 
     // TODO: SOLVE METHOD REWRITE
     public BeanShellEngine (CodeEngineProvider provider, Interpreter parent_interpreter)
@@ -73,6 +74,9 @@ public class BeanShellEngine implements CodeEngineBase
         // Set this BeanShell reference
         //local_namespace.setBeanShell (parent);
 
+        // Clear mapped service variables
+        service_vars.clear ();
+
         try
         {
             return (parent_interpreter.eval (reader, context.getStdout (), context.getStderr (),
@@ -105,7 +109,6 @@ public class BeanShellEngine implements CodeEngineBase
 
     public class LocalNameSpace extends NameSpace
     {
-        private Map<String, Variable> var_map = new HashMap<> ();
 
         public LocalNameSpace (NameSpace parent)
         {
@@ -116,22 +119,20 @@ public class BeanShellEngine implements CodeEngineBase
         protected Variable getVariableImpl (String name, boolean recurse)
             throws UtilEvalError
         {
-            log.info ("getVariableImpl(name={}, recurse={}) IN", name, recurse);
-
             // We have precedence here for both speed and scope
             Variable v = super.getVariableImpl (name, recurse);
 
-            log.info ("getVariableImpl(name={}, recurse={}) LOOKUP = {}", name, recurse, v);
+            log.debug ("getVariableImpl(name={}, recurse={}) LOOKUP = {}", name, recurse, v);
 
             // This
             if (v == null)
             {
-                log.info ("getVariableImpl(name={}, recurse={}) DYNAMIC", name, recurse);
+                log.debug ("getVariableImpl(name={}, recurse={}) DYNAMIC", name, recurse);
 
-                if (var_map.containsKey (name))
+                if (service_vars.containsKey (name))
                 {
                     // From cache
-                    v = var_map.get (name);
+                    v = service_vars.get (name);
                 }
                 else // Try to retrieve from services
                 {
@@ -140,12 +141,12 @@ public class BeanShellEngine implements CodeEngineBase
                     if (obj != null)
                     {
                         v = createVariable(name, obj, null/*modifiers*/);
-                        var_map.put (name, v);
+                        service_vars.put (name, v);
                     }
                 }
             }
 
-            log.info ("getVariableImpl(name={}, recurse={}) OUT = {}", name, recurse, v);
+            log.debug ("getVariableImpl(name={}, recurse={}) OUT = {}", name, recurse, v);
             return (v);
         }
     }

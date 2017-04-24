@@ -27,11 +27,6 @@
 
 package bsh;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.vaadin.server.VaadinSession;
-
 import java.lang.reflect.*;
 import java.util.Vector;
 
@@ -52,8 +47,6 @@ import java.util.Vector;
 */
 class Reflect 
 {
-	private final transient static Logger log = LoggerFactory.getLogger (Reflect.class);
-
     /**
 		Invoke method on arbitrary object instance.
 		invocation may be static (through the object instance) or dynamic.
@@ -72,11 +65,7 @@ class Reflect
 				false/*delcaredOnly*/
 			);
 
-		log.debug ("Reflect.invokeObjectMethod: object={} methodName={} interpreter={} namespace={}",
-			object, methodName, interpreter, interpreter.getNameSpace ());
-
 		// Plain Java object, find the java method
-		VaadinSession session = null;
 		try {
 			BshClassManager bcm =
 				interpreter == null ? null : interpreter.getClassManager();
@@ -85,37 +74,10 @@ class Reflect
 			Method method = resolveExpectedJavaMethod(
 				bcm, clas, object, methodName, args, false );
 
-			// TODO: HANDLE MULTIPLE CALLS, TEST AGAINST OBJECT
-			boolean guard = method.getDeclaringClass ().getCanonicalName ().startsWith ("com.vaadin.");
-
-			if (guard)
-			{
-				log.debug ("Reflect.invokeObjectMethod: GUARD object={} methodName={} interpreter={} namespace={}",
-					object, methodName, interpreter, interpreter.getNameSpace ());
-
-				session = VaadinSession.getCurrent ();
-				session.lock();
-			}
-
-			// TODO: CATCH THROWABLE
-			Object result = invokeMethod( method, object, args );
-
-			if (session != null)
-			{
-				session.unlock ();
-				session = null;
-			}
-
-			return (result);
+			return invokeMethod( method, object, args );
 		} catch ( UtilEvalError e ) {
 			throw e.toEvalError( callerInfo, callstack );
-		} finally {
-			if (session != null)
-			{
-				session.unlock();
-			}
 		}
-
     }
 
     /** 

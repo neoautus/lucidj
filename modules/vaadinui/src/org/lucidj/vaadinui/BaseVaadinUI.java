@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -23,7 +23,6 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.data.Property;
-import com.vaadin.server.ClientConnector;
 import com.vaadin.server.ExternalResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Page;
@@ -44,7 +43,6 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.UI;
-import com.vaadin.ui.UIDetachedException;
 import com.vaadin.ui.VerticalLayout;
 
 import org.lucidj.api.DesktopInterface;
@@ -56,11 +54,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -84,6 +77,7 @@ public class BaseVaadinUI extends UI
 
     private DesktopInterface desktop;
     private ConnectorTracker tracker;
+    private SmartPush smart_push;
 
     private VerticalLayout system_toolbar = new VerticalLayout ();
     private HorizontalLayout hSearchArea = new HorizontalLayout ();
@@ -232,8 +226,7 @@ public class BaseVaadinUI extends UI
         }
     }
 
-    @Override
-    protected void init (VaadinRequest vaadinRequest)
+    private void init_desktop (VaadinRequest vaadinRequest)
     {
         Responsive.makeResponsive (this);
         setLocale (vaadinRequest.getLocale());
@@ -275,134 +268,18 @@ public class BaseVaadinUI extends UI
         }
     }
 
-    //=========================================================================================
-    // SMARTPUSH
-    //=========================================================================================
-
-    class ObservingConnectorTracker extends ConnectorTracker
+    @Override
+    protected void init (VaadinRequest vaadinRequest)
     {
-        final static int SP_RESTING    = 0;    // Nothing to update
-        final static int SP_PREPARED   = 1;    // At least one markDirty() pending
-        final static int SP_ACCESS_SET = 2;    // Push is scheduled using ui.access()
-        final static int SP_PUSHING    = 3;    // Pushing NOW
-
-        private Timer push_timer = new Timer ();
-        private UI ui;
-        private volatile long last_push;
-        private volatile long prepare_push;
-        private AtomicInteger push_status;
-
-        public ObservingConnectorTracker (UI ui)
-        {
-            super (ui);
-            this.ui = ui;
-
-            push_status = new AtomicInteger (SP_RESTING);
-            push_timer = new Timer ();
-            push_timer.scheduleAtFixedRate (new TimerTask ()
-            {
-                @Override
-                public void run ()
-                {
-                    timer_poll ();
-                }
-            }, 50, 50);
-        }
-
-        @Override
-        public Collection<ClientConnector> getDirtyConnectors()
-        {
-            return (new HashSet<ClientConnector> (super.getDirtyConnectors ()));
-        }
-
-        private void timer_poll ()
-        {
-            if (push_status.get () != SP_PREPARED ||
-                !ui.isAttached ())
-            {
-                // When resting, pushing or detached, do nothing here
-                return;
-            }
-
-            if (ui.isClosing ())
-            {
-                log.info (">>>>> UI IS CLOSING");
-                push_timer.cancel ();
-
-                // TODO: DO WE NEED TO FORCE A FINAL push()?
-                return;
-            }
-
-            if ((last_push - prepare_push) > 100 ||                 // Time between updates > 100ms
-                (last_push + 200) < System.currentTimeMillis ())    // Last update more than 100ms ago
-            {
-                if (push_status.compareAndSet (SP_PREPARED, SP_ACCESS_SET))
-                {
-                    try
-                    {
-                        ui.access (new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                if (push_status.getAndSet (SP_PUSHING) == SP_PUSHING)
-                                {
-                                    // Already pushing, ignore this one
-                                    log.info (">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> PUSH: Already pushing");
-                                    return;
-                                }
-
-                                try
-                                {
-                                    ui.push ();
-                                }
-                                finally
-                                {
-                                    push_status.set (SP_RESTING);
-                                }
-                            }
-                        });
-                    }
-                    catch (UIDetachedException never_mind)
-                    {
-                        log.error ("Automatic push: ui.access exception", never_mind);
-                    };
-                }
-            }
-        }
-
-        @Override
-        public void markDirty(ClientConnector connector)
-        {
-            super.markDirty (connector);
-
-            // We use markDirty to check if we need to push. With automatic push, within every
-            // session.unlock() a push() is issued. This way, with BeanShell and automatic push,
-            // ALL changes are directed towards the browser, something that may saturate the
-            // comm link if too many changes need to be rendered. With this class AND _manual_
-            // PushMode.MANUAL, the pending changes are synchronized using synchronized batches,
-            // minimizing the network load.
-            //
-            if (push_status.compareAndSet (SP_RESTING, SP_PREPARED))
-            {
-                prepare_push = last_push = System.currentTimeMillis ();
-            }
-            else if (push_status.get () == SP_PREPARED)
-            {
-                last_push = System.currentTimeMillis ();
-            }
-        }
+        init_desktop (vaadinRequest);
+        smart_push = new SmartPush (this);
     }
 
     @Override
-    public ConnectorTracker getConnectorTracker()
+    public void close ()
     {
-        if (tracker == null)
-        {
-            tracker =  new ObservingConnectorTracker (this);
-        }
-
-        return (tracker);
+        smart_push.stop ();
+        super.close ();
     }
 
     //=========================================================================================

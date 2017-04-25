@@ -47,28 +47,24 @@ import com.vaadin.ui.VerticalLayout;
 import org.osgi.framework.BundleContext;
 
 import org.lucidj.api.ApplicationInterface;
+import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.TaskContext;
-import org.lucidj.runtime.Kernel;
-import org.lucidj.shiro.Shiro;
-import org.lucidj.runtime.CompositeTask;
+import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.SerializerEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @StyleSheet ("vaadin://~/formulas_libraries/styles.css")
 public class FormulasView extends VerticalLayout implements ManagedObject, View, ApplicationInterface
 {
-    //==============================
-    //==============================
-    // THIS IS A TaskContext VIEWER
-    //==============================
-    //==============================
+    // Actually this will be some sort of Bundle Renderer
 
     // TODO: CREATE A PROPER NAVIGATION AID
     private String navid = "formulas";
@@ -88,25 +84,28 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     private ComponentPalette sidebar = null;
 
     private BundleContext ctx;
-    private Shiro shiro;
-
-    private TaskContext tctx;
+    private SecurityEngine security;
+    private ComponentManager componentManager;
 
     private String view_name = null;
     private long last_save = 0;
     private boolean formulae_changed = false;
 
-    private CompositeTask object_list = null;
+    private List object_list = null;
+//    private CompositeTask object_list = null;
     private String task_source = null;
     private Object current_object;
     private Map<Object, Cell> active_cells = new ConcurrentHashMap<> ();
 
     private VerticalLayout content;
     private Cell insert_here_cell;
+    private SerializerEngine serializer;
 
-    public FormulasView (Shiro shiro)
+    public FormulasView (SecurityEngine security, SerializerEngine serializer, ComponentManager componentManager)
     {
-        this.shiro = shiro;
+        this.security = security;
+        this.serializer = serializer;
+        this.componentManager = componentManager;
     }
 
     @Override // ManagedObject
@@ -118,19 +117,8 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     @Override // ManagedObject
     public void invalidate (ManagedObjectInstance instance)
     {
-
-    }
-
-    @Override // ManagedObject
-    public Map<String, Object> serializeObject ()
-    {
-        return null;
-    }
-
-    @Override // ManagedObject
-    public boolean deserializeObject (Map<String, Object> properties)
-    {
-        return (false);
+        security = null;
+        serializer = null;
     }
 
     @Override // ApplicationInterface
@@ -153,10 +141,10 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
     class Cell extends AbstractCell
     {
-        public Cell (BundleContext ctx, Object object)
+        public Cell (Object object)
         {
             // Cell formatting, decoration and event handling is located at AbstractCell
-            super (ctx, object);
+            super (object);
         }
 
         @Override
@@ -297,7 +285,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
             if (cell == null)
             {
-                cell = new Cell (ctx, source_object);
+                cell = new Cell (source_object);
                 active_cells.put (source_object, cell);
                 log.info ("synchronize_cell_view: NEW cell source_object={} cell={}", source_object, cell);
             }
@@ -367,33 +355,21 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     {
         log.info ("insert_new_object: canonical_name={} index={}", canonical_name, index);
 
-        Object new_object = null;
+        ManagedObjectInstance object_instance = Formulas.getObjectFactory ().newInstance (canonical_name, null);
+        ManagedObject object = object_instance.adapt (ManagedObject.class);
 
-        try
-        {
-            // TODO: LOAD OBJECT FROM CONTEXT CLASSLOADER? tctx.newInstance (cn)?
-            Kernel.bindTaskContext (tctx);
-            Class cls = tctx.getClassLoader ().loadClass (canonical_name);
-            new_object = cls.newInstance ();
-        }
-        catch (Exception e)
-        {
-            // TODO: ERROR NOTIFICATION
-            log.error ("insert_new_object: Error creating {}", canonical_name, e);
-        }
-
-        log.info ("*** insert_new_object: new_object={}", new_object);
+        log.info ("*** insert_new_object: object={}", object);
 
         if (index == -1)
         {
-            object_list.add (new_object);
+            object_list.add (object);
         }
         else
         {
-            object_list.add (index, new_object);
+            object_list.add (index, object);
         }
 
-        return (new_object);
+        return (object);
     }
 
     //-----------------------------------------------------------------------------------------------------------------
@@ -566,6 +542,10 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
         createButton (local_toolbar, "save", FontAwesome.SAVE)
             .addStyleName("ui-toolbar-spacer");
+//        createButton (local_toolbar, "test", FontAwesome.MAGIC)
+//            .addStyleName("ui-toolbar-spacer");
+//        createButton (local_toolbar, "test2", FontAwesome.FLASK)
+//                .addStyleName("ui-toolbar-spacer");
 
         CssLayout edition = new CssLayout();
         edition.addStyleName("v-component-group");
@@ -631,7 +611,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         acSidebar.setSizeFull ();
         acSidebar.addStyleName ("borderless");
 
-        sidebar = new ComponentPalette (ctx);
+        sidebar = new ComponentPalette (componentManager.newComponentSet ());
         sidebar.setWidth (100, Unit.PERCENTAGE);
         sidebar.setHeightUndefined ();
         sidebar.setPaletteClickListener (new LayoutEvents.LayoutClickListener ()
@@ -694,7 +674,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
             return (false);
         }
 
-        Path userdir = shiro.getDefaultUserDir ();
+        Path userdir = security.getDefaultUserDir ();
 
         if (userdir == null)
         {
@@ -704,19 +684,18 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
         Path formulae_path = userdir.resolve (formulae_name);
 
-        if (!tctx.save (formulae_path))
+        if (!serializer.serializeObject (formulae_path, object_list))
         {
             return (false);
         }
-
         formulae_changed = false;
         return (true);
     }
 
-    public boolean load_formulae (String formulae_name)
+    public Object load_formulae (String formulae_name)
     {
         // TODO: REGISTER COMPLETE FILE SOURCE INCLUDING SOURCE FILESYSTEM
-        Path userdir = shiro.getDefaultUserDir ();
+        Path userdir = security.getDefaultUserDir ();
 
         if (userdir == null)
         {
@@ -728,7 +707,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
         formulae_changed = false;
 
-        return (tctx.load (formulae_path));
+        return (serializer.deserializeObject (formulae_path));
     }
 
     private Label get_icon (String icon_name)
@@ -774,15 +753,12 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
     private void build_formula_view (String view_mode)
     {
-        // TODO: VERIFICAR SE É MELHOR CHECAR A EXISTÊNCIA DA FORMULA AQUI OU NA CRIAÇÃO DO COMPONENTE
-//////        caption = "Formula: <b>" + task_source + "</b>";   +++++++++++++++
-
         setMargin (new MarginInfo (true, false, true, false));
 
         build_toolbar();
         build_sidebar ();
 
-        insert_here_cell = new Cell (ctx, null);
+        insert_here_cell = new Cell (null);
 
         HorizontalLayout header = new HorizontalLayout ();
         header.setWidth (100, Unit.PERCENTAGE);
@@ -796,7 +772,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
             caption.addStyleName ("formula-header");
             caption.setWidth (100, Unit.PERCENTAGE);
             {
-                caption.addComponent (get_icon ("freepik-saturn.png"));
+                //caption.addComponent (get_icon ("freepik-saturn.png"));
 
                 VerticalLayout title_area = new VerticalLayout ();
                 {
@@ -853,9 +829,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         addComponent (content);
 
         // TODO: RETRIEVE RUNNING TASKS WITHOUT LOAD
-        tctx = Kernel.createTaskContext ();
-        load_formulae (task_source);
-        object_list = tctx.currentTask (CompositeTask.class);
+        object_list = (List)load_formulae (task_source);
 
         log.info ("object_list: {}", object_list);
 

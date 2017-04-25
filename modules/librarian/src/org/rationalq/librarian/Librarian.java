@@ -19,14 +19,12 @@ package org.rationalq.librarian;
 import aQute.bnd.osgi.Builder;
 import aQute.bnd.osgi.Jar;
 import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.Quark;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -35,10 +33,11 @@ import org.apache.felix.ipojo.annotations.Provides;
 @Component (immediate = true)
 @Instantiate
 @Provides
-public class Librarian implements Quark, ComponentInterface
+public class Librarian implements ComponentInterface
 {
     private final transient Logger log = LoggerFactory.getLogger (Librarian.class);
 
+    private String descriptor_id;
     private HashMap<String, Object> properties = new HashMap<>();
     private String jar_file_path;
 
@@ -46,7 +45,7 @@ public class Librarian implements Quark, ComponentInterface
     // https://github.com/bndtools/bnd/blob/master/biz.aQute.bndlib.tests/src/test/BuilderTest.java
     // http://bnd.bndtools.org/chapters/600-developer.html
     private void load_jar (String jar_path)
-        throws Exception
+            throws Exception
     {
         String autobundle_dir = "/home/marcond/Lab/rationalq-dev/stage/cache/automatic-bundles/admin/default";
 
@@ -95,10 +94,16 @@ public class Librarian implements Quark, ComponentInterface
         return (properties.get (name));
     }
 
-    @Override
-    public String getIconTitle ()
+    @Override // ComponentInterface
+    public String getDescriptorId ()
     {
-        return ("Jar Libraries");
+        return (descriptor_id);
+    }
+
+    @Override // ComponentInterface
+    public void setDescriptorId (String descriptor_id)
+    {
+        this.descriptor_id = descriptor_id;
     }
 
     @Override
@@ -119,21 +124,21 @@ public class Librarian implements Quark, ComponentInterface
         return (jar_file_path);
     }
 
-    @Override
-    public void deserializeObject(Map<String, Object> properties)
-    {
-        this.properties.putAll (properties);
-        jar_file_path = ((String)properties.get("Jar-File"));
-    }
-
-    @Override
-    public Map<String, Object> serializeObject ()
-    {
-        log.info("serializeObject()");
-        properties.put ("Jar-File", jar_file_path);
-        properties.put ("/", new byte [200]);
-        return(properties);
-    }
+//    @Override
+//    public void deserializeObject(Map<String, Object> properties)
+//    {
+//        this.properties.putAll (properties);
+//        jar_file_path = ((String)properties.get("Jar-File"));
+//    }
+//
+//    @Override
+//    public Map<String, Object> serializeObject ()
+//    {
+//        log.info("serializeObject()");
+//        properties.put ("Jar-File", jar_file_path);
+//        properties.put ("/", new byte [200]);
+//        return(properties);
+//    }
 }
 
 // EOF

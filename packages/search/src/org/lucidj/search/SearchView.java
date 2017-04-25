@@ -25,7 +25,6 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.uiaccess.UIAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +38,6 @@ import com.vaadin.ui.VerticalLayout;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 // TODO: HANDLE SUBSCRIBER
 import org.apache.felix.ipojo.handlers.event.Subscriber;
@@ -53,9 +51,6 @@ public class SearchView extends VerticalLayout implements ManagedObject, View
     private HtmlRenderer renderer;
     private final DigestRandomGenerator generator = new DigestRandomGenerator (new SHA3Digest (512));
 
-    private String content = "";
-    private String html = "";
-
     public SearchView ()
     {
         List<Extension> extensions = Arrays.asList (TablesExtension.create ());
@@ -67,9 +62,9 @@ public class SearchView extends VerticalLayout implements ManagedObject, View
         log.info ("Search is visible now");
     }
 
-    private void buildView()
+    private void buildView ()
     {
-        setMargin(true);
+        setMargin (true);
         Node document = parser.parse ("## This is *Markdown*!");
         addComponent (new Label (renderer.render (document), ContentMode.HTML));
         addComponent (new Image (null, new ExternalResource ("vaadin://~/search/cool-image.jpg")));
@@ -77,27 +72,28 @@ public class SearchView extends VerticalLayout implements ManagedObject, View
         addComponent (new Label ("No results to show."));
     }
 
+    // TODO: MOVE TO IPOJO COMPONENT OR API
     @Subscriber (name = "searchbox", topics = "search", dataKey = "args", dataType = "java.lang.String")
     private void receive (final String search_event)
     {
-        new UIAccess (this)
+        getUI ().access (new Runnable ()
         {
             @Override
-            public void updateUI()
+            public void run ()
             {
                 log.info ("SEARCH EVENT: {}", search_event);
                 self.addComponent (new Label (search_event));
             }
-        };
+        });
     }
 
     @Override
-    public void enter(ViewChangeListener.ViewChangeEvent event)
+    public void enter (ViewChangeListener.ViewChangeEvent event)
     {
         // TODO Auto-generated method stub
-        if (getComponentCount() == 0)
+        if (getComponentCount () == 0)
         {
-            buildView();
+            buildView ();
         }
     }
 
@@ -111,18 +107,6 @@ public class SearchView extends VerticalLayout implements ManagedObject, View
     public void invalidate (ManagedObjectInstance instance)
     {
         log.info ("invalidate");
-    }
-
-    @Override
-    public Map<String, Object> serializeObject ()
-    {
-        return (null);
-    }
-
-    @Override
-    public boolean deserializeObject (Map<String, Object> properties)
-    {
-        return (false);
     }
 }
 

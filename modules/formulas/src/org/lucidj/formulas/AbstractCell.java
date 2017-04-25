@@ -17,10 +17,11 @@
 package org.lucidj.formulas;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.EditorInterface;
-import org.lucidj.renderer.ObjectRenderer;
+import org.lucidj.api.ObjectRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +46,6 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
 
 public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutClickListener, ComponentState.ChangeListener
 {
@@ -63,7 +62,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
     private Label running;
     private Label component_icon;
 
-    public AbstractCell (BundleContext ctx, Object object)
+    public AbstractCell (Object object)
     {
         log.info("Cell: object = {}", object);
 
@@ -71,8 +70,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         {
             // Register and render the source object
             source_object = object;
-            // TODO: DO WE REALLY NEED ctx HERE??
-            object_renderer = new ObjectRenderer (ctx);
+            object_renderer = Formulas.getRendererFactory ().newRenderer ();
             rendered_object = object_renderer.link (source_object);
         }
         else
@@ -140,13 +138,13 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         if (source_object instanceof ComponentInterface)
         {
             // If it is a valid component, displays its icon on the top left corner of the cell
-            ComponentInterface ci = (ComponentInterface)source_object;
-            Bundle bnd = FrameworkUtil.getBundle (ci.getClass ());
+            ComponentDescriptor descriptor = Formulas.getComponentManager ().getComponentDescriptor (source_object);
 
-            if (bnd != null)
+            if (descriptor != null)
             {
-                icon_url = "/VAADIN/~/" + bnd.getSymbolicName () + "/component-icon.png";
-                icon_title = ci.getIconTitle ();
+                Bundle bnd = descriptor.getComponentBundle ();
+                icon_url = "/VAADIN/~/" + bnd.getSymbolicName () + "/component-icon.png"; // <-- getIcon() instead
+                icon_title = descriptor.getIconTitle ();
             }
         }
 

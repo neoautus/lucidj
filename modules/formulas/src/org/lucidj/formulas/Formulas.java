@@ -16,11 +16,14 @@
 
 package org.lucidj.formulas;
 
+import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
-import org.lucidj.shiro.Shiro;
+import org.lucidj.api.RendererFactory;
+import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.SerializerEngine;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
@@ -41,10 +44,44 @@ public class Formulas implements MenuProvider, ViewProvider
     private final static String NAVID = "formulas";
 
     @Requires
-    private Shiro shiro;
+    private SecurityEngine security;
 
     @Requires
-    private ManagedObjectFactory object_factory;
+    private ManagedObjectFactory objectFactory;
+    private static ManagedObjectFactory static_objectFactory;
+
+    @Requires
+    private SerializerEngine serializer;
+
+    @Requires
+    private ComponentManager componentManager;
+    private static ComponentManager static_componentManager;
+
+    @Requires
+    private RendererFactory rendererFactory;
+    private static RendererFactory static_rendererFactory;
+
+    public Formulas ()
+    {
+        static_objectFactory = objectFactory;
+        static_rendererFactory = rendererFactory;
+        static_componentManager = componentManager;
+    }
+
+    public static ManagedObjectFactory getObjectFactory ()
+    {
+        return (static_objectFactory);
+    }
+
+    public static RendererFactory getRendererFactory ()
+    {
+        return (static_rendererFactory);
+    }
+
+    public static ComponentManager getComponentManager ()
+    {
+        return (static_componentManager);
+    }
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -79,7 +116,8 @@ public class Formulas implements MenuProvider, ViewProvider
     {
         if (NAVID.equals (s))
         {
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new FormulasView (shiro));
+            // TODO: wrapObject() IS ANOTHER USE-CASE (FACTORY-LESS ManagedObject)
+            ManagedObjectInstance view_instance = objectFactory.wrapObject (new FormulasView (security, serializer, componentManager));
             return (view_instance.adapt (View.class));
         }
         return null;

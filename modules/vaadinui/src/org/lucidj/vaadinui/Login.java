@@ -22,9 +22,8 @@ import com.vaadin.shared.Position;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
-import org.apache.shiro.authc.UsernamePasswordToken;
-import org.apache.shiro.subject.Subject;
-import org.lucidj.shiro.Shiro;
+import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.SecuritySubject;
 
 import java.io.Serializable;
 
@@ -35,12 +34,12 @@ public class Login extends VerticalLayout implements Button.ClickListener
     private PasswordField password;
     private Button signin;
     private Button forgotPassword;
-    private Shiro shiro;
+    private SecurityEngine security;
     private LoginListener login_listener;
 
-    Login (Shiro shiro, LoginListener login_listener)
+    Login (SecurityEngine security, LoginListener login_listener)
     {
-        this.shiro = shiro;
+        this.security = security;
         this.login_listener = login_listener;
 
         setSizeFull();
@@ -118,13 +117,12 @@ public class Login extends VerticalLayout implements Button.ClickListener
     @Override
     public void buttonClick (Button.ClickEvent clickEvent)
     {
-        Subject current_user = shiro.getSubject();
-        UsernamePasswordToken token = new UsernamePasswordToken (username.getValue(), password.getValue());
+        SecuritySubject current_user = security.getSubject();
 
         try
         {
             // TODO: http://stackoverflow.com/questions/14516851/shiro-complaining-there-is-no-session-with-id-xxx-with-defaultsecuritymanager
-            current_user.login (token);
+            current_user.login (username.getValue(), password.getValue());
         }
         catch (Exception ignore) {};
 

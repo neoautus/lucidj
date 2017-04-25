@@ -16,13 +16,16 @@
 
 package org.lucidj.formulas;
 
+import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
+import org.lucidj.api.ComponentSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.lucidj.uiaccess.UIAccess;
 
 import com.vaadin.event.LayoutEvents;
 import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.DragAndDropWrapper;
 import com.vaadin.ui.Label;
@@ -30,38 +33,27 @@ import com.vaadin.ui.Label;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
-
-public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutClickListener,
-    ServiceTrackerCustomizer<ComponentInterface, ComponentInterface>
+public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutClickListener, ComponentInterface.ComponentListener
 {
     private final transient static Logger log = LoggerFactory.getLogger (ComponentPalette.class);
     private final ComponentPalette self = this;
     private LayoutEvents.LayoutClickListener layout_click_listener;
 
-    private BundleContext ctx;
-    private ServiceTracker<ComponentInterface, ComponentInterface> tracker;
-    private Map<ServiceReference<ComponentInterface>, ComponentInterface> component_map = new HashMap<> ();
+    private Map<ComponentDescriptor, Component> component_to_vaadin = new HashMap<> ();
+    private ComponentSet component_set;
 
-    public ComponentPalette (BundleContext ctx)
+    public ComponentPalette (ComponentSet component_set)
     {
-        // Track all available components
-        this.ctx = ctx;
-        tracker = new ServiceTracker<> (ctx, ComponentInterface.class, this);
-        tracker.open ();
-
+        this.component_set = component_set;
+        this.component_set.addListener (this);
         addLayoutClickListener (this);
     }
 
-    private boolean add_component_to_palette (Bundle bnd, ComponentInterface component)
+    private boolean add_component_to_palette (ComponentDescriptor component)
     {
-        String canonical_name = component.getClass ().getCanonicalName();
+        String canonical_name = component.getComponentClass ().getName ();
         String icon_title = component.getIconTitle ();
-        String bundle_symbolic_name = bnd.getSymbolicName ();
+        String bundle_symbolic_name = component.getComponentBundle ().getSymbolicName ();
 
         log.info ("*** => ADDING component {} ({})", canonical_name, component);
 
@@ -97,6 +89,9 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
         icon_dd_wrap.setId (canonical_name);
         icon_label.setId (canonical_name);
 
+        // Remember this association
+        component_to_vaadin.put (component, icon_dd_wrap);
+
         new UIAccess (self)
         {
             @Override
@@ -124,34 +119,26 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
         layout_click_listener = listener;
     }
 
-    @Override // ServiceTrackerCustomizer
-    public ComponentInterface addingService (ServiceReference<ComponentInterface> serviceReference)
+    @Override // ComponentInterface.ComponentListener
+    public void addingComponent (ComponentDescriptor component)
     {
-        ComponentInterface component = ctx.getService (serviceReference);
-        component_map.put (serviceReference, component);
-
-        log.info ("addingService Component: {}: {}", serviceReference, component);
-
-        add_component_to_palette (serviceReference.getBundle (), component);
-
-        // We need to return the object in order to track it
-        return (component);
-
+        add_component_to_palette (component);
     }
 
-    @Override // ServiceTrackerCustomizer
-    public void modifiedService (ServiceReference<ComponentInterface> serviceReference, ComponentInterface component)
+    @Override // ComponentInterface.ComponentListener
+    public void removingComponent (final ComponentDescriptor component)
     {
-        log.info ("modifiedService Component: {}: {}", serviceReference, component);
-        component_map.put (serviceReference, component);
-    }
-
-    @Override // ServiceTrackerCustomizer
-    public void removedService (ServiceReference<ComponentInterface> serviceReference, ComponentInterface component)
-    {
-        ctx.ungetService (serviceReference);
-        component_map.remove (serviceReference);
-        log.info ("removedService Component: {}: {}", serviceReference, component);
+        new UIAccess (self)
+        {
+            @Override
+            public void updateUI()
+            {
+                if (component_to_vaadin.containsKey (component))
+                {
+                    self.removeComponent (component_to_vaadin.get (component));
+                }
+            }
+        };
     }
 }
 

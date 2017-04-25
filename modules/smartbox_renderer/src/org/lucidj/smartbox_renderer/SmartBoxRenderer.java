@@ -31,20 +31,17 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 import org.lucidj.api.EditorInterface;
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
-import org.lucidj.renderer.ObjectRenderer;
+import org.lucidj.api.RendererFactory;
+import org.lucidj.smartbox.SmartBox;
 import org.rationalq.aceeditor.AceEditor;
-import org.rationalq.smartbox.SmartBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-
-@org.apache.felix.ipojo.annotations.Component (immediate = true)
-@Instantiate
-@Provides
-public class SmartBoxRenderer extends VerticalLayout implements Renderer, EditorInterface
+public class SmartBoxRenderer extends VerticalLayout implements Renderer, EditorInterface, ManagedObject
 {
     private static final transient Logger log = LoggerFactory.getLogger (SmartBoxRenderer.class);
 
@@ -56,9 +53,18 @@ public class SmartBoxRenderer extends VerticalLayout implements Renderer, Editor
 
     private CssLayout cell_toolbar;
 
+    private RendererFactory rendererFactory;
+    private ObjectRenderer object_renderer;
+
+    public SmartBoxRenderer (RendererFactory rendererFactory)
+    {
+        this.rendererFactory = rendererFactory;
+    }
+
     private void init ()
     {
-        output_layout = new ObjectRenderer ().link (source.getObjectManager ());
+        object_renderer = rendererFactory.newRenderer ();
+        output_layout = object_renderer.link (source.getObjectManager ());
         init_main ();
         init_toolbar ();
     }
@@ -272,6 +278,18 @@ public class SmartBoxRenderer extends VerticalLayout implements Renderer, Editor
     public void objectUpdated ()
     {
         commands.setValue ((String)source.getValue ());
+    }
+
+    @Override // ManagedObject
+    public void validate (ManagedObjectInstance instance)
+    {
+        // Nop
+    }
+
+    @Override // ManagedObject
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        // Nop
     }
 }
 

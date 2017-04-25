@@ -24,9 +24,12 @@ import com.vaadin.ui.VerticalLayout;
 import com.ejt.vaadin.sizereporter.ComponentResizeEvent;
 import com.ejt.vaadin.sizereporter.ComponentResizeListener;
 import com.ejt.vaadin.sizereporter.SizeReporter;
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
+import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
-import org.lucidj.renderer.ObjectRenderer;
+import org.lucidj.api.RendererFactory;
 import org.lucidj.uiaccess.UIAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,16 +38,9 @@ import org.vaadin.jouni.restrain.Restrain;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-
 // LayoutManager is the default renderer for ObjectManager.
 
-@Component (immediate = true)
-@Instantiate
-@Provides
-public class LayoutManager implements Renderer, ObjectManager.ObjectEventListener, ComponentResizeListener
+public class LayoutManager implements Renderer, ObjectManager.ObjectEventListener, ComponentResizeListener, ManagedObject
 {
     private final transient static Logger log = LoggerFactory.getLogger (LayoutManager.class);
 
@@ -55,7 +51,9 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
     private Restrain restrain;
     private int current_height = -1;
 
-    public LayoutManager (AbstractOrderedLayout base_layout)
+    private RendererFactory rendererFactory;
+
+    private LayoutManager (AbstractOrderedLayout base_layout)
     {
         layout = base_layout;
         layout.addStyleName ("renderer-layout");
@@ -86,9 +84,10 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
         log.info ("new LayoutManager () base_layout={}", base_layout);
     }
 
-    public LayoutManager ()
+    public LayoutManager (RendererFactory rendererFactory)
     {
         this (new VerticalLayout ());
+        this.rendererFactory = rendererFactory;
     }
 
     private String get_object_hash (Object obj)
@@ -130,7 +129,7 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
     @Override // ObjectEventListener
     public Object addingObject (Object obj, int index)
     {
-        ObjectRenderer or = new ObjectRenderer ();
+        ObjectRenderer or = rendererFactory.newRenderer ();
         // TODO: VAADIN SESSION HANDLING
         layout.addComponent (or.link (obj), index);
         active_renderers.put (get_object_hash (obj), or);
@@ -209,6 +208,18 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
     {
         log.debug ("<<RESIZE>> width={} height={}", componentResizeEvent.getWidth(), componentResizeEvent.getHeight());
         current_height = componentResizeEvent.getHeight();
+    }
+
+    @Override
+    public void validate (ManagedObjectInstance instance)
+    {
+        // Nop
+    }
+
+    @Override
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        // Nop
     }
 }
 

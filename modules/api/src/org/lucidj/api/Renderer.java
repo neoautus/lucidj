@@ -18,11 +18,9 @@ package org.lucidj.api;
 
 import com.vaadin.ui.Component;
 
-import java.util.Observer;
-
 public interface Renderer
 {
-    boolean compatibleObject (Object obj_to_check);
+    boolean compatibleObject (Object object);
     void objectLinked (Object obj);
     void objectUnlinked ();
     Component renderingComponent ();
@@ -30,8 +28,8 @@ public interface Renderer
 
     interface Observable
     {
-        void addObserver (Observer observer);
-        void deleteObserver (Observer observer);
+        void addObserver (EventHelper.Subscriber observer);
+        void deleteObserver (EventHelper.Subscriber observer);
     }
 }
 

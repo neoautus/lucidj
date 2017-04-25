@@ -18,10 +18,12 @@ package org.lucidj.ui.gauss;
 
 import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.NavigatorManager;
+import org.lucidj.api.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,21 +41,23 @@ public class Gauss implements ManagedObjectProvider
 {
     private final static transient Logger log = LoggerFactory.getLogger (Gauss.class);
 
-    private static final String[] provided_classes = new String[]
-    {
-        DesktopInterface.class.getName ()
-    };
+    @Requires
+    private ManagedObjectFactory objectFactory;
 
     @Requires
-    private MenuManager menu_manager;
+    private MenuManager menuManager;
 
     @Requires
-    private NavigatorManager nav_manager;
+    private NavigatorManager navigatorManager;
+
+    @Requires
+    private RendererFactory rendererFactory;
 
     @Validate
     private boolean validate ()
     {
         log.info ("Gauss UI Provider started");
+        objectFactory.register (DesktopInterface.class, this, null);
         return (true);
     }
 
@@ -64,17 +68,11 @@ public class Gauss implements ManagedObjectProvider
     }
 
     @Override
-    public String[] getProvidedClasses ()
-    {
-        return (provided_classes);
-    }
-
-    @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        instance.putObject (MenuManager.class, menu_manager);
-        instance.putObject (NavigatorManager.class, nav_manager);
-
+        instance.putObject (MenuManager.class, menuManager);
+        instance.putObject (NavigatorManager.class, navigatorManager);
+        instance.putObject (RendererFactory.class, rendererFactory);
         return (new GaussUI ());
     }
 }

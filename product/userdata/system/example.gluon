@@ -1,0 +1,59 @@
+X-Serialization-Engine: org.lucidj.gluon.GluonSerializer; version="1.0"
+X-Object: org.lucidj.runtime.CompositeTask
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.smartbox.SmartBox
+output: org.lucidj.console.Console@1, org.lucidj.vaadin.Vaadin@2
+View-Mode: "default"
+Long-Value: 31415926535898L
+
+for (int i = 0; i < 5; i++)
+{
+    Console.println ("Hello world! i=" + i);
+    Console.flush ();
+    Thread.sleep (500);
+}
+Vaadin.addComponent (new Label ("Hello world!"));
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.smartbox.SmartBox
+output: org.lucidj.vaadin.Vaadin@3
+
+new Image (null, new ExternalResource ("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"));
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.console.Console@1; embedded
+
+2017-03-06 19:20:22.626 | OUT | Hello world! i=0\n
+2017-03-06 19:20:23.140 | OUT | Hello world! i=1\n
+2017-03-06 19:20:23.641 | OUT | Hello world! i=2\n
+2017-03-06 19:20:24.142 | OUT | Hello world! i=3\n
+2017-03-06 19:20:24.642 | OUT | Hello world! i=4\n
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.vaadin.Vaadin@2; embedded
+
+<!doctype html>
+<html>
+    <head>
+        <meta name="package-mapping" content="org_lucidj_vaadin:org.lucidj.vaadin">
+    </head>
+    <body>
+        <org_lucidj_vaadin-vaadin>
+            <vaadin-label plain-text>
+                Hello world!
+            </vaadin-label>
+        </org_lucidj_vaadin-vaadin>
+    </body>
+</html>
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.vaadin.Vaadin@3; embedded
+
+<!doctype html>
+<html>
+    <head></head>
+    <body>
+        <vaadin-image source="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"></vaadin-image>
+    </body>
+</html>
+-------THINK_BIG_BE_BOLD-------//

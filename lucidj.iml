@@ -45,6 +45,15 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/navigatormanager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/managedobject/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/quarkextender/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/gluon/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/mappingclassmanager/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/registry/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/palette/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/eventhelper/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/FelixCodeEngine/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/nashorn/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/packages/quercus/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/KarafBinding/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/stage" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />

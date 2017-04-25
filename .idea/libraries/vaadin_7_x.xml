@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="vaadin-7.x">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/cache/lib/vaadin/jar/vaadin-server-7.7.6.jar!/" />
-      <root url="jar://$PROJECT_DIR$/cache/lib/vaadin/jar/vaadin-shared-7.7.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/vaadin/jar/vaadin-server-7.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/vaadin/jar/vaadin-shared-7.7.7.jar!/" />
+      <root url="jar://$PROJECT_DIR$/cache/lib/wrapped-jars/gwt-user-2.7.0.vaadin4.jar!/" />
     </CLASSES>
     <JAVADOC />
-    <SOURCES>
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>

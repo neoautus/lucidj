@@ -16,18 +16,17 @@
 
 package org.lucidj.menumanager;
 
+import org.lucidj.api.EventHelper;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.MenuProvider;
 import org.lucidj.api.Renderer;
-import org.lucidj.renderer.SimpleObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Observer;
 import java.util.TreeSet;
 
 public class DefaultMenuInstance implements MenuInstance, Renderer.Observable
@@ -35,11 +34,16 @@ public class DefaultMenuInstance implements MenuInstance, Renderer.Observable
     private final static transient Logger log = LoggerFactory.getLogger (DefaultMenuInstance.class);
 
     private TreeSet<MenuEntry> menu_entry_list = new TreeSet<>();
-    private SimpleObservable observers = new SimpleObservable ();
+    private EventHelper event_helper;
     private MenuManager menu_manager;
     private volatile boolean menu_changed;
     private Map<String, Object> properties = new HashMap<> ();
     private EventListener event_listener;
+
+    public DefaultMenuInstance (EventHelper event_helper)
+    {
+        this.event_helper = event_helper;
+    }
 
     @Override // MenuInstance
     public void setMenuManager (MenuManager menu_manager)
@@ -90,7 +94,7 @@ public class DefaultMenuInstance implements MenuInstance, Renderer.Observable
     public void menuChanged (MenuProvider menu_provider)
     {
         menu_changed = true;
-        observers.notifyNow ();
+        event_helper.publish (this);
     }
 
     @Override // MenuInstance
@@ -109,15 +113,15 @@ public class DefaultMenuInstance implements MenuInstance, Renderer.Observable
     }
 
     @Override // Renderer.Observable
-    public void addObserver (Observer observer)
+    public void addObserver (EventHelper.Subscriber observer)
     {
-        observers.addObserver (observer);
+        event_helper.subscribe (observer);
     }
 
     @Override // Renderer.Observable
-    public void deleteObserver (Observer observer)
+    public void deleteObserver (EventHelper.Subscriber observer)
     {
-        observers.deleteObserver (observer);
+        event_helper.unsubscribe (observer);
     }
 }
 

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// ECAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 public class DefaultObjectManager implements ObjectManager
 {
     private final transient static Logger log = LoggerFactory.getLogger (DefaultObjectManager.class);

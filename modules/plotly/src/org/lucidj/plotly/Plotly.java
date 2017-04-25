@@ -24,19 +24,20 @@ import java.util.Observer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.lucidj.api.Quark;
+import org.lucidj.api.EventHelper;
 import org.lucidj.api.Renderer;
-import org.lucidj.renderer.SimpleObservable;
 
 /* Plotly, what a neat library!
  * Be sure to visit https://plot.ly/ to know more.
  */
 
-public class Plotly implements Quark, Renderer.Observable
+public class Plotly implements Renderer.Observable
 {
     private transient Gson gson = new Gson ();
     private transient Gson pretty = new GsonBuilder ().setPrettyPrinting().create();
-    private SimpleObservable observers = new SimpleObservable ();
+
+    private static EventHelper.Factory eventHelperFactory;
+    private EventHelper event_helper;
 
     private HashMap properties = new HashMap ();
     private JsonMap layout = new JsonMap ();
@@ -73,13 +74,16 @@ public class Plotly implements Quark, Renderer.Observable
     public Integer orientation;
     public Boolean hidesources;
 
-    public Plotly ()
+    // TODO: BETTER INTERFACE
+    public Plotly (EventHelper.Factory eventHelperFactory)
     {
+        this.eventHelperFactory = eventHelperFactory;
+        event_helper = eventHelperFactory.newInstance ();
     }
 
     public void update ()
     {
-        observers.notifyNow ();
+        event_helper.publish (this);
     }
 
     public Plotly title (String str)
@@ -357,7 +361,7 @@ public class Plotly implements Quark, Renderer.Observable
 
     public static Plotly newPlot ()
     {
-        return (new Plotly ());
+        return (new Plotly (eventHelperFactory));
     }
 
     public static Plotly newPlot (Trace t0, Trace t1, Trace t2, Trace t3, Trace t4,
@@ -487,51 +491,52 @@ public class Plotly implements Quark, Renderer.Observable
     }
 
     @Override
-    public void addObserver (Observer observer)
+    public void addObserver (EventHelper.Subscriber observer)
     {
-        observers.addObserver (observer);
+        event_helper.subscribe (observer);
     }
 
     @Override
-    public void deleteObserver (Observer observer)
+    public void deleteObserver (EventHelper.Subscriber observer)
     {
-        observers.deleteObserver (observer);
+        event_helper.unsubscribe (observer);
     }
 
-    @Override
-    public Map<String, Object> serializeObject ()
-    {
-        for (int i = 0; i < trace_data.size (); i++)
-        {
-            properties.put ("data" + i, trace_data.get (i));
-        }
-
-        properties.put ("/", layout.toPrettyJson ());
-        return (properties);
-    }
-
-    @Override
-    public void deserializeObject (Map<String, Object> properties)
-    {
-        trace_data.clear ();
-        map_data.clear ();
-
-        this.properties.putAll (properties);
-
-        Object obj;
-        int i = 0;
-
-        while ((obj = properties.get ("data" + i)) != null)
-        {
-            if (obj instanceof Trace)
-            {
-                addTrace ((Trace)obj);
-            }
-            i++;
-        }
-
-        layout.fromJson ((String)properties.get ("/"));
-    }
+    // TODO: GLUON
+//    @Override
+//    public Map<String, Object> serializeObject ()
+//    {
+//        for (int i = 0; i < trace_data.size (); i++)
+//        {
+//            properties.put ("data" + i, trace_data.get (i));
+//        }
+//
+//        properties.put ("/", layout.toPrettyJson ());
+//        return (properties);
+//    }
+//
+//    @Override
+//    public void deserializeObject (Map<String, Object> properties)
+//    {
+//        trace_data.clear ();
+//        map_data.clear ();
+//
+//        this.properties.putAll (properties);
+//
+//        Object obj;
+//        int i = 0;
+//
+//        while ((obj = properties.get ("data" + i)) != null)
+//        {
+//            if (obj instanceof Trace)
+//            {
+//                addTrace ((Trace)obj);
+//            }
+//            i++;
+//        }
+//
+//        layout.fromJson ((String)properties.get ("/"));
+//    }
 }
 
 // EOF

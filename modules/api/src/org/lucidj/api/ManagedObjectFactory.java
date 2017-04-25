@@ -20,6 +20,8 @@ import java.util.Map;
 
 public interface ManagedObjectFactory
 {
+    ManagedObjectInstance register (String clazz, ManagedObjectProvider provider, Map<String, Object> properties);
+    ManagedObjectInstance register (Class clazz, ManagedObjectProvider provider, Map<String, Object> properties);
     ManagedObjectInstance[] getManagedObjects (String clazz, String filter);
     ManagedObjectInstance[] getManagedObjects (Class clazz, String filter);
     ManagedObjectInstance wrapObject (ManagedObject managed_object);

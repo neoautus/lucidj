@@ -16,6 +16,8 @@
 
 package org.lucidj.renderer.treemenu;
 
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.Renderer;
@@ -33,13 +35,7 @@ import com.vaadin.ui.Tree;
 
 import java.util.TreeSet;
 
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-
-@org.apache.felix.ipojo.annotations.Component (immediate = true)
-@Instantiate
-@Provides
-public class TreeMenuRenderer implements Renderer, ItemClickEvent.ItemClickListener
+public class TreeMenuRenderer implements ManagedObject, Renderer, ItemClickEvent.ItemClickListener
 {
     private final static transient Logger log = LoggerFactory.getLogger (TreeMenuRenderer.class);
 
@@ -137,37 +133,37 @@ public class TreeMenuRenderer implements Renderer, ItemClickEvent.ItemClickListe
         };
     }
 
-    @Override
+    @Override // Renderer
     public boolean compatibleObject (Object obj_to_check)
     {
         return (obj_to_check instanceof MenuInstance);
     }
 
-    @Override
+    @Override // Renderer
     public void objectLinked (Object obj)
     {
         menu_instance = (MenuInstance)obj;
     }
 
-    @Override
+    @Override // Renderer
     public void objectUnlinked ()
     {
         menu_instance = null;
     }
 
-    @Override
+    @Override // Renderer
     public Component renderingComponent ()
     {
         return (tree_menu);
     }
 
-    @Override
+    @Override // Renderer
     public void objectUpdated ()
     {
         render_tree_menu ();
     }
 
-    @Override
+    @Override // ItemClickEvent.ItemClickListener
     public void itemClick (ItemClickEvent itemClickEvent)
     {
         Object item_id = itemClickEvent.getItemId ();
@@ -178,6 +174,18 @@ public class TreeMenuRenderer implements Renderer, ItemClickEvent.ItemClickListe
         {
             menu_instance.fireEventEntrySelected (entry);
         }
+    }
+
+    @Override // ManagedObject
+    public void validate (ManagedObjectInstance instance)
+    {
+        // Nop
+    }
+
+    @Override // ManagedObject
+    public void invalidate (ManagedObjectInstance instance)
+    {
+        // Nop
     }
 }
 

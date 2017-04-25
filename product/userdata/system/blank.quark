@@ -1,8 +1,0 @@
-#!/usr/bin/quark-handler
-Q-Quark-Version: "1.0.0"
-Q-Object: "org.lucidj.runtime.CompositeTask"
-Q-Content-Type: "multipart/mixed"; boundary="-------THINK_BIG_BE_BOLD-------"
-Formulae-Version: "1.0.0"
-
--------THINK_BIG_BE_BOLD---------
-

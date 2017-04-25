@@ -772,7 +772,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
             caption.addStyleName ("formula-header");
             caption.setWidth (100, Unit.PERCENTAGE);
             {
-                caption.addComponent (get_icon ("freepik-saturn.png"));
+                //caption.addComponent (get_icon ("freepik-saturn.png"));
 
                 VerticalLayout title_area = new VerticalLayout ();
                 {

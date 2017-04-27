@@ -30,7 +30,6 @@ import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererFactory;
-import org.lucidj.uiaccess.UIAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.jouni.restrain.Restrain;
@@ -100,30 +99,16 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
     {
         if (current_height != -1)
         {
-            new UIAccess (layout)
-            {
-                @Override
-                public void updateUI()
-                {
-                    log.info ("<<RESTRAIN>> height={}", current_height);
-                    restrain.setMinHeight (current_height + "px");
-                }
-            };
+            log.info ("<<RESTRAIN>> height={}", current_height);
+            restrain.setMinHeight (current_height + "px");
         }
     }
 
     @Override // ObjectEventListener
     public void release ()
     {
-        new UIAccess (layout)
-        {
-            @Override
-            public void updateUI()
-            {
-                log.info ("<<RELEASE>> height={}", current_height);
-                restrain.setMinHeight ("auto");
-            }
-        };
+        log.info ("<<RELEASE>> height={}", current_height);
+        restrain.setMinHeight ("auto");
     }
 
     @Override // ObjectEventListener

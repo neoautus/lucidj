@@ -21,7 +21,6 @@ import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.lucidj.uiaccess.UIAccess;
 
 import com.vaadin.event.LayoutEvents;
 import com.vaadin.shared.ui.label.ContentMode;
@@ -92,16 +91,8 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
         // Remember this association
         component_to_vaadin.put (component, icon_dd_wrap);
 
-        new UIAccess (self)
-        {
-            @Override
-            public void updateUI()
-            {
-                // Add the wrapper, not the component, to the layout
-                self.addComponent (icon_dd_wrap);
-            }
-        };
-
+        // Add the wrapper, not the component, to the layout
+        self.addComponent (icon_dd_wrap);
         return (true);
     }
 
@@ -128,17 +119,10 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
     @Override // ComponentInterface.ComponentListener
     public void removingComponent (final ComponentDescriptor component)
     {
-        new UIAccess (self)
+        if (component_to_vaadin.containsKey (component))
         {
-            @Override
-            public void updateUI()
-            {
-                if (component_to_vaadin.containsKey (component))
-                {
-                    self.removeComponent (component_to_vaadin.get (component));
-                }
-            }
-        };
+            self.removeComponent (component_to_vaadin.get (component));
+        }
     }
 }
 

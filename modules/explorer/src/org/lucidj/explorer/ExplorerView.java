@@ -21,7 +21,6 @@ import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.SecurityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.lucidj.uiaccess.UIAccess;
 
 import com.vaadin.data.util.FilesystemContainer;
 import com.vaadin.event.ItemClickEvent;
@@ -210,16 +209,9 @@ public class ExplorerView extends VerticalLayout implements ManagedObject, View,
 
                         if (filesystem_changed)
                         {
-                            new UIAccess (self)
-                            {
-                                @Override
-                                public void updateUI()
-                                {
-                                    // Refresh treetable contents
-                                    refresh_treetable ();
-                                    filesystem_changed = false;
-                                }
-                            };
+                            // Refresh treetable contents
+                            refresh_treetable ();
+                            filesystem_changed = false;
                         }
 
                         try

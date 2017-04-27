@@ -21,6 +21,7 @@ import javassist.ClassClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
+import javassist.LoaderClassPath;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import com.vaadin.server.VaadinSession;
 
 import org.osgi.framework.hooks.weaving.WeavingHook;
 import org.osgi.framework.hooks.weaving.WovenClass;
+import org.osgi.framework.wiring.BundleWiring;
 
 public class VaadinWeaving implements WeavingHook
 {
@@ -65,19 +67,18 @@ public class VaadinWeaving implements WeavingHook
 
         // TODO: MAKE THIS CONFIGURABLE, INCLUDING METHOD SETS
         // TODO: ADD SANITY CHECKS, LIKE "thou shall not VerticalLayout.addComponent(null);"
-        if (class_name.startsWith ("com.vaadin.ui."))
+        if (class_name.startsWith ("com.vaadin.ui.")
+            || class_name.equals ("org.vaadin.jouni.restrain.Restrain"))
         {
-            if (class_name.equals (VaadinSession.class.getName ()))
-            {
-                // NEVER weave VaadinSession
-                return;
-            }
-
             log.info ("Weaving class {}", class_name);
 
             // This bundle classloader sees Vaadin et al.
             ClassPool cp = new ClassPool (true);
             cp.insertClassPath (new ClassClassPath (VaadinSession.class));
+
+            // Add the source classloader for the woven class
+            BundleWiring bwg = wc.getBundleWiring ();
+            cp.insertClassPath (new LoaderClassPath (bwg.getClassLoader ()));
 
             try
             {

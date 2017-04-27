@@ -20,7 +20,6 @@ import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.lucidj.uiaccess.UIAccess;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.util.IndexedContainer;
@@ -87,14 +86,7 @@ public class TopView extends VerticalLayout implements ManagedObject, View
             @Override
             public void run ()
             {
-                new UIAccess (grid)
-                {
-                    @Override
-                    public void updateUI()
-                    {
-                        updateView ();
-                    }
-                };
+                updateView ();
             }
         };
 

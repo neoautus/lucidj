@@ -21,7 +21,6 @@ import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.Renderer;
-import org.lucidj.uiaccess.UIAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,38 +98,29 @@ public class TreeMenuRenderer implements ManagedObject, Renderer, ItemClickEvent
             return;
         }
 
-        log.debug ("render_tree_menu: will render");
+        log.debug ("render_tree_menu: updateUI rendering start");
 
-        new UIAccess (tree_menu)
+        // Get the logical menu representation...
+        TreeSet<MenuEntry> menu_entries = menu_instance.getMenuEntries ();
+
+        // ...and start building the visible UI menu
+        tree_menu.removeAllItems ();
+
+        // TODO: EXPAND THIS TO BUILD MENU SUBITEMS
+        for (MenuEntry entry: menu_entries)
         {
-            @Override
-            public void updateUI ()
-            {
-                log.debug ("render_tree_menu: updateUI rendering start");
+            Object item_id = tree_menu.addItem ();
 
-                // Get the logical menu representation...
-                TreeSet<MenuEntry> menu_entries = menu_instance.getMenuEntries ();
+            tree_menu.getContainerProperty (item_id, CP_ENTRY).setValue (entry);
+            tree_menu.getContainerProperty (item_id, CP_CAPTION).setValue (entry.getTitle ());
+            tree_menu.getContainerProperty (item_id, CP_NAVID).setValue (entry.getNavId ());
+            tree_menu.getContainerProperty (item_id, CP_ICON).setValue (entry.getIcon ());
 
-                // ...and start building the visible UI menu
-                tree_menu.removeAllItems ();
+            // By default no one has children
+            tree_menu.setChildrenAllowed (item_id, false);
+        }
 
-                // TODO: EXPAND THIS TO BUILD MENU SUBITEMS
-                for (MenuEntry entry: menu_entries)
-                {
-                    Object item_id = tree_menu.addItem ();
-
-                    tree_menu.getContainerProperty (item_id, CP_ENTRY).setValue (entry);
-                    tree_menu.getContainerProperty (item_id, CP_CAPTION).setValue (entry.getTitle ());
-                    tree_menu.getContainerProperty (item_id, CP_NAVID).setValue (entry.getNavId ());
-                    tree_menu.getContainerProperty (item_id, CP_ICON).setValue (entry.getIcon ());
-
-                    // By default no one has children
-                    tree_menu.setChildrenAllowed (item_id, false);
-                }
-
-                log.debug ("render_tree_menu: updateUI rendering finished");
-            }
-        };
+        log.debug ("render_tree_menu: updateUI rendering finished");
     }
 
     @Override // Renderer

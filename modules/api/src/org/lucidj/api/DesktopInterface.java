@@ -23,6 +23,7 @@ public interface DesktopInterface
 {
     void init (UI ui);
     Layout getMainLayout ();
+    Layout getSecurityLayout ();
     void attach ();
     void detach ();
 }

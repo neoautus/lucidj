@@ -30,6 +30,7 @@ import org.lucidj.vaadinui.FancyEmptyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.event.LayoutEvents;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
@@ -40,6 +41,7 @@ import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Accordion;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
@@ -82,6 +84,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     private HorizontalLayout hToolbarArea = new HorizontalLayout();
     private CssLayout hToolbarPlaceholder = new CssLayout ();
     private CssLayout emptySidebar = new FancyEmptyView ("Sidebar empty");
+    private HorizontalLayout hSecurityArea = new HorizontalLayout ();
     private Button toggle_sidebar;
     private Accordion acMenu = new Accordion ();
     private int default_sidebar_width_pixels = 250;
@@ -277,6 +280,31 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
     }
 
+    private void initSecurityArea ()
+    {
+        HorizontalLayout click_catcher = new HorizontalLayout ();
+        {
+            click_catcher.setDefaultComponentAlignment (Alignment.MIDDLE_LEFT);
+
+            String userinfo_html =
+                "<span style='vertical-align:middle;'>LucidJ Admin</span>" +
+                "&nbsp;&nbsp;" +
+                "<img style='vertical-align:middle;' src='/VAADIN/~/vaadinui_libraries/unidentified-user-32x32.png'>";
+            Label userinfo = new Label (userinfo_html, ContentMode.HTML);
+            click_catcher.addComponent (userinfo);
+
+            click_catcher.addLayoutClickListener (new LayoutEvents.LayoutClickListener ()
+            {
+                @Override
+                public void layoutClick (LayoutEvents.LayoutClickEvent layoutClickEvent)
+                {
+                    navigator.navigateTo ("account_security");
+                }
+            });
+        }
+        hSecurityArea.addComponent (click_catcher);
+    }
+
     protected void initAllLayouts ()
     {
         initAppLayout ();
@@ -402,6 +430,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     public void init (UI ui)
     {
         initAllLayouts ();
+        initSecurityArea ();
         initNavigator (ui);
     }
 
@@ -409,6 +438,12 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     public Layout getMainLayout ()
     {
         return (vAppLayout);
+    }
+
+    @Override
+    public Layout getSecurityLayout ()
+    {
+        return (hSecurityArea);
     }
 
     @Override // DesktopInterface

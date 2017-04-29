@@ -119,6 +119,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
     private Component build_insert_here ()
     {
         Label message = new Label ("Drag or double-click any component to add one or more here");
+        // TODO: FIX WRONG TEXT-WRAPPING WHEN CELL TOO NARROW
         message.addStyleName ("formula-insert-here");
         message.setHeight (64, Sizeable.Unit.PIXELS);
         message.setWidth (100, Sizeable.Unit.PERCENTAGE);

@@ -23,25 +23,20 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.data.Property;
-import com.vaadin.server.ExternalResource;
 import com.vaadin.server.FontAwesome;
-import com.vaadin.server.Page;
 import com.vaadin.server.Responsive;
 import com.vaadin.server.Sizeable;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServletRequest;
-import com.vaadin.server.VaadinSession;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
-import com.vaadin.ui.ConnectorTracker;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
-import com.vaadin.ui.MenuBar;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -76,12 +71,12 @@ public class BaseVaadinUI extends UI
     private final static transient Logger log = LoggerFactory.getLogger (BaseVaadinUI.class);
 
     private DesktopInterface desktop;
-    private ConnectorTracker tracker;
     private SmartPush smart_push;
 
-    private VerticalLayout system_toolbar = new VerticalLayout ();
-    private HorizontalLayout hSearchArea = new HorizontalLayout ();
-    private Layout empty_desktop = new FancyEmptyView ("Empty desktop");
+    private VerticalLayout desktop_canvas = new VerticalLayout ();
+    private HorizontalLayout ui_header;
+    private Layout empty_desktop = new CssLayout ();
+    private Layout user_component;
     private int default_sidebar_width_pixels = 250;
 
     @Requires
@@ -97,108 +92,103 @@ public class BaseVaadinUI extends UI
     // LAYOUTS
     //=========================================================================================
 
-    private MenuBar userSettingsMenu ()
-    {
-        // User picture + user menu
-        final MenuBar settings = new MenuBar();
-        //settings.addStyleName("user-menu");
-
-        final MenuBar.MenuItem settingsItem = settings.addItem
-        (
-            "Willie Coyote",
-            new ExternalResource ("vaadin://~/vaadinui_libraries/willie-coyote-32.png"),
-            null
-        );
-        settingsItem.addItem("Edit Profile", null, new MenuBar.Command()
-        {
-            @Override
-            public void menuSelected (MenuBar.MenuItem selectedItem)
-            {
-                log.info ("Edit Profile");
-            }
-        });
-        settingsItem.addItem("Preferences", null, new MenuBar.Command()
-        {
-            @Override
-            public void menuSelected (MenuBar.MenuItem selectedItem)
-            {
-                log.info ("Preferences");
-            }
-        });
-        settingsItem.addSeparator();
-        settingsItem.addItem("Sign Out", FontAwesome.SIGN_OUT, new MenuBar.Command()
-        {
-            @Override
-            public void menuSelected(MenuBar.MenuItem selectedItem)
-            {
-                VaadinSession.getCurrent().getSession().invalidate();
-                Page.getCurrent().reload();
-            }
-        });
-
-        return (settings);
-    }
-
     private void initSystemToolbar ()
     {
-        system_toolbar.setSizeFull();
-        system_toolbar.setWidth("100%");
+        desktop_canvas.setSizeFull();
+        desktop_canvas.setWidth("100%");
 
+        ui_header = new HorizontalLayout ();
         {
-            hSearchArea.setStyleName ("ui-header-area");
-            hSearchArea.setWidth (100, Sizeable.Unit.PERCENTAGE);
-            hSearchArea.setHeightUndefined ();
-            hSearchArea.setDefaultComponentAlignment (Alignment.MIDDLE_LEFT);
+            ui_header.setStyleName ("ui-header-area");
+            ui_header.setWidth (100, Sizeable.Unit.PERCENTAGE);
+            ui_header.setHeightUndefined ();
+            ui_header.setDefaultComponentAlignment (Alignment.MIDDLE_LEFT);
 
-            Label title = new Label("&nbsp;", ContentMode.HTML);
-            title.addStyleName ("ui-header-logo");
-            title.setWidth (default_sidebar_width_pixels, Sizeable.Unit.PIXELS);
-            hSearchArea.addComponent (title);
-
-            CssLayout group = new CssLayout();
-            group.addStyleName ("v-component-group");
-            group.addStyleName ("ui-header-search");
-            final ComboBox combo = new ComboBox();
-            combo.setInputPrompt("Search or paste URL...");
-            //combo.setContainerDataSource(StringGenerator.generateContainer(200, false));
-            combo.setNullSelectionAllowed (true);
-            combo.setTextInputAllowed (true);
-            combo.setNewItemsAllowed (true);
-            //combo.select(combo.getItemIds().iterator().next());
-            //combo.setItemCaptionPropertyId(StringGenerator.CAPTION_PROPERTY);
-            //combo.setItemIconPropertyId(StringGenerator.ICON_PROPERTY);
-            combo.setWidth("480px");
-            group.addComponent(combo);
-            Button search_button = new Button ();
-            search_button.setIcon (FontAwesome.SEARCH);
-            group.addComponent(search_button);
-            hSearchArea.addComponent(group);
-            hSearchArea.setExpandRatio (group, 1.0f);
-
-            combo.addValueChangeListener (new Property.ValueChangeListener ()
+            Label logo = new Label("&nbsp;", ContentMode.HTML);
             {
-                @Override
-                public void valueChange (Property.ValueChangeEvent valueChangeEvent)
+                logo.addStyleName ("ui-header-logo");
+                logo.setWidth (default_sidebar_width_pixels, Sizeable.Unit.PIXELS);
+            }
+            ui_header.addComponent (logo);
+
+            HorizontalLayout header_components = new HorizontalLayout ();
+            {
+                header_components.setWidth (100, com.vaadin.server.Sizeable.Unit.PERCENTAGE);
+                header_components.setDefaultComponentAlignment (Alignment.MIDDLE_LEFT);
+                header_components.setSpacing (true);
+
+                // Search component
+                CssLayout search_component = new CssLayout();
                 {
-                    String search_args = (String)combo.getValue ();
-
-                    if (search_args != null)
+                    search_component.setWidth (100, com.vaadin.server.Sizeable.Unit.PERCENTAGE);
+                    search_component.setWidthUndefined ();
+                    search_component.addStyleName ("v-component-group");
+                    search_component.addStyleName ("ui-header-search");
+                    final ComboBox search_text = new ComboBox ();
                     {
-                        log.info ("SEARCH: {}", search_args);
-                        search.sendData (combo.getValue ());
-                    }
-                }
-            });
+                        search_text.setInputPrompt ("Search or paste URL...");
+                        //combo.setContainerDataSource(StringGenerator.generateContainer(200, false));
+                        search_text.setNullSelectionAllowed (true);
+                        search_text.setTextInputAllowed (true);
+                        search_text.setNewItemsAllowed (true);
+                        //combo.select(combo.getItemIds().iterator().next());
+                        //combo.setItemCaptionPropertyId(StringGenerator.CAPTION_PROPERTY);
+                        //combo.setItemIconPropertyId(StringGenerator.ICON_PROPERTY);
 
-            MenuBar user = userSettingsMenu ();
-            user.addStyleName ("ui-header-user");
-            hSearchArea.addComponent (user);
-            system_toolbar.addComponent (hSearchArea);
+                        // TODO: SOMEDAY DISCOVER HOW TO EXPAND THIS GROUPED COMPONENT, AND THE CURE FOR CANCER
+                        search_text.setWidth("480px");
+                    }
+                    search_component.addComponent (search_text);
+
+                    Button search_button = new Button ();
+                    {
+                        search_button.setIcon (FontAwesome.SEARCH);
+                    }
+                    search_component.addComponent (search_button);
+
+                    search_text.addValueChangeListener (new Property.ValueChangeListener ()
+                    {
+                        @Override
+                        public void valueChange (Property.ValueChangeEvent valueChangeEvent)
+                        {
+                            String search_args = (String)search_text.getValue ();
+
+                            if (search_args != null)
+                            {
+                                log.info ("SEARCH: {}", search_args);
+                                search.sendData (search_text.getValue ());
+                            }
+                        }
+                    });
+                }
+                header_components.addComponent (search_component);
+
+                // User component
+                user_component = new HorizontalLayout ();
+                {
+                    user_component.setStyleName ("ui-header-user");
+                    user_component.setWidthUndefined ();
+                }
+                header_components.addComponent (user_component);
+
+                // I swear someday I'll learn CSS, AFTER implementing my own distributed
+                // operating system with virtual reality interface and a machine learning kernel,
+                // as a preparation for the task.
+                Label spacer = new Label ();
+                spacer.setWidthUndefined ();
+                header_components.addComponent (spacer);
+
+                // Search expands
+                header_components.setExpandRatio (search_component, 1.0f);
+            }
+            ui_header.addComponent (header_components);
+            ui_header.setExpandRatio (header_components, 1.0f);
         }
 
-        system_toolbar.addComponent (empty_desktop);
-        system_toolbar.setExpandRatio (empty_desktop, 1.0f);
-        setContent (system_toolbar);
+        desktop_canvas.addComponent (ui_header);
+        desktop_canvas.addComponent (empty_desktop);
+        desktop_canvas.setExpandRatio (empty_desktop, 1.0f);
+        setContent (desktop_canvas);
     }
 
     //=========================================================================================
@@ -221,7 +211,13 @@ public class BaseVaadinUI extends UI
             if (desktop != null)
             {
                 desktop.init (this);
-                system_toolbar.replaceComponent (empty_desktop, desktop.getMainLayout ());
+
+                // Set the main desktop area
+                desktop_canvas.replaceComponent (empty_desktop, desktop.getMainLayout ());
+
+                // Clear old security layout and set/add the newer one
+                user_component.removeAllComponents ();
+                user_component.addComponent (desktop.getSecurityLayout ());
             }
         }
     }

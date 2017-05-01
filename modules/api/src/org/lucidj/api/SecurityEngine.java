@@ -24,7 +24,7 @@ public interface SecurityEngine
     SecuritySubject getStoredSubject    (boolean is_system);
     SecuritySubject getSubject          ();
     SecuritySubject createSystemSubject ();
-    String          getLocalHome        ();
+    String          getSystemHome       ();
     FileSystem      getDefaultUserFS    ();
     Path            getDefaultUserDir   ();
 }

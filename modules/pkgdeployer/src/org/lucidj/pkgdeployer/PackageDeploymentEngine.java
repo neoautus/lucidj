@@ -65,7 +65,8 @@ public class PackageDeploymentEngine implements DeploymentEngine
 
     public PackageDeploymentEngine ()
     {
-        packages_dir = System.getProperty ("rq.home") + "/cache/" + this.getClass ().getSimpleName ();
+        // TODO: THIS SHOULD BE RECONFIGURABLE
+        packages_dir = System.getProperty ("system.home") + "/cache/" + this.getClass ().getSimpleName ();
 
         File check_packages_dir = new File (packages_dir);
 

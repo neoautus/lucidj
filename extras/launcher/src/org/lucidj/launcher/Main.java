@@ -53,7 +53,7 @@ public class Main
         return (false);
     }
 
-    private static boolean get_rq_home ()
+    private static boolean get_system_home ()
     {
         String[] java_class_path = System.getProperty ("java.class.path").split (path_separator);
         String user_dir = System.getProperty ("user.dir") + file_separator;
@@ -148,7 +148,7 @@ public class Main
 
     public static void main (String[] args)
     {
-        if (get_rq_home ())
+        if (get_system_home ())
         {
             System.out.println ("System Home: '" + rq_home + "'");
         }

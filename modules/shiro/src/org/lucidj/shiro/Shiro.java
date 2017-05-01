@@ -49,7 +49,7 @@ public class Shiro implements SecurityEngine
     // http://shiro.apache.org/configuration.html
     public Shiro ()
     {
-        String shiro_ini = "file:" + System.getProperty ("rq.conf") + "/shiro.ini";
+        String shiro_ini = "file:" + System.getProperty ("system.conf") + "/shiro.ini";
         log.info ("shiro_ini = " + shiro_ini);
         Factory<SecurityManager> factory = new IniSecurityManagerFactory (shiro_ini);
         ini_security_manager = factory.getInstance ();
@@ -117,9 +117,9 @@ public class Shiro implements SecurityEngine
     }
 
     @Override // SecurityEngine
-    public String getLocalHome ()
+    public String getSystemHome ()
     {
-        return (System.getProperty("rq.home"));
+        return (System.getProperty("system.home"));
     }
 
     @Override // SecurityEngine
@@ -140,8 +140,8 @@ public class Shiro implements SecurityEngine
         }
 
         String username = subject.getPrincipal ();
-
-        return (getDefaultUserFS ().getPath (getLocalHome (), "userdata", username));
+        // TODO: CHANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        return (getDefaultUserFS ().getPath (getSystemHome (), "userdata", username));
     }
 }
 

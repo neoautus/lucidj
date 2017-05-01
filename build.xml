@@ -403,45 +403,6 @@
         </installer>
     </target>
 
-    <target name="karaf">
-
-        <property name="rq.home" value="/home/marcond/Lab/rationalq-dev/stage"/>
-        <property name="jdk.home" value="/srv/lab/tools/jdk1.8.x"/>
-        <property name="karaf.dirname" value="apache-karaf-4.0.4"/>
-
-        <property name="karaf.home" value="${runtime.dir}/${karaf.dirname}"/>
-        <property name="karaf.data" value="${rq.home}/cache/${karaf.dirname}"/>
-        <java classname="org.apache.karaf.main.Main" fork="yes" spawn="true">
-            <jvmarg value="-server" />
-            <jvmarg value="-Xms128M" />
-            <jvmarg value="-Xmx1024M" />
-            <jvmarg value="-XX:+UnlockDiagnosticVMOptions" />
-            <jvmarg value="-XX:+UnsyncloadClass" />
-            <jvmarg value="-Djava.awt.headless=true" />
-            <jvmarg value="-Dcom.sun.management.jmxremote" />
-            <sysproperty key="rq.home" value="${rq.home}" />
-            <sysproperty key="rq.deploy" value="${system.dir}" />
-            <sysproperty key="java.endorsed.dirs" value="${jdk.home}/jre/lib/endorsed:${jdk.home}/lib/endorsed:${karaf.home}/lib/endorsed" />
-            <sysproperty key="java.ext.dirs" value="${jdk.home}/jre/lib/ext:${jdk.home}/lib/ext:${karaf.home}/lib/ext" />
-            <sysproperty key="karaf.instances" value="${karaf.home}/instances" />
-            <sysproperty key="karaf.home" value="${karaf.home}" />
-            <sysproperty key="karaf.base" value="${karaf.home}" />
-            <sysproperty key="karaf.data" value="${karaf.data}" />
-            <sysproperty key="karaf.etc" value="${rq.home}/conf" />
-            <sysproperty key="karaf.restart.jvm.supported" value="true" />
-            <sysproperty key="java.io.tmpdir" value="${karaf.data}/tmp" />
-            <sysproperty key="java.util.logging.config.file" value="${karaf.home}/etc/java.util.logging.properties" />
-            <sysproperty key="karaf.startLocalConsole" value="false" />
-            <sysproperty key="karaf.startRemoteShell" value="true" />
-            <classpath>
-                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.diagnostic.boot-4.0.4.jar"/>
-                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.jaas.boot-4.0.4.jar"/>
-                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.main-4.0.4.jar"/>
-                <pathelement location="${karaf.home}/lib/boot/org.osgi.core-6.0.0.jar"/>
-            </classpath>
-        </java>
-    </target>
-
     <target name="launch4j">
 
         <!-- TODO: ALLOW IGNORING BUILD IF 32BIT ELF SUPPORT ISN'T ENABLED (windres exec) -->

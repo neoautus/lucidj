@@ -286,10 +286,11 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
         {
             click_catcher.setDefaultComponentAlignment (Alignment.MIDDLE_LEFT);
 
+            String fancy_css = "background-color: white; vertical-align:middle; width: 32px; height: 32px; border-radius: 50%;";
             String userinfo_html =
                 "<span style='vertical-align:middle;'>LucidJ Admin</span>" +
                 "&nbsp;&nbsp;" +
-                "<img style='vertical-align:middle;' src='/VAADIN/~/vaadinui_libraries/unidentified-user-32x32.png'>";
+                "<img style='" + fancy_css + "' src='/VAADIN/~/vaadinui_libraries/user-frank-128x128.png'>";
             Label userinfo = new Label (userinfo_html, ContentMode.HTML);
             click_catcher.addComponent (userinfo);
 
@@ -298,7 +299,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
                 @Override
                 public void layoutClick (LayoutEvents.LayoutClickEvent layoutClickEvent)
                 {
-                    navigator.navigateTo ("account_security");
+                    navigator.navigateTo ("accounts");
                 }
             });
         }

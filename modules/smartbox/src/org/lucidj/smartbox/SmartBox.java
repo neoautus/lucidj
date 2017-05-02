@@ -28,9 +28,10 @@ import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
 import org.lucidj.objectmanager.DefaultObjectManager;
 import org.lucidj.console.Console;
-import org.lucidj.vaadin.Vaadin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.vaadin.ui.AbstractComponent;
 
 import java.util.HashMap;
 
@@ -52,8 +53,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
     // TODO: GET RID OF THESE DEPENDENCIES!!!
     private Console console;
-    private Vaadin vaadin;
-    private Karaf karaf;
 
     private BundleRegistry bundleRegistry;
     private ManagedObjectFactory objectFactory;
@@ -95,35 +94,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         return (console);
     }
 
-//    private Vaadin get_vaadin (boolean show)
-//    {
-//        if (vaadin == null)
-//        {
-//            ManagedObjectInstance console_instance = objectFactory.newInstance (Vaadin.class, null);
-//            vaadin = console_instance.adapt (Vaadin.class);
-//        }
-//
-//        if (show && om.getObject (Vaadin.class.getCanonicalName ()) == null)
-//        {
-//            om.showObject (vaadin);
-//            om.setObjectTag (vaadin, Vaadin.class.getCanonicalName ());
-//        }
-//
-//        return (vaadin);
-//    }
-
-
-    private Karaf get_karaf ()
-    {
-        if (karaf == null)
-        {
-            karaf = new Karaf ();
-        }
-
-        // Creates a new session for every run
-        return (karaf);
-    }
-
     private void init ()
     {
         log.info ("bundleRegistry = {}", bundleRegistry);
@@ -151,7 +121,10 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             public void fetchService (String svcName, Object svcObject)
             {
                 log.info ("fetchService(svcName={}, svcObject={})", svcName, svcObject);
-                if (svcObject instanceof Vaadin) // TODO: OTHER KIND OF OBJECT
+
+                // When the returned object is a visual component,
+                // it is added automatically on the object output
+                if (svcObject instanceof AbstractComponent)
                 {
                     if (om.getObject (svcName) == null)
                     {
@@ -209,53 +182,11 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
                 // TODO: ADD LATER SOME AUTO UPDATE
                 //update_pragmas ();
             }
-
-            // TODO: ALL THIS SHOULD GO TO CodeBindings
-/*
-            @Override
-            public Object getVariable (String varname)
-                throws NoSuchFieldError
-            {
-                log.debug ("getDynamicVariable {}", varname);
-
-                if ("Console".equals(varname))
-                {
-                    // Console is alias for current System.out
-                    return (System.out);
-                }
-                else if ("Vaadin".equals (varname))
-                {
-                    // Return current Vaadin output object
-                    return (get_vaadin (true));
-                }
-                else if ("Karaf".equals (varname))
-                {
-                    return (get_karaf ());
-                }
-                else if ("Self".equals (varname))
-                {
-                    return (self);
-                }
-//                else if ("Pipe".equals (varname))
-//                {
-//                    return (Pipe.pipe ());
-//                }
-//                else if (Kernel.currentTaskContext ().getPublishedObject (varname) != null)
-//                {
-//                    return (Kernel.currentTaskContext ().getPublishedObject (varname));
-//                }
-                throw new NoSuchFieldError (varname);
-            }
-*/
         });
     }
 
     private void eventhandler_run ()
     {
-//        log.info ("TaskContext before = {}", Kernel.currentTaskContext ());
-//        Kernel.bindTaskContext (tctx);
-//        log.info ("TaskContext after = {}", Kernel.currentTaskContext ());
-
         log.info (">>> RUN {}", code);
         get_console (false).clear ();
 //        get_vaadin (false).removeAllComponents ();

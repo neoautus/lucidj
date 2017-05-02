@@ -14,42 +14,37 @@
  * the License.
  */
 
-package org.lucidj.layoutmanager;
+package org.lucidj.objectmanager;
 
+import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererFactory;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.ManagedObjectProvider;
+import org.lucidj.api.ObjectManager;
 
-import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
-@Component (immediate = true, publicFactory = false)
+@org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides
-public class LayoutManagerProvider implements RendererProvider
+public class DefaultObjectManagerProvider implements ManagedObjectProvider
 {
-    private LayoutManager instance_filter = new LayoutManager (null);
-
     @Requires
     private ManagedObjectFactory objectFactory;
 
-    @Requires
-    private RendererFactory rendererFactory;
+    @Validate
+    private void validate ()
+    {
+        objectFactory.register (ObjectManager.class, this, null);
+    }
 
     @Override
-    public Renderer getCompatibleRenderer (Object object)
+    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        if (instance_filter.compatibleObject (object))
-        {
-            LayoutManager renderer = new LayoutManager (rendererFactory);
-            ManagedObjectInstance object_instance = objectFactory.wrapObject (renderer);
-            return (object_instance.adapt (LayoutManager.class));
-        }
-        return (null);
+        return (new DefaultObjectManager ());
     }
 }
 

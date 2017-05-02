@@ -26,7 +26,6 @@ import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
-import org.lucidj.objectmanager.DefaultObjectManager;
 import org.lucidj.console.Console;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,8 +97,9 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     {
         log.info ("bundleRegistry = {}", bundleRegistry);
 
-        // TODO: FACTORY....
-        om = new DefaultObjectManager ();
+        // Create our own ObjectManager
+        ManagedObjectInstance om_instance = objectFactory.newInstance (ObjectManager.class, null);
+        om = om_instance.adapt (ObjectManager.class);
 
         log.info ("code_engine = {}", code_engine);
 

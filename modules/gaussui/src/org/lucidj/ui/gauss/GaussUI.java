@@ -26,7 +26,6 @@ import org.lucidj.api.MenuManager;
 import org.lucidj.api.NavigatorManager;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.RendererFactory;
-import org.lucidj.vaadinui.FancyEmptyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,7 +82,8 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     private HorizontalSplitPanel hsContentsSidebar = new HorizontalSplitPanel ();
     private HorizontalLayout hToolbarArea = new HorizontalLayout();
     private CssLayout hToolbarPlaceholder = new CssLayout ();
-    private CssLayout emptySidebar = new FancyEmptyView ("Sidebar empty");
+    private CssLayout emptyContents = new CssLayout ();
+    private CssLayout emptySidebar = new CssLayout ();
     private HorizontalLayout hSecurityArea = new HorizontalLayout ();
     private Button toggle_sidebar;
     private Accordion acMenu = new Accordion ();
@@ -139,8 +139,13 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             acMenu.setSizeFull ();
         }
 
-        hsContentsSidebar.setFirstComponent (new FancyEmptyView ());
+        emptyContents = new CssLayout ();
+        emptyContents.addStyleName ("fancy-grid-background");
+        hsContentsSidebar.setFirstComponent (emptyContents);
+
+        emptySidebar.addStyleName ("fancy-grid-background");
         hsContentsSidebar.setSecondComponent (emptySidebar);
+
         hsContentsSidebar.setSplitPosition (default_sidebar_width_pixels, Sizeable.Unit.PIXELS, true);
         hsMenuContents.setFirstComponent (acMenu);
         hsMenuContents.setSecondComponent (hsContentsSidebar);
@@ -329,12 +334,12 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
                 else
                 {
                     String msg = "Invalid component:\n" + view.getClass ().getCanonicalName ();
-                    hsContentsSidebar.setFirstComponent (new FancyEmptyView (msg));
+                    hsContentsSidebar.setFirstComponent (emptyContents);
                 }
             }
         });
 
-        navigator.setErrorView (FancyEmptyView.class);
+//        navigator.setErrorView (FancyEmptyView.class);  ---> make it better
         navigator.addView (DAMN, damage_report_view);
         nav_manager.configureNavigator (navigator, null);
 

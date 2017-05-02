@@ -18,7 +18,6 @@ package org.lucidj.accounts;
 
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.top.TopView;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;

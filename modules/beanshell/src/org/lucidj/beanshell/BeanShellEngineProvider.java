@@ -52,7 +52,6 @@ public class BeanShellEngineProvider implements CodeEngineProvider
         // Create an interpreter instance with a null inputstream,
         // the capture out/err stream, non-interactive
         bsh = new Interpreter (null, System.out, System.err, false);
-//        bsh.setClassLoader (cld);
 
         // TODO: CHECK: ONE LNS FOR EVERY BUNDLE?
 

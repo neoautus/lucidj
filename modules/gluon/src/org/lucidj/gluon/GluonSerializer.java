@@ -35,7 +35,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
@@ -110,6 +109,14 @@ public class GluonSerializer implements SerializerEngine
         {
             log.error ("Serializer not found for {}", type);
             return (false);
+        }
+
+        if (!(serializer instanceof GluonPrimitive)
+            && obj != null
+            && !obj.getClass ().isArray ()) // We also treat arrays as primitives
+        {
+            // Preset object type
+            instance.setObjectClass (type_name);
         }
         return (serializer.serializeObject (instance, obj));
     }
@@ -431,10 +438,7 @@ public class GluonSerializer implements SerializerEngine
         register (Long.class, new DefaultSerializers.LongSerializer ());
         register (double.class, new DefaultSerializers.DoubleSerializer ());
         register (Double.class, new DefaultSerializers.DoubleSerializer ());
-
         register (Object[].class, new DefaultArraySerializers.ObjectArraySerializer ());
-//        register (List.class, new ListSerializer ());   ---cleanup
-
         log.info ("ObjectSerializer started");
     }
 

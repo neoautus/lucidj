@@ -30,6 +30,9 @@ public interface SerializerInstance
     String[]            getPropertyKeys  ();
     void                setPropertyKey   (String key);
     SerializerInstance  setObjectClass   (Class clazz);
+    SerializerInstance  setObjectClass   (String clazz);
+    boolean             serializeAs      (Object object, String clazz);
+    Object              deserializeAs    (String clazz);
 }
 
 // EOF

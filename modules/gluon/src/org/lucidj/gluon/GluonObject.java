@@ -29,6 +29,11 @@ public class GluonObject
         class_name = clazz.getName ();
     }
 
+    public GluonObject (String clazz)
+    {
+        class_name = clazz;
+    }
+
     public GluonObject ()
     {
         // Nothing set

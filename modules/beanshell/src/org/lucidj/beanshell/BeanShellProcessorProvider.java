@@ -85,12 +85,21 @@ public class BeanShellProcessorProvider implements Serializer, ManagedObjectProv
     {
         // TODO: CodeEngineManager CAN HAVE AN ObjectFactory ASPECT
         CodeEngine code_engine = engineManager.getEngineByName ("beanshell");
+        ComponentInterface code_container;
 
-        // Provide the CodeEngine and build the code container
-        Map<String, Object> props = new HashMap<> ();
-        props.put (CodeEngine.class.getName (), code_engine);
-        ManagedObjectInstance code_container_instance = objectFactory.newInstance ("org.lucidj.smartbox.SmartBox", props);
-        ComponentInterface code_container = code_container_instance.adapt (ComponentInterface.class);
+        if (instance.containsKey (ComponentInterface.class.getName ()))
+        {
+            // Use the provided code container
+            code_container = (ComponentInterface)instance.getProperty (ComponentInterface.class.getName ());
+        }
+        else
+        {
+            // Provide a brand new code container
+            Map<String, Object> props = new HashMap<> ();
+            props.put (CodeEngine.class.getName (), code_engine);
+            ManagedObjectInstance new_instance = objectFactory.newInstance ("org.lucidj.smartbox.SmartBox", props);
+            code_container = new_instance.adapt (ComponentInterface.class);
+        }
 
         // Add the UI descriptor
         code_container.setProperty (ComponentDescriptor.DESCRIPTOR, descriptor);
@@ -108,12 +117,14 @@ public class BeanShellProcessorProvider implements Serializer, ManagedObjectProv
     @Override
     public Object deserializeObject (SerializerInstance instance)
     {
-        CodeEngine code_engine = engineManager.getEngineByName ("beanshell");
+        // Use another deserializer to build our object
         ComponentInterface code_container = (ComponentInterface)instance.deserializeAs ("org.lucidj.smartbox.SmartBox");
 
-        // Build the processor
-        // TODO: CREATE A MANAGED OBJECT INSTEAD
-        return (new BeanShellProcessor (code_container, code_engine));
+        // Create the new processor providing the code_container
+        Map<String, Object> props = new HashMap<> ();
+        props.put (ComponentInterface.class.getName (), code_container);
+        ManagedObjectInstance new_instance = objectFactory.newInstance (BeanShellProcessor.class, props);
+        return (new_instance.adapt (BeanShellProcessor.class));
     }
 
     @Validate

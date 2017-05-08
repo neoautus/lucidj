@@ -52,18 +52,6 @@ public class Html implements ComponentInterface
     }
 
     @Override // ComponentInterface
-    public String getDescriptorId ()
-    {
-        return (descriptor_id);
-    }
-
-    @Override // ComponentInterface
-    public void setDescriptorId (String descriptor_id)
-    {
-        this.descriptor_id = descriptor_id;
-    }
-
-    @Override // ComponentInterface
     public Object fireEvent (Object source, Object event)
     {
         if (event instanceof String && event.equals ("run"))

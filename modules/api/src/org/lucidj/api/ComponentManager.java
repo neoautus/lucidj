@@ -16,12 +16,17 @@
 
 package org.lucidj.api;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+
+// TODO: I FEEL THIS WILL BECOME A SUBCASE OF ManagedObjectFactory
 public interface ComponentManager
 {
     ComponentSet        newComponentSet        ();
     ComponentDescriptor newComponentDescriptor ();
-    ComponentDescriptor getComponentDescriptor (Object component);
-    boolean             register               (ComponentDescriptor descriptor);
+//    ComponentDescriptor getComponentDescriptor (Object component);
+    boolean             register               (Bundle bundle, ComponentDescriptor descriptor);
+    boolean             register               (BundleContext context, ComponentDescriptor descriptor);
 }
 
 // EOF

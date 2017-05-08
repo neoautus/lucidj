@@ -18,30 +18,11 @@ package org.lucidj.palette;
 
 import org.lucidj.api.ComponentDescriptor;
 
-import com.vaadin.server.Resource;
-
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-
 public class Descriptor implements ComponentDescriptor
 {
-    private String descriptor_id = "<" + this.toString () + ">";
     private String icon_title;
-    private Resource icon_resource;
-    private Class component_class;
-    private Bundle component_bundle;
-
-    @Override
-    public void setDescriptorId (String id)
-    {
-        descriptor_id = id;
-    }
-
-    @Override
-    public String getDescriptorId ()
-    {
-        return (descriptor_id);
-    }
+    private String icon_url;
+    private String component_class;
 
     @Override
     public void setIconTitle (String icon_title)
@@ -56,34 +37,27 @@ public class Descriptor implements ComponentDescriptor
     }
 
     @Override
-    public void setIcon (Resource icon_resource)
+    public void setIconUrl (String url)
     {
-        this.icon_resource = icon_resource;
+        icon_url = url;
     }
 
     @Override
-    public Resource getIcon ()
+    public String getIconUrl ()
     {
-        return (icon_resource);
+        return (icon_url);
     }
 
     @Override
-    public void setComponentClass (Class component_class)
+    public void setComponentClass (String component_class)
     {
         this.component_class = component_class;
-        component_bundle = FrameworkUtil.getBundle (component_class);
     }
 
     @Override
-    public Class getComponentClass ()
+    public String getComponentClass ()
     {
         return (component_class);
-    }
-
-    @Override
-    public Bundle getComponentBundle ()
-    {
-        return (component_bundle);
     }
 }
 

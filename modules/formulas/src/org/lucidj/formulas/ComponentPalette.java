@@ -50,9 +50,8 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
 
     private boolean add_component_to_palette (ComponentDescriptor component)
     {
-        String canonical_name = component.getComponentClass ().getName ();
+        String canonical_name = component.getComponentClass ();
         String icon_title = component.getIconTitle ();
-        String bundle_symbolic_name = component.getComponentBundle ().getSymbolicName ();
 
         log.info ("*** => ADDING component {} ({})", canonical_name, component);
 
@@ -66,8 +65,8 @@ public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutCl
         String icon_html =
             "<div style='text-align: center; height:auto; display:inline-block; " +
                 "margin:" + margin_v_size_px + "px " + margin_h_size_px + "px;" +
-                "width:" + icon_box_width_px + "px;'>" +
-            "<img src='/VAADIN/~/" + bundle_symbolic_name + "/component-icon.png' " +
+                "width:" + icon_box_width_px + "px; line-height:1.1em;'>" +
+            "<img src='" + component.getIconUrl () + "' " +
                 "width='" + icon_size_px + "px' height='" + icon_size_px + "px' />" +
             "<div style='white-space:normal; word-wrap:break-word; font-weight: 400;" +
                 "font-size:" + font_size_px + "px;'>" + icon_title + "</div>" +

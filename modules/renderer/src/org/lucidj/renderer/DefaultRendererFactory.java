@@ -16,6 +16,7 @@
 
 package org.lucidj.renderer;
 
+import org.lucidj.api.Aggregate;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectRenderer;
@@ -121,11 +122,16 @@ public class DefaultRendererFactory implements RendererFactory
 
         for (Map.Entry<String, RendererProvider> provider: renderer_providers.entrySet ())
         {
-            Renderer renderer = provider.getValue ().getCompatibleRenderer (object);
-
-            if (renderer != null)
+            for (Object aspect: Aggregate.get (object))
             {
-                return (renderer);
+                Renderer renderer = provider.getValue ().getCompatibleRenderer (aspect);
+
+                if (renderer != null)
+                {
+                    // Link the aspect to the renderer
+                    renderer.objectLinked (aspect);
+                    return (renderer);
+                }
             }
         }
         return (null);

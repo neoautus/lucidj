@@ -81,7 +81,6 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
         }
 
         // Base object data
-        instance.setObjectClass (SmartBox.class);
         instance.setValue ((String)smartbox.getValue ());
 
         // Runtime properties
@@ -124,7 +123,14 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        CodeEngine engine = engineManager.getEngineByName ("beanshell");
+        // Try to get the user-provided engine
+        CodeEngine engine = instance.getObject (CodeEngine.class);
+
+        if (engine == null)
+        {
+            log.error ("Engine not defined -- defaulting to BeanShell");
+            engine = engineManager.getEngineByName ("beanshell");
+        }
         return (new SmartBox (engine, bundleRegistry, objectFactory));
     }
 }

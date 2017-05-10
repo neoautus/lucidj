@@ -123,15 +123,7 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        // Try to get the user-provided engine
-        CodeEngine engine = instance.getObject (CodeEngine.class);
-
-        if (engine == null)
-        {
-            log.error ("Engine not defined -- defaulting to BeanShell");
-            engine = engineManager.getEngineByName ("beanshell");
-        }
-        return (new SmartBox (engine, bundleRegistry, objectFactory));
+        return (new SmartBox (bundleRegistry, objectFactory));
     }
 }
 

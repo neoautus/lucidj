@@ -95,14 +95,13 @@ public class BeanShellProcessorProvider implements Serializer, ManagedObjectProv
         else
         {
             // Provide a brand new code container
-            Map<String, Object> props = new HashMap<> ();
-            props.put (CodeEngine.class.getName (), code_engine);
-            ManagedObjectInstance new_instance = objectFactory.newInstance ("org.lucidj.smartbox.SmartBox", props);
+            ManagedObjectInstance new_instance = objectFactory.newInstance ("org.lucidj.smartbox.SmartBox", null);
             code_container = new_instance.adapt (ComponentInterface.class);
         }
 
         // Add the UI descriptor
         code_container.setProperty (ComponentDescriptor.DESCRIPTOR, descriptor);
+        code_container.setProperty (CodeEngine.class.getName (), code_engine);
 
         // Build the processor
         return (new BeanShellProcessor (code_container, code_engine));

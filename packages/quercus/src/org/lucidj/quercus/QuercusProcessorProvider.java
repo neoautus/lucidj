@@ -81,15 +81,23 @@ public class QuercusProcessorProvider implements ManagedObjectProvider, Serializ
     {
         // TODO: CodeEngineManager CAN HAVE AN ObjectFactory ASPECT
         CodeEngine code_engine = engineManager.getEngineByName ("quercus");
+        ComponentInterface code_container;
 
-        // Provide the CodeEngine and build the code container
-        Map<String, Object> props = new HashMap<> ();
-        props.put (CodeEngine.class.getName (), code_engine);
-        ManagedObjectInstance code_container_instance = objectFactory.newInstance ("org.lucidj.smartbox.SmartBox", props);
-        ComponentInterface code_container = code_container_instance.adapt (ComponentInterface.class);
+        if (instance.containsKey (ComponentInterface.class.getName ()))
+        {
+            // Use the provided code container
+            code_container = (ComponentInterface)instance.getProperty (ComponentInterface.class.getName ());
+        }
+        else
+        {
+            // Provide a brand new code container
+            ManagedObjectInstance new_instance = objectFactory.newInstance ("org.lucidj.smartbox.SmartBox", null);
+            code_container = new_instance.adapt (ComponentInterface.class);
+        }
 
         // Add the UI descriptor
         code_container.setProperty (ComponentDescriptor.DESCRIPTOR, descriptor);
+        code_container.setProperty (CodeEngine.class.getName (), code_engine);
 
         // Build the processor
         return (new QuercusProcessor (code_container, code_engine));
@@ -104,12 +112,14 @@ public class QuercusProcessorProvider implements ManagedObjectProvider, Serializ
     @Override
     public Object deserializeObject (SerializerInstance instance)
     {
-        CodeEngine code_engine = engineManager.getEngineByName ("quercus");
+        // Use another deserializer to build our object
         ComponentInterface code_container = (ComponentInterface)instance.deserializeAs ("org.lucidj.smartbox.SmartBox");
 
-        // Build the processor
-        // TODO: CREATE A MANAGED OBJECT INSTEAD
-        return (new QuercusProcessor (code_container, code_engine));
+        // Create the new processor providing the code_container
+        Map<String, Object> props = new HashMap<> ();
+        props.put (ComponentInterface.class.getName (), code_container);
+        ManagedObjectInstance new_instance = objectFactory.newInstance (QuercusProcessor.class, props);
+        return (new_instance.adapt (QuercusProcessor.class));
     }
 
     @Validate

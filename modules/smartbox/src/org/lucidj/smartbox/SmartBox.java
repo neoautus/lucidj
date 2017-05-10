@@ -63,16 +63,17 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 //        init ();
     }
 
-    public SmartBox (CodeEngine code_engine, BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
+    public SmartBox (BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
     {
         this.bundleRegistry = bundleRegistry;
         this.objectFactory = objectFactory;
 
-        this.code_engine = code_engine;
-        code_context = code_engine.getContext ();
+        log.info ("bundleRegistry = {}", bundleRegistry);
+        log.info ("objectFactory = {}", objectFactory);
 
-        log.info ("#### bundleRegistry = {}", bundleRegistry);
-        init ();
+        // Create our own ObjectManager
+        ManagedObjectInstance om_instance = objectFactory.newInstance (ObjectManager.class, null);
+        om = om_instance.adapt (ObjectManager.class);
     }
 
     // TODO: DECOUPLE THESE OBJECTS INTO PLUGGABLE STRUCTURES
@@ -93,16 +94,15 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         return (console);
     }
 
-    private void init ()
+    private void set_code_engine (CodeEngine code_engine)
     {
-        log.info ("bundleRegistry = {}", bundleRegistry);
+        log.info ("---> set_code_engine: {}", code_engine);
+        this.code_engine = code_engine;
+        code_context = code_engine.getContext ();
 
-        // Create our own ObjectManager
-        ManagedObjectInstance om_instance = objectFactory.newInstance (ObjectManager.class, null);
-        om = om_instance.adapt (ObjectManager.class);
+        log.info ("set_code_engine(): code_engine={} code_context={}", code_engine, code_context);
 
-        log.info ("code_engine = {}", code_engine);
-
+        // TODO: REMOVE THIS CALLBACK IF CodeEngine IS CHANGED
         code_context.addCallbacksListener (new CodeContext.Callbacks ()
         {
             @Override
@@ -198,6 +198,11 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     @Override // ComponentInterface
     public Object fireEvent (Object source, Object event)
     {
+        if (code_engine == null)
+        {
+            return (null);
+        }
+
         if (event instanceof String)
         {
             String action = (String)event;
@@ -223,6 +228,14 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     public void setProperty (String name, Object value)
     {
         properties.put (name, value);
+
+        log.info ("setProperty(name={}, value={})", name, value);
+
+        if (CodeEngine.class.getName ().equals (name))
+        {
+            log.info ("---> set_code_engine");
+            set_code_engine ((CodeEngine)value);
+        }
     }
 
     @Override // ComponentInterface
@@ -278,9 +291,15 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         return (true);
     }
 
+    // TODO: CHECK OR REORDER THIS MECHANISM
     @Override
     public boolean signal (int signal)
     {
+        if (code_engine == null)
+        {
+            return (false);
+        }
+
         if (signal == SIGTERM && component_state == RUNNING)
         {
             code_engine.getThread ().interrupt ();

@@ -97,7 +97,7 @@ public class QuercusProcessorProvider implements ManagedObjectProvider, Serializ
 
         // Add the UI descriptor
         code_container.setProperty (ComponentDescriptor.DESCRIPTOR, descriptor);
-        code_container.setProperty (CodeEngine.class.getName (), code_engine);
+        code_container.setProperty (CodeEngine.CODE_ENGINE, code_engine);
 
         // Build the processor
         return (new QuercusProcessor (code_container, code_engine));

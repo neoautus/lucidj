@@ -16,7 +16,6 @@
 
 package org.lucidj.smartbox;
 
-import org.lucidj.api.BundleRegistry;
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
 import org.lucidj.api.ComponentInterface;
@@ -39,7 +38,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
 
     private final SmartBox self = this;
-    private String descriptor_id;
 
     private int component_state = ACTIVE;
     private ComponentState.ChangeListener state_listener;
@@ -53,7 +51,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     // TODO: GET RID OF THESE DEPENDENCIES!!!
     private Console console;
 
-    private BundleRegistry bundleRegistry;
     private ManagedObjectFactory objectFactory;
     private CodeEngine code_engine;
     private CodeContext code_context;
@@ -63,12 +60,9 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 //        init ();
     }
 
-    public SmartBox (BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
+    public SmartBox (ManagedObjectFactory objectFactory)
     {
-        this.bundleRegistry = bundleRegistry;
         this.objectFactory = objectFactory;
-
-        log.info ("bundleRegistry = {}", bundleRegistry);
         log.info ("objectFactory = {}", objectFactory);
 
         // Create our own ObjectManager
@@ -229,11 +223,8 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     {
         properties.put (name, value);
 
-        log.info ("setProperty(name={}, value={})", name, value);
-
-        if (CodeEngine.class.getName ().equals (name))
+        if (CodeEngine.CODE_ENGINE.equals (name))
         {
-            log.info ("---> set_code_engine");
             set_code_engine ((CodeEngine)value);
         }
     }

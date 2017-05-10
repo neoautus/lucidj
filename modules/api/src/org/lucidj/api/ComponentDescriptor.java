@@ -18,7 +18,7 @@ package org.lucidj.api;
 
 public interface ComponentDescriptor
 {
-    static final String DESCRIPTOR = ".ComponentDescriptor-Descriptor";
+    String DESCRIPTOR = ".ComponentDescriptor-Descriptor";
 
     void     setIconTitle       (String title);
     String   getIconTitle       ();

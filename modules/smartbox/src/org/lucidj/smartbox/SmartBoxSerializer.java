@@ -16,8 +16,6 @@
 
 package org.lucidj.smartbox;
 
-import org.lucidj.api.BundleRegistry;
-import org.lucidj.api.CodeEngine;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
@@ -51,9 +49,6 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
 
     @Requires
     private ManagedObjectFactory objectFactory;
-
-    @Requires
-    private BundleRegistry bundleRegistry;
 
     @Requires
     private SerializerEngine serializer;
@@ -102,8 +97,6 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
 
         smartbox.setValue (instance.getValue ());
 
-        log.info ("*** deserializeObject: properties={}", properties);
-
         Object[] output = instance.getArrayProperty ("output");
 
         if (output != null)
@@ -123,7 +116,7 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        return (new SmartBox (bundleRegistry, objectFactory));
+        return (new SmartBox (objectFactory));
     }
 }
 

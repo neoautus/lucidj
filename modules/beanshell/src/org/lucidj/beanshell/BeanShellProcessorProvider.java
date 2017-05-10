@@ -101,7 +101,7 @@ public class BeanShellProcessorProvider implements Serializer, ManagedObjectProv
 
         // Add the UI descriptor
         code_container.setProperty (ComponentDescriptor.DESCRIPTOR, descriptor);
-        code_container.setProperty (CodeEngine.class.getName (), code_engine);
+        code_container.setProperty (CodeEngine.CODE_ENGINE, code_engine);
 
         // Build the processor
         return (new BeanShellProcessor (code_container, code_engine));

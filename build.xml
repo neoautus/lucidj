@@ -266,7 +266,7 @@
                 <exclude name="code/**"/>
             </fileset>
             <local name="packages"/>
-            <pathconvert dirsep="/" refid="classes" property="packages" pathsep=",">
+            <pathconvert dirsep="/" refid="classes" property="packages" pathsep="," setonempty="false">
                 <mapper type="regexp" from="@{dir}/(.*)/.*\.class" to="\1" />
             </pathconvert>
             <dirset id="unique.packages" dir="@{dir}" includes="${packages}"/>
@@ -401,45 +401,6 @@
                    icons="eclipse">
             <fileset file="${dist.dir}/installpack.zip"/>
         </installer>
-    </target>
-
-    <target name="karaf">
-
-        <property name="rq.home" value="/home/marcond/Lab/rationalq-dev/stage"/>
-        <property name="jdk.home" value="/srv/lab/tools/jdk1.8.x"/>
-        <property name="karaf.dirname" value="apache-karaf-4.0.4"/>
-
-        <property name="karaf.home" value="${runtime.dir}/${karaf.dirname}"/>
-        <property name="karaf.data" value="${rq.home}/cache/${karaf.dirname}"/>
-        <java classname="org.apache.karaf.main.Main" fork="yes" spawn="true">
-            <jvmarg value="-server" />
-            <jvmarg value="-Xms128M" />
-            <jvmarg value="-Xmx1024M" />
-            <jvmarg value="-XX:+UnlockDiagnosticVMOptions" />
-            <jvmarg value="-XX:+UnsyncloadClass" />
-            <jvmarg value="-Djava.awt.headless=true" />
-            <jvmarg value="-Dcom.sun.management.jmxremote" />
-            <sysproperty key="rq.home" value="${rq.home}" />
-            <sysproperty key="rq.deploy" value="${system.dir}" />
-            <sysproperty key="java.endorsed.dirs" value="${jdk.home}/jre/lib/endorsed:${jdk.home}/lib/endorsed:${karaf.home}/lib/endorsed" />
-            <sysproperty key="java.ext.dirs" value="${jdk.home}/jre/lib/ext:${jdk.home}/lib/ext:${karaf.home}/lib/ext" />
-            <sysproperty key="karaf.instances" value="${karaf.home}/instances" />
-            <sysproperty key="karaf.home" value="${karaf.home}" />
-            <sysproperty key="karaf.base" value="${karaf.home}" />
-            <sysproperty key="karaf.data" value="${karaf.data}" />
-            <sysproperty key="karaf.etc" value="${rq.home}/conf" />
-            <sysproperty key="karaf.restart.jvm.supported" value="true" />
-            <sysproperty key="java.io.tmpdir" value="${karaf.data}/tmp" />
-            <sysproperty key="java.util.logging.config.file" value="${karaf.home}/etc/java.util.logging.properties" />
-            <sysproperty key="karaf.startLocalConsole" value="false" />
-            <sysproperty key="karaf.startRemoteShell" value="true" />
-            <classpath>
-                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.diagnostic.boot-4.0.4.jar"/>
-                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.jaas.boot-4.0.4.jar"/>
-                <pathelement location="${karaf.home}/lib/boot/org.apache.karaf.main-4.0.4.jar"/>
-                <pathelement location="${karaf.home}/lib/boot/org.osgi.core-6.0.0.jar"/>
-            </classpath>
-        </java>
     </target>
 
     <target name="launch4j">
@@ -1187,17 +1148,23 @@
             <property name="bnd.root" value="${bnd.dirname}"/>
             <property name="classpath" value="${classpath.build.literal}"/>
         </ant>
-        <!-- Add library classes to class store -->
-        <javac srcdir="${bnd.path}" destdir="${libraries.class}"
-               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
-               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
-               includeantruntime="false">
-            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
-            <classpath>
-                <path refid="classpath.build"/>
-                <pathelement path="${libraries.class}"/>
-            </classpath>
-        </javac>
+
+        <available file="${bnd.path}" type="dir" property="src.exists"/>
+        <if><isset property="src.exists"/>
+            <then>
+                <!-- Add library classes to class store -->
+                <javac srcdir="${bnd.path}" destdir="${libraries.class}"
+                       debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+                       source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+                       includeantruntime="false">
+                    <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+                    <classpath>
+                        <path refid="classpath.build"/>
+                        <pathelement path="${libraries.class}"/>
+                    </classpath>
+                </javac>
+            </then>
+        </if>
 
     </target>
 
@@ -1252,14 +1219,26 @@
         <property name="bnd.classpath" value="${private.cp.literal}:${bnd.build}:${classpath}"/>
         <!--echo message="bnd.classpath=${bnd.classpath}"/-->
 
-        <javac srcdir="${bnd.src}" destdir="${bnd.build}"
-               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
-               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
-               includeantruntime="false">
-            <classpath>
-                <pathelement path="${bnd.classpath}"/>
-            </classpath>
-        </javac>
+        <available file="${bnd.src}" type="dir" property="src.exists"/>
+        <if><isset property="src.exists"/>
+            <then>
+                <javac srcdir="${bnd.src}" destdir="${bnd.build}"
+                       debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+                       source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+                       includeantruntime="false">
+                    <classpath>
+                        <pathelement path="${bnd.classpath}"/>
+                    </classpath>
+                </javac>
+
+                <!-- Copy all packagefile(s) -->
+                <copy todir="${bnd.build}" overwrite="true" verbose="true">
+                    <fileset dir="${bnd.src}">
+                        <include name="**/packageinfo"/>
+                    </fileset>
+                </copy>
+            </then>
+        </if>
 
         <property name="bnd.file" value="${bnd.build}/bundle.bnd"/>
 
@@ -1276,13 +1255,6 @@
                 <delete file="${bnd.file}"/>
             </else>
         </if>
-
-        <!-- Copy all packagefile(s) -->
-        <copy todir="${bnd.build}" overwrite="true" verbose="true">
-            <fileset dir="${bnd.src}">
-                <include name="**/packageinfo"/>
-            </fileset>
-        </copy>
 
         <!-- Cria e/ou Customiza o arquivo bundle.bnd -->
         <echo file="${bnd.file}" append="true"
@@ -1358,11 +1330,12 @@
         <bnd files="${bnd.file}" output="${bnd.jar}"
              classpath="${bnd.build}:${private.cp.literal}"
              eclipse="false" failok="false" exceptions="true"/>
-        <!--bnd files="${bnd.file}" output="${bnd.jar}"
-             classpath="${bnd.build}"
-             eclipse="false" failok="false" exceptions="true"/-->
 
-        <if><not><contains string="${bnd.file.contents}" substring="x-no-ipojo"/></not>
+        <if>
+            <and>
+                <isset property="src.exists"/>
+                <not><contains string="${bnd.file.contents}" substring="x-no-ipojo"/></not>
+            </and>
             <then>
                 <ipojo input="${bnd.jar}">
                     <classpath>
@@ -1387,13 +1360,17 @@
         </jar>
 
         <!-- Add resource files from src/ -->
-        <jar destfile="${bnd.jar}" update="true" filesonly="true">
-            <fileset dir="${bnd.root}/src">
-                <include name="**/*"/>
-                <exclude name="**/*.jar"/>
-                <exclude name="**/*.java"/>
-            </fileset>
-        </jar>
+        <if><isset property="src.exists"/>
+            <then>
+                <jar destfile="${bnd.jar}" update="true" filesonly="true">
+                    <fileset dir="${bnd.root}/src">
+                        <include name="**/*"/>
+                        <exclude name="**/*.jar"/>
+                        <exclude name="**/*.java"/>
+                    </fileset>
+                </jar>
+            </then>
+        </if>
 
         <!-- Add full resources/ dir if it exists -->
         <if><available file="${bnd.root}/resources" type="dir"/>

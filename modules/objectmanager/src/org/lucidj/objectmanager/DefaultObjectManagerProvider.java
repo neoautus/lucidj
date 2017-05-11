@@ -14,38 +14,37 @@
  * the License.
  */
 
-package org.lucidj.smartbox_renderer;
+package org.lucidj.objectmanager;
 
-import org.lucidj.api.ComponentDescriptor;
-import org.lucidj.api.ComponentManager;
-import org.lucidj.smartbox.SmartBox;
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectFactory;
+import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.ManagedObjectProvider;
+import org.lucidj.api.ObjectManager;
 
-import com.vaadin.server.ClassResource;
-
-import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@Component (immediate = true, publicFactory = false)
+@org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides
-public class SmartBoxRegister
+public class DefaultObjectManagerProvider implements ManagedObjectProvider
 {
     @Requires
-    private ComponentManager componentManager;
+    private ManagedObjectFactory objectFactory;
 
     @Validate
     private void validate ()
     {
-        ComponentDescriptor desc = componentManager.newComponentDescriptor ();
+        objectFactory.register (ObjectManager.class, this, null);
+    }
 
-        // Component description
-        desc.setIcon (new ClassResource (this.getClass (), "public/component-icon.png"));
-        desc.setIconTitle ("SmartBox");
-        desc.setComponentClass (SmartBox.class);
-        componentManager.register (desc);
+    @Override
+    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
+    {
+        return (new DefaultObjectManager ());
     }
 }
 

@@ -273,7 +273,7 @@ public class LauncherUI extends JFrame
                        " (" + System.getProperty ("os.name") + " " + System.getProperty ("os.version") +
                        " " + System.getProperty ("os.arch") + ")</td></tr>";
         logger_text += "<tr><td><b>JDK home:&nbsp;</b></td><td>" + System.getProperty ("java.home") + "</td></tr>";
-        logger_text += "<tr><td><b>Sys home:&nbsp;</b></td><td>" + System.getProperty ("rq.home") + "</td></tr>";
+        logger_text += "<tr><td><b>Sys home:&nbsp;</b></td><td>" + System.getProperty ("system.home") + "</td></tr>";
         logger_text += "</table>";
         jTextPane1.setText (logger_text);
         prepend_timestamp = true;

@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.nashorn;
+package org.lucidj.quercus;
 
 import org.lucidj.api.CodeEngineManager;
 import org.slf4j.Logger;

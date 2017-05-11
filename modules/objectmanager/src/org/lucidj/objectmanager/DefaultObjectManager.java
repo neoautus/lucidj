@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,6 +16,8 @@
 
 package org.lucidj.objectmanager;
 
+import org.lucidj.api.ManagedObject;
+import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-// ECAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-public class DefaultObjectManager implements ObjectManager
+public class DefaultObjectManager implements ObjectManager, ManagedObject
 {
     private final transient static Logger log = LoggerFactory.getLogger (DefaultObjectManager.class);
 
@@ -239,6 +240,18 @@ public class DefaultObjectManager implements ObjectManager
             log.info ("setObjectEventListener: adding {} {}", i, object_list.get (i));
             listener.addingObject (object_list.get (i), i);
         }
+    }
+
+    @Override
+    public void validate (ManagedObjectInstance instance)
+    {
+
+    }
+
+    @Override
+    public void invalidate (ManagedObjectInstance instance)
+    {
+
     }
 }
 

@@ -16,7 +16,6 @@
 
 package org.lucidj.smartbox;
 
-import org.lucidj.api.BundleRegistry;
 import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
 import org.lucidj.api.ComponentInterface;
@@ -26,11 +25,11 @@ import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
-import org.lucidj.objectmanager.DefaultObjectManager;
 import org.lucidj.console.Console;
-import org.lucidj.vaadin.Vaadin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.vaadin.ui.AbstractComponent;
 
 import java.util.HashMap;
 
@@ -39,7 +38,6 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
 
     private final SmartBox self = this;
-    private String descriptor_id;
 
     private int component_state = ACTIVE;
     private ComponentState.ChangeListener state_listener;
@@ -52,10 +50,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
     // TODO: GET RID OF THESE DEPENDENCIES!!!
     private Console console;
-    private Vaadin vaadin;
-    private Karaf karaf;
 
-    private BundleRegistry bundleRegistry;
     private ManagedObjectFactory objectFactory;
     private CodeEngine code_engine;
     private CodeContext code_context;
@@ -65,16 +60,14 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 //        init ();
     }
 
-    public SmartBox (CodeEngine code_engine, BundleRegistry bundleRegistry, ManagedObjectFactory objectFactory)
+    public SmartBox (ManagedObjectFactory objectFactory)
     {
-        this.bundleRegistry = bundleRegistry;
         this.objectFactory = objectFactory;
+        log.info ("objectFactory = {}", objectFactory);
 
-        this.code_engine = code_engine;
-        code_context = code_engine.getContext ();
-
-        log.info ("#### bundleRegistry = {}", bundleRegistry);
-        init ();
+        // Create our own ObjectManager
+        ManagedObjectInstance om_instance = objectFactory.newInstance (ObjectManager.class, null);
+        om = om_instance.adapt (ObjectManager.class);
     }
 
     // TODO: DECOUPLE THESE OBJECTS INTO PLUGGABLE STRUCTURES
@@ -95,44 +88,15 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         return (console);
     }
 
-//    private Vaadin get_vaadin (boolean show)
-//    {
-//        if (vaadin == null)
-//        {
-//            ManagedObjectInstance console_instance = objectFactory.newInstance (Vaadin.class, null);
-//            vaadin = console_instance.adapt (Vaadin.class);
-//        }
-//
-//        if (show && om.getObject (Vaadin.class.getCanonicalName ()) == null)
-//        {
-//            om.showObject (vaadin);
-//            om.setObjectTag (vaadin, Vaadin.class.getCanonicalName ());
-//        }
-//
-//        return (vaadin);
-//    }
-
-
-    private Karaf get_karaf ()
+    private void set_code_engine (CodeEngine code_engine)
     {
-        if (karaf == null)
-        {
-            karaf = new Karaf ();
-        }
+        log.info ("---> set_code_engine: {}", code_engine);
+        this.code_engine = code_engine;
+        code_context = code_engine.getContext ();
 
-        // Creates a new session for every run
-        return (karaf);
-    }
+        log.info ("set_code_engine(): code_engine={} code_context={}", code_engine, code_context);
 
-    private void init ()
-    {
-        log.info ("bundleRegistry = {}", bundleRegistry);
-
-        // TODO: FACTORY....
-        om = new DefaultObjectManager ();
-
-        log.info ("code_engine = {}", code_engine);
-
+        // TODO: REMOVE THIS CALLBACK IF CodeEngine IS CHANGED
         code_context.addCallbacksListener (new CodeContext.Callbacks ()
         {
             @Override
@@ -151,7 +115,10 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             public void fetchService (String svcName, Object svcObject)
             {
                 log.info ("fetchService(svcName={}, svcObject={})", svcName, svcObject);
-                if (svcObject instanceof Vaadin) // TODO: OTHER KIND OF OBJECT
+
+                // When the returned object is a visual component,
+                // it is added automatically on the object output
+                if (svcObject instanceof AbstractComponent)
                 {
                     if (om.getObject (svcName) == null)
                     {
@@ -209,53 +176,11 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
                 // TODO: ADD LATER SOME AUTO UPDATE
                 //update_pragmas ();
             }
-
-            // TODO: ALL THIS SHOULD GO TO CodeBindings
-/*
-            @Override
-            public Object getVariable (String varname)
-                throws NoSuchFieldError
-            {
-                log.debug ("getDynamicVariable {}", varname);
-
-                if ("Console".equals(varname))
-                {
-                    // Console is alias for current System.out
-                    return (System.out);
-                }
-                else if ("Vaadin".equals (varname))
-                {
-                    // Return current Vaadin output object
-                    return (get_vaadin (true));
-                }
-                else if ("Karaf".equals (varname))
-                {
-                    return (get_karaf ());
-                }
-                else if ("Self".equals (varname))
-                {
-                    return (self);
-                }
-//                else if ("Pipe".equals (varname))
-//                {
-//                    return (Pipe.pipe ());
-//                }
-//                else if (Kernel.currentTaskContext ().getPublishedObject (varname) != null)
-//                {
-//                    return (Kernel.currentTaskContext ().getPublishedObject (varname));
-//                }
-                throw new NoSuchFieldError (varname);
-            }
-*/
         });
     }
 
     private void eventhandler_run ()
     {
-//        log.info ("TaskContext before = {}", Kernel.currentTaskContext ());
-//        Kernel.bindTaskContext (tctx);
-//        log.info ("TaskContext after = {}", Kernel.currentTaskContext ());
-
         log.info (">>> RUN {}", code);
         get_console (false).clear ();
 //        get_vaadin (false).removeAllComponents ();
@@ -265,20 +190,13 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     }
 
     @Override // ComponentInterface
-    public String getDescriptorId ()
-    {
-        return (descriptor_id);
-    }
-
-    @Override // ComponentInterface
-    public void setDescriptorId (String descriptor_id)
-    {
-        this.descriptor_id = descriptor_id;
-    }
-
-    @Override // ComponentInterface
     public Object fireEvent (Object source, Object event)
     {
+        if (code_engine == null)
+        {
+            return (null);
+        }
+
         if (event instanceof String)
         {
             String action = (String)event;
@@ -304,6 +222,11 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     public void setProperty (String name, Object value)
     {
         properties.put (name, value);
+
+        if (CodeEngine.CODE_ENGINE.equals (name))
+        {
+            set_code_engine ((CodeEngine)value);
+        }
     }
 
     @Override // ComponentInterface
@@ -359,9 +282,15 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         return (true);
     }
 
+    // TODO: CHECK OR REORDER THIS MECHANISM
     @Override
     public boolean signal (int signal)
     {
+        if (code_engine == null)
+        {
+            return (false);
+        }
+
         if (signal == SIGTERM && component_state == RUNNING)
         {
             code_engine.getThread ().interrupt ();

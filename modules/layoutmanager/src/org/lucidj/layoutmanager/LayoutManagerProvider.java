@@ -32,7 +32,7 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Provides
 public class LayoutManagerProvider implements RendererProvider
 {
-    private LayoutManager console_filter = new LayoutManager (null);
+    private LayoutManager instance_filter = new LayoutManager (null);
 
     @Requires
     private ManagedObjectFactory objectFactory;
@@ -43,7 +43,7 @@ public class LayoutManagerProvider implements RendererProvider
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
-        if (console_filter.compatibleObject (object))
+        if (instance_filter.compatibleObject (object))
         {
             LayoutManager renderer = new LayoutManager (rendererFactory);
             ManagedObjectInstance object_instance = objectFactory.wrapObject (renderer);

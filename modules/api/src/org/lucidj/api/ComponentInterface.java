@@ -18,9 +18,6 @@ package org.lucidj.api;
 
 public interface ComponentInterface
 {
-    String getDescriptorId ();
-    void   setDescriptorId (String descriptor_id);
-
     Object fireEvent (Object source, Object event);
 
     void setValue (Object value);

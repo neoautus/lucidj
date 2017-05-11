@@ -22,6 +22,7 @@ package org.lucidj.api;
 
 public interface ManagedObject
 {
+    // TODO: INJECT ManagedObjectInstance BACK-REFERENCE USING Javassist ET AL
     void validate   (ManagedObjectInstance instance);
     void invalidate (ManagedObjectInstance instance);
 }

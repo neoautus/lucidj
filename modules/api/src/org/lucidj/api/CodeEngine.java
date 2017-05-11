@@ -20,6 +20,8 @@ import java.io.Reader;
 
 public interface CodeEngine extends CodeEngineBase
 {
+    String CODE_ENGINE = ".CodeEngine-Engine";
+
     CodeContext exec      (String script, CodeContext context);
     CodeContext exec      (Reader reader, CodeContext context);
     Thread      getThread ();

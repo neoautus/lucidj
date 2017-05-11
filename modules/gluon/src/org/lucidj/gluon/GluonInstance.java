@@ -186,6 +186,30 @@ public class GluonInstance implements SerializerInstance
     }
 
     @Override
+    public SerializerInstance setObjectClass (String clazz)
+    {
+        return (setProperty (GluonConstants.OBJECT_CLASS, new GluonObject (clazz)));
+    }
+
+    @Override
+    public boolean serializeAs (Object object, String clazz)
+    {
+        if (serializer.applySerializer (this, object))
+        {
+            setObjectClass (clazz);
+            return (true);
+        }
+        return (false);
+    }
+
+    @Override
+    public Object deserializeAs (String clazz)
+    {
+        setObjectClass (clazz);
+        return (_resolveObject ());
+    }
+
+    @Override
     public SerializerInstance setAttribute (String property, String attribute, Object object)
     {
         GluonInstance entry = getOrCreatePropertyEntry (property);

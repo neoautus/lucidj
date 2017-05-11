@@ -30,6 +30,8 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 
+// TODO: LIBRARIAN WILL BE MIGRATED TO PACKAGE-LEVEL JAR LOADING
+
 @Component (immediate = true)
 @Instantiate
 @Provides
@@ -92,18 +94,6 @@ public class Librarian implements ComponentInterface
     public Object getProperty (String name)
     {
         return (properties.get (name));
-    }
-
-    @Override // ComponentInterface
-    public String getDescriptorId ()
-    {
-        return (descriptor_id);
-    }
-
-    @Override // ComponentInterface
-    public void setDescriptorId (String descriptor_id)
-    {
-        this.descriptor_id = descriptor_id;
     }
 
     @Override

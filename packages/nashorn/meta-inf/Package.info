@@ -11,4 +11,8 @@ X-Package-Tags: utility, plugins
 X-Package-Languages: en, ptBR
 X-Package-StoreIcon: rhino-store.png
 X-Package-Origin: http://openjdk.java.net/projects/nashorn/
+X-Package-Modules: Main, UI
+# Main bundle (the package itself) always include Main module.
+# In this case, it includes also UI module (which is NOT optional)
+X-Package-Bundles: Main;UI
 # Add dependencies for extension fragment (jdk.internal.*)

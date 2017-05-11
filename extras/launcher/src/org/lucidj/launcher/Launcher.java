@@ -37,7 +37,7 @@ public class Launcher implements ExecuteResultHandler
     private String main_class = "org.apache.karaf.main.Main";
     private boolean daemon_mode = true;
 
-    static String rq_home;
+    static String system_home;
     static String jdk_home;
     static String java_exe;
 
@@ -72,22 +72,22 @@ public class Launcher implements ExecuteResultHandler
 
     public static void configure (String app_home_path, String jdk_home_path)
     {
-        rq_home = app_home_path;
+        system_home = app_home_path;
         jdk_home = jdk_home_path;
 
         // TODO: CHECK NULL
-        String karaf_dirname = find_apache_karaf (rq_home + "/runtime");
+        String karaf_dirname = find_apache_karaf (system_home + "/runtime");
 
         // Init Karaf dirs
-        String karaf_home = rq_home + "/runtime/" + karaf_dirname;
-        String karaf_data = rq_home + "/cache/" + karaf_dirname;
+        String karaf_home = system_home + "/runtime/" + karaf_dirname;
+        String karaf_data = system_home + "/cache/" + karaf_dirname;
 
         System.out.println ("Karaf Home: '" + karaf_home + "'");
 
-        System.setProperty ("rq.home", rq_home);
-        System.setProperty ("rq.conf", rq_home + "/conf");
-        System.setProperty ("rq.bootstrap", rq_home + "/runtime/bootstrap");
-        System.setProperty ("rq.deploy", rq_home + "/runtime/application-dev");
+        System.setProperty ("system.home", system_home);
+        System.setProperty ("system.conf", system_home + "/conf");
+        System.setProperty ("system.bootstrap", system_home + "/runtime/bootstrap");
+        System.setProperty ("system.deploy", system_home + "/runtime/application-dev");
         System.setProperty ("java.endorsed.dirs",
             jdk_home + "/jre/lib/endorsed" + path_separator +
             jdk_home + "/lib/endorsed" + path_separator +
@@ -100,7 +100,7 @@ public class Launcher implements ExecuteResultHandler
         System.setProperty ("karaf.home", karaf_home);
         System.setProperty ("karaf.base", karaf_home);
         System.setProperty ("karaf.data", karaf_data);
-        System.setProperty ("karaf.etc", rq_home + "/conf/" + karaf_dirname);
+        System.setProperty ("karaf.etc", system_home + "/conf/" + karaf_dirname);
         System.setProperty ("java.io.tmpdir", karaf_data + "/tmp");
         System.setProperty ("java.util.logging.config.file",
                 karaf_home + "/etc/java.util.logging.properties");
@@ -229,10 +229,10 @@ public class Launcher implements ExecuteResultHandler
         }
 
         // Container args
-        addArgument (cmdline, "rq.home", System.getProperty ("rq.home"));
-        addArgument (cmdline, "rq.conf", System.getProperty ("rq.conf"));
-        addArgument (cmdline, "rq.bootstrap", System.getProperty ("rq.bootstrap"));
-        addArgument (cmdline, "rq.deploy", System.getProperty ("rq.deploy"));
+        addArgument (cmdline, "system.home", System.getProperty ("system.home"));
+        addArgument (cmdline, "system.conf", System.getProperty ("system.conf"));
+        addArgument (cmdline, "system.bootstrap", System.getProperty ("system.bootstrap"));
+        addArgument (cmdline, "system.deploy", System.getProperty ("system.deploy"));
         addArgument (cmdline, "java.endorsed.dirs", System.getProperty ("java.endorsed.dirs"));
         addArgument (cmdline, "java.ext.dirs", System.getProperty ("java.ext.dirs"));
         addArgument (cmdline, "karaf.instances", System.getProperty ("karaf.instances"));

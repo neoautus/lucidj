@@ -26,10 +26,10 @@ import org.lucidj.api.MenuManager;
 import org.lucidj.api.NavigatorManager;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.RendererFactory;
-import org.lucidj.vaadinui.FancyEmptyView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.event.LayoutEvents;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
@@ -40,6 +40,7 @@ import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Accordion;
+import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
@@ -81,7 +82,9 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     private HorizontalSplitPanel hsContentsSidebar = new HorizontalSplitPanel ();
     private HorizontalLayout hToolbarArea = new HorizontalLayout();
     private CssLayout hToolbarPlaceholder = new CssLayout ();
-    private CssLayout emptySidebar = new FancyEmptyView ("Sidebar empty");
+    private CssLayout emptyContents = new CssLayout ();
+    private CssLayout emptySidebar = new CssLayout ();
+    private HorizontalLayout hSecurityArea = new HorizontalLayout ();
     private Button toggle_sidebar;
     private Accordion acMenu = new Accordion ();
     private int default_sidebar_width_pixels = 250;
@@ -136,8 +139,13 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             acMenu.setSizeFull ();
         }
 
-        hsContentsSidebar.setFirstComponent (new FancyEmptyView ());
+        emptyContents = new CssLayout ();
+        emptyContents.addStyleName ("fancy-grid-background");
+        hsContentsSidebar.setFirstComponent (emptyContents);
+
+        emptySidebar.addStyleName ("fancy-grid-background");
         hsContentsSidebar.setSecondComponent (emptySidebar);
+
         hsContentsSidebar.setSplitPosition (default_sidebar_width_pixels, Sizeable.Unit.PIXELS, true);
         hsMenuContents.setFirstComponent (acMenu);
         hsMenuContents.setSecondComponent (hsContentsSidebar);
@@ -277,6 +285,32 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
     }
 
+    private void initSecurityArea ()
+    {
+        HorizontalLayout click_catcher = new HorizontalLayout ();
+        {
+            click_catcher.setDefaultComponentAlignment (Alignment.MIDDLE_LEFT);
+
+            String fancy_css = "background-color: white; vertical-align:middle; width: 32px; height: 32px; border-radius: 50%;";
+            String userinfo_html =
+                "<span style='vertical-align:middle;'>LucidJ Admin</span>" +
+                "&nbsp;&nbsp;" +
+                "<img style='" + fancy_css + "' src='/VAADIN/~/vaadinui_libraries/user-frank-128x128.png'>";
+            Label userinfo = new Label (userinfo_html, ContentMode.HTML);
+            click_catcher.addComponent (userinfo);
+
+            click_catcher.addLayoutClickListener (new LayoutEvents.LayoutClickListener ()
+            {
+                @Override
+                public void layoutClick (LayoutEvents.LayoutClickEvent layoutClickEvent)
+                {
+                    navigator.navigateTo ("accounts");
+                }
+            });
+        }
+        hSecurityArea.addComponent (click_catcher);
+    }
+
     protected void initAllLayouts ()
     {
         initAppLayout ();
@@ -300,12 +334,12 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
                 else
                 {
                     String msg = "Invalid component:\n" + view.getClass ().getCanonicalName ();
-                    hsContentsSidebar.setFirstComponent (new FancyEmptyView (msg));
+                    hsContentsSidebar.setFirstComponent (emptyContents);
                 }
             }
         });
 
-        navigator.setErrorView (FancyEmptyView.class);
+//        navigator.setErrorView (FancyEmptyView.class);  ---> make it better
         navigator.addView (DAMN, damage_report_view);
         nav_manager.configureNavigator (navigator, null);
 
@@ -402,6 +436,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     public void init (UI ui)
     {
         initAllLayouts ();
+        initSecurityArea ();
         initNavigator (ui);
     }
 
@@ -409,6 +444,12 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     public Layout getMainLayout ()
     {
         return (vAppLayout);
+    }
+
+    @Override
+    public Layout getSecurityLayout ()
+    {
+        return (hSecurityArea);
     }
 
     @Override // DesktopInterface

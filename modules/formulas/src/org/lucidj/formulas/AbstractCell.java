@@ -17,6 +17,7 @@
 package org.lucidj.formulas;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import org.lucidj.api.Aggregate;
 import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
@@ -44,8 +45,6 @@ import com.vaadin.ui.DragAndDropWrapper;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
-
-import org.osgi.framework.Bundle;
 
 public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutClickListener, ComponentState.ChangeListener
 {
@@ -119,6 +118,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
     private Component build_insert_here ()
     {
         Label message = new Label ("Drag or double-click any component to add one or more here");
+        // TODO: FIX WRONG TEXT-WRAPPING WHEN CELL TOO NARROW
         message.addStyleName ("formula-insert-here");
         message.setHeight (64, Sizeable.Unit.PIXELS);
         message.setWidth (100, Sizeable.Unit.PERCENTAGE);
@@ -135,15 +135,16 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         String icon_url = "/VAADIN/~/formulas/impossible.png";
         String icon_title = "The Unknown";
 
-        if (source_object instanceof ComponentInterface)
+        ComponentInterface component_interface = Aggregate.adapt (source_object, ComponentInterface.class);
+        if (component_interface != null)
         {
             // If it is a valid component, displays its icon on the top left corner of the cell
-            ComponentDescriptor descriptor = Formulas.getComponentManager ().getComponentDescriptor (source_object);
+            ComponentDescriptor descriptor =
+                (ComponentDescriptor)component_interface.getProperty (ComponentDescriptor.DESCRIPTOR);
 
             if (descriptor != null)
             {
-                Bundle bnd = descriptor.getComponentBundle ();
-                icon_url = "/VAADIN/~/" + bnd.getSymbolicName () + "/component-icon.png"; // <-- getIcon() instead
+                icon_url = descriptor.getIconUrl ();
                 icon_title = descriptor.getIconTitle ();
             }
         }
@@ -188,9 +189,9 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         running.setVisible (false);
         right_panel.addComponent (running);
 
-        if (source_object instanceof ComponentState)
+        ComponentState source_state = Aggregate.adapt (source_object, ComponentState.class);
+        if (source_state != null)
         {
-            ComponentState source_state = (ComponentState)source_object;
             source_state.addStateListener (this);
             setRunning (true, source_state);
         }

@@ -46,6 +46,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import org.osgi.framework.BundleContext;
 
+import org.lucidj.api.Aggregate;
 import org.lucidj.api.ApplicationInterface;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentState;
@@ -184,10 +185,10 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         @Override
         public void taskStateClick (int task_state)
         {
-            if (getSourceObject () instanceof ComponentState)
-            {
-                ComponentState cs = (ComponentState)getSourceObject ();
+            ComponentState cs;
 
+            if ((cs = Aggregate.adapt (getSourceObject (), ComponentState.class)) != null)
+            {
                 if (task_state == ComponentState.RUNNING)
                 {
                     cs.signal (ComponentState.SIGTERM);

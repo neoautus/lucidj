@@ -20,6 +20,7 @@ import java.util.Map;
 
 public interface ManagedObjectFactory
 {
+    // TODO: REQUEST A GROUP OF INTERFACES/ASPECTS
     ManagedObjectInstance register (String clazz, ManagedObjectProvider provider, Map<String, Object> properties);
     ManagedObjectInstance register (Class clazz, ManagedObjectProvider provider, Map<String, Object> properties);
     ManagedObjectInstance[] getManagedObjects (String clazz, String filter);

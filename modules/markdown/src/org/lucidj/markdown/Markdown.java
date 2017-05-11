@@ -76,18 +76,6 @@ public class Markdown implements ComponentInterface
         return (properties.get (name));
     }
 
-    @Override
-    public String getDescriptorId ()
-    {
-        return (descriptor_id);
-    }
-
-    @Override
-    public void setDescriptorId (String descriptor_id)
-    {
-        this.descriptor_id = descriptor_id;
-    }
-
     @Override // ComponentInterface
     public Object fireEvent (Object source, Object event)
     {

@@ -86,8 +86,7 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         }
         else if ((current_renderer = renderer_factory.getCompatibleRenderer (obj)) != null)
         {
-            // Link and trigger initial update
-            current_renderer.objectLinked (obj);
+            // Issue initial update
             current_renderer.objectUpdated ();
             new_component = current_renderer.renderingComponent ();
         }

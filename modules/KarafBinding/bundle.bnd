@@ -1,0 +1,2 @@
+# Transitive optional dependencies from org.osgi.compendium
+Import-Package: javax.microedition.io;resolution:=optional,javax.persistence;resolution:=optional,*

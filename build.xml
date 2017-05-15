@@ -1093,8 +1093,8 @@
                 <include name="gson/jar/gson-*.jar"/>
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
-                <include name="jansi/jar/*.jar"/>
                 <include name="javassist/bundle/*.jar"/>
+                <include name="karaf-util/bundle/org.apache.felix.gogo.runtime-*.jar"/>
 
                 <!-- iPOJO -->
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>

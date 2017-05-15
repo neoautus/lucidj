@@ -1099,6 +1099,9 @@
                 <!-- iPOJO -->
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.extender-*.jar"/>
+
+                <!-- Hazelcast -->
+                <include name="hazelcast/jar/*.jar"/>
             </fileset>
 
             <!-- Include the non-osgi bastards -->

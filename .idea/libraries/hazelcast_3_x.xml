@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="hazelcast-3.x">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/cache/lib/hazelcast/jar/hazelcast-3.7.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -151,15 +151,9 @@
             <ivy:dependency org="javax" name="javaee-api" rev="7.0" />
         </pathdep>
 
-        <!--property name="beanshell.rev" value="2.0b4"/>
-        <pathdep group="bsh">
-            <ivy:dependency org="org.beanshell" name="bsh-util"      rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-reflect"   rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-core"      rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-commands"  rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-classgen"  rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-classpath" rev="${beanshell.rev}"/>
-        </pathdep-->
+        <pathdep group="hazelcast">
+            <ivy:dependency org="com.hazelcast" name="hazelcast" rev="3.7.2" transitive="false"/>
+        </pathdep>
 
         <pathdep group="gson">
             <ivy:dependency org="com.google.code.gson" name="gson" rev="2.4"/>

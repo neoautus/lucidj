@@ -76,5 +76,6 @@
     <orderEntry type="library" name="javaee-api-7.0" level="project" />
     <orderEntry type="library" name="commons-exec-1.x" level="project" />
     <orderEntry type="library" name="bouncycastle-1.5x" level="project" />
+    <orderEntry type="library" name="hazelcast-3.x" level="project" />
   </component>
 </module>

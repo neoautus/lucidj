@@ -232,7 +232,7 @@
                     Bundle-Name: wrapped-${bsn}
                     Bundle-Version: ${version}
                     Import-Package: *;resolution:=optional
-                    Export-Package: *;version=${version}
+                    Export-Package: !javax.*,*;version=${version}
                 </echo>
                 <bnd files="${output.bnd}" output="${output.jar}"
                      eclipse="false" failok="false" exceptions="true">

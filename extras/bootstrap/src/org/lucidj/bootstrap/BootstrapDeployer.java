@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,8 +16,6 @@
 
 package org.lucidj.bootstrap;
 
-import org.apache.karaf.features.BootFinished;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -33,20 +31,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.wiring.BundleRevision;
 
 public class BootstrapDeployer extends Thread implements BundleListener
 {
-    TinyLog log = new TinyLog ();
+    private TinyLog log = new TinyLog ();
 
     private BundleContext context;
 
     private String watched_directory;
-    private int poll_ms = 2000;
-    private boolean initial_delay_flag = false;
-    private int initial_delay_ms = 3000;
+    private int poll_ms = 1000;
 
     private Map<String, Bundle> managed_bundles = new ConcurrentHashMap<> ();
     private Set<Bundle> installing_bundles = new HashSet<> ();
@@ -57,7 +53,6 @@ public class BootstrapDeployer extends Thread implements BundleListener
     public BootstrapDeployer (BundleContext context)
     {
         this.context = context;
-        this.context.addBundleListener (this);
         setName (this.context.getBundle ().getSymbolicName ());
 
         // TODO: (IN)SANITY CHECKS
@@ -262,6 +257,7 @@ public class BootstrapDeployer extends Thread implements BundleListener
                 }
                 else // The bundle isn't installed yet
                 {
+                    // TODO: GIVE ONLY A DEFINED NUMBER OF RETRIES ON FAULTY BUNDLES
                     try
                     {
                         new_bundle = context.installBundle (bnd_uri);
@@ -269,14 +265,21 @@ public class BootstrapDeployer extends Thread implements BundleListener
                         installing_bundles.add (new_bundle);
                         log.info ("Installing bundle {} from {}", new_bundle, bnd_uri);
                     }
+                    catch (BundleException e)
+                    {
+                        log.error ("Exception installing bundle {}: {}", bnd_uri, e.getMessage ());
+                    }
                     catch (Exception e)
                     {
                         log.error ("Exception on bundle install: {}", bnd_uri, e);
                     }
                 }
 
-                // We always store the bundle info assigned with every file (even invalid ones)
-                managed_bundles.put (bnd_uri, new_bundle);
+                if (new_bundle != null)
+                {
+                    // We always store the bundle info assigned with every file (even invalid ones)
+                    managed_bundles.put (bnd_uri, new_bundle);
+                }
             }
         }
     }
@@ -337,88 +340,28 @@ public class BootstrapDeployer extends Thread implements BundleListener
     @Override
     public void run ()
     {
-        long check_start_time = System.currentTimeMillis ();
-
-        log.info ("Bootstrap bundle scanner started");
-
-        if (initial_delay_flag)
-        {
-            log.info ("Initial delay {}ms", initial_delay_ms);
-
-            try
-            {
-                // Enforce a delay before the first directory scan
-                Thread.sleep (initial_delay_ms);
-            }
-            catch (InterruptedException e)
-            {
-                log.info ("Watcher initial delay interrupted", e);
-                // TODO: KEEP THE LOOP, EXIT WHEN THREAD STOPPED
-                //return;
-            }
-        }
-
-        //-------------------------------------------------------------------
-        // IMPORTANT: SERVICE BootFinished IS REGISTERED WHEN KARAF FINISHES
-        // STARTING IT'S INTERNAL FEATURES/BUNDLES, SO WE CAN KICK IN
-        //-------------------------------------------------------------------
-        String boot_finished_svc = BootFinished.class.getCanonicalName ();
-        boolean boot_finished_flag = false;
-        boolean start_level_good_flag = false;
-        bootstrap_finished = false;
+        log.info ("Bootstrap bundle scanner started: {}", watched_directory);
+        context.addBundleListener (this);
 
         //-----------
         // Main loop
         //-----------
         while (!interrupted ())
         {
-            if (!start_level_good_flag)
-            {
-                log.info ("System check cycle {}ms", System.currentTimeMillis () - check_start_time);
-            }
-
             try
             {
-                if (context.getBundle (0) == null)
+                // Will stop the scanner when the system is shutting down,
+                // even without receiving an interrupt()
+                if (context.getBundle (0).getState () != Bundle.ACTIVE)
                 {
-                    log.error ("The Daleks are here. It's time to die :(");
+                    log.info ("Stopping deployment scanner due to system shutdown");
                     break;
                 }
 
-                //----------------------
-                // Check framework boot
-                //----------------------
-                if (!boot_finished_flag)
-                {
-                    ServiceReference boot_marker = context.getServiceReference (boot_finished_svc);
-
-                    log.debug ("boot_marker = {}", boot_marker);
-
-                    if (boot_marker != null)
-                    {
-                        log.info ("Framework is ready for deployments");
-                        boot_finished_flag = true;
-                    }
-                }
-
-                //--------------------------
-                // Check proper start level
-                //--------------------------
-                if (boot_finished_flag)
-                {
-                    // Don't access the disk when the framework is still in a startup phase.
-                    start_level_good_flag = (context.getBundle (0).getState() == Bundle.ACTIVE);
-                }
-
-                if (boot_finished_flag && start_level_good_flag)
-                {
-                    //--------------
-                    // Main actions
-                    //--------------
-                    locate_removed_updated_bundles ();
-                    locate_added_bundles ();
-                    update_bundle_states ();
-                }
+                // Treat all bundle changes
+                locate_removed_updated_bundles ();
+                locate_added_bundles ();
+                update_bundle_states ();
 
                 if (installing_bundles.size () > 0)
                 {
@@ -443,7 +386,8 @@ public class BootstrapDeployer extends Thread implements BundleListener
             }
             catch (InterruptedException e)
             {
-                return;
+                log.info ("Deployment thread interrupted");
+                break;
             }
             catch (Throwable e)
             {
@@ -455,28 +399,31 @@ public class BootstrapDeployer extends Thread implements BundleListener
                 catch (IllegalStateException t)
                 {
                     // FileInstall bundle has been uninstalled, exiting loop
-                    return;
+                    break;
                 }
-
                 log.error ("In main loop, serious trouble we have, young padawan", e);
             }
         }
+
+        context.removeBundleListener (this);
+
+        log.info ("Deployment scanner terminated");
     }
 
     public void close ()
     {
-        log.info ("Closing scanner thread...");
-
-        context.removeBundleListener (this);
-
-        try
+        if (isAlive ())
         {
-            interrupt ();
-            join (10000);
-        }
-        catch (InterruptedException ignore) {};
+            log.info ("Terminating deployment scanner thread");
+            context.removeBundleListener (this);
 
-        log.info ("Scanner thread closed.");
+            try
+            {
+                interrupt ();
+                join (10000);
+            }
+            catch (InterruptedException ignore) {};
+        }
     }
 
     public synchronized boolean bootstrapFinished ()
@@ -487,6 +434,14 @@ public class BootstrapDeployer extends Thread implements BundleListener
     @Override
     public void bundleChanged (BundleEvent bundleEvent)
     {
+        if (context.getBundle (0).getState () != Bundle.ACTIVE)
+        {
+            // We stop as soon as we detect framework shutdown
+            log.info ("Stopping deployment scanner due to system shutdown");
+            interrupt ();
+            return;
+        }
+
         Bundle bnd = bundleEvent.getBundle ();
         String msg;
 

@@ -75,8 +75,8 @@ public class PkgDeployer implements Runnable
     private void validate ()
     {
         // Configuration
-        // TODO: THIS SHOULD BE RECONFIGURABLE
-        watched_directory = System.getProperty ("system.home") + "/runtime/applications";
+        // TODO: THIS SHOULD BE RECONFIGURABLE!!!
+        watched_directory = System.getProperty ("system.home") + "/local/Applications";
 
         // Start things
         poll_thread = new Thread (this);

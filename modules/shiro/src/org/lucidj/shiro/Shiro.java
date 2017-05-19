@@ -139,9 +139,11 @@ public class Shiro implements SecurityEngine
             return (null);
         }
 
+        // TODO: THIS WILL CHANGE. THE LOCAL ACCOUNT MAPS DIRECTLY TO local/[Workspaces,Applications,etc]
+
         String username = subject.getPrincipal ();
         // TODO: CHANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        return (getDefaultUserFS ().getPath (getSystemHome (), "userdata", username));
+        return (getDefaultUserFS ().getPath (getSystemHome (), "local", "Workspaces"));
     }
 }
 

@@ -79,7 +79,7 @@ public class GluonUtil
     public static void dumpRepresentation (GluonInstance root, String filename)
     {
         // TODO: THIS SHOULD BE RECONFIGURABLE
-        Path userdir = FileSystems.getDefault ().getPath (System.getProperty ("system.home"), "userdata");
+        Path userdir = FileSystems.getDefault ().getPath (System.getProperty ("system.home"), "local");
         Path destination_path = userdir.resolve (filename);
         Charset cs = Charset.forName ("UTF-8");
         Writer writer = null;

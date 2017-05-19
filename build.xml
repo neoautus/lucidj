@@ -1439,7 +1439,8 @@
             <local name="bnd.file"/>
                 <property name="bnd.file" value="${bnd.build.dir}/bundle.bnd"/>
             <local name="bnd.dist.jar"/>
-                <property name="bnd.dist.jar" value="${dist.dir}/${bnd.name}.jar"/>
+                <!-- Introducing Lucidj Extendable Application Package ;) -->
+                <property name="bnd.dist.jar" value="${dist.dir}/${bnd.name}.leap"/>
 
             <!-- Package structure properties -->
             <local name="bundles.dirname"/>

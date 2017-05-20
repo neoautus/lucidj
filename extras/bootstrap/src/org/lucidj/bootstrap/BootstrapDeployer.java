@@ -249,7 +249,8 @@ public class BootstrapDeployer extends Thread implements BundleListener
                         log.info ("Linking bundle {} from {}", new_bundle, bnd_uri);
                         update_if_changed (new_bundle, bnd_file);
 
-                        if (!is_fragment (new_bundle))
+                        if (!is_fragment (new_bundle)
+                            && new_bundle.getState () != Bundle.ACTIVE)
                         {
                             linked_bundles.add (new_bundle);
                         }

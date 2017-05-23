@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.rationalq.aceeditor;
+package org.lucidj.aceeditor;
 
 import com.vaadin.shared.ui.JavaScriptComponentState;
 

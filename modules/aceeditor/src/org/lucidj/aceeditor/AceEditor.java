@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.rationalq.aceeditor;
+package org.lucidj.aceeditor;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -84,7 +84,7 @@ public class AceEditor extends AbstractJavaScriptComponent implements Component.
             @Override
             public void call(JsonArray arguments)
             {
-                log.info("server_afterRender: arguments = {}", arguments.toJson());
+                log.debug ("server_afterRender: arguments = {}", arguments.toJson());
 
                 // When we receive afterRender event, the editor contents are already loaded.
                 // We only use s_value to do the _initial load_ for the js component.
@@ -102,7 +102,7 @@ public class AceEditor extends AbstractJavaScriptComponent implements Component.
                     String width = arguments.get(0).asString () + "px";
                     setWidth (width);
                     state.width = width;
-                    log.info("setWidth = {}", (float)arguments.get(0).asNumber ());
+                    log.debug ("setWidth = {}", (float)arguments.get(0).asNumber ());
                 }
 
                 if (getHeight() == -1)
@@ -116,7 +116,7 @@ public class AceEditor extends AbstractJavaScriptComponent implements Component.
 
                     setHeight (height);
                     state.height = height;
-                    log.info("setHeight = {}", (float)arguments.get(1).asNumber ());
+                    log.debug ("setHeight = {}", (float)arguments.get(1).asNumber ());
                 }
             }
         });
@@ -126,7 +126,7 @@ public class AceEditor extends AbstractJavaScriptComponent implements Component.
             @Override
             public void call(JsonArray arguments)
             {
-                log.info ("server_onChangeValue: arguments = {}", arguments.toJson());
+                log.debug ("server_onChangeValue: arguments = {}", arguments.toJson());
 
                 c_value = arguments.getString(0);
 
@@ -143,7 +143,7 @@ public class AceEditor extends AbstractJavaScriptComponent implements Component.
             @Override
             public void call(JsonArray arguments)
             {
-                log.info ("server_onFocus: arguments = {}", arguments.toJson());
+                log.debug ("server_onFocus: arguments = {}", arguments.toJson());
 
                 for (FieldEvents.FocusListener listener: focusListeners)
                 {
@@ -157,7 +157,7 @@ public class AceEditor extends AbstractJavaScriptComponent implements Component.
             @Override
             public void call(JsonArray arguments)
             {
-                log.info ("server_onBlur: arguments = {}", arguments.toJson());
+                log.debug ("server_onBlur: arguments = {}", arguments.toJson());
 
                 JsonObject cursor = arguments.getObject (0);
 
@@ -165,7 +165,7 @@ public class AceEditor extends AbstractJavaScriptComponent implements Component.
                 {
                     c_cursor_row = (int)arguments.getObject (0).getNumber ("row");
                     c_cursor_column = (int)arguments.getObject (0).getNumber("column");
-                    log.info("server_onBlur: row={} column={}", c_cursor_row, c_cursor_column);
+                    log.debug ("server_onBlur: row={} column={}", c_cursor_row, c_cursor_column);
                 }
             }
         });

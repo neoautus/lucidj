@@ -14,7 +14,7 @@
  * the License.
  */
 
-org_rationalq_aceeditor_AceEditor = function ()
+org_lucidj_aceeditor_AceEditor = function ()
 {
     var self = this;
     var state = this.getState();

@@ -19,7 +19,7 @@ package org.lucidj.markdown_renderer;
 import org.lucidj.api.EditorInterface;
 import org.lucidj.api.Renderer;
 import org.lucidj.markdown.Markdown;
-import org.rationalq.aceeditor.AceEditor;
+import org.lucidj.aceeditor.AceEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

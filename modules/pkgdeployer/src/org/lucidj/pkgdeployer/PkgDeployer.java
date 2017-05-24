@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,7 +16,7 @@
 
 package org.lucidj.pkgdeployer;
 
-import org.lucidj.api.BundleDeployer;
+import org.lucidj.api.ArtifactDeployer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ public class PkgDeployer implements Runnable
     private BundleContext context;
 
     @Requires
-    private BundleDeployer bnd_deployer;
+    private ArtifactDeployer artifactDeployer;
 
     private String watched_directory;
     private Thread poll_thread;
@@ -62,11 +62,11 @@ public class PkgDeployer implements Runnable
 
             log.debug ("INSTALL Scanning {} -> {}", package_uri, package_file);
 
-            Bundle bnd = bnd_deployer.getBundleByLocation (package_uri);
+            Bundle bnd = artifactDeployer.getArtifactByLocation (package_uri);
 
             if (bnd == null) // The bundle isn't installed yet
             {
-                bnd_deployer.installBundle (package_uri);
+                artifactDeployer.installArtifact (package_uri);
             }
         }
     }

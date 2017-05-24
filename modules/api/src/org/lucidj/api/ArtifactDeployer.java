@@ -19,14 +19,16 @@ package org.lucidj.api;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Version;
 
-public interface BundleDeployer
+public interface ArtifactDeployer
 {
-    Bundle getBundleByDescription (String symbolic_name, Version version);
-    Bundle installBundle (String location);
-    boolean updateBundle (Bundle bnd);
-    boolean refreshBundle (Bundle bnd);
-    boolean uninstallBundle (Bundle bnd);
-    Bundle getBundleByLocation (String location);
+    Bundle getArtifactByDescription (String symbolic_name, Version version);
+    Bundle installArtifact (String location);
+    boolean openArtifact (Bundle bnd);
+    boolean closeArtifact (Bundle bnd);
+    boolean updateArtifact (Bundle bnd);
+    boolean refreshArtifact (Bundle bnd);
+    boolean uninstallArtifact (Bundle bnd);
+    Bundle getArtifactByLocation (String location);
 }
 
 // EOF

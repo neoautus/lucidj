@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,6 +16,7 @@
 
 package org.lucidj.pkgdeployer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +50,9 @@ import org.apache.felix.ipojo.annotations.Validate;
 //
 //   Low-level bundle services
 //   Non-volatile properties                               Main deployment service
-//   +-----------------+                                   +------------------+
-//   |  BundleManager  |<---------------------------------1|  BundleDeployer  |<---1 System
-//   +-----------------+                                   +------------------+
+//   +-----------------+                                   +--------------------+
+//   |  BundleManager  |<---------------------------------1|  ArtifactDeployer  |<---1 System
+//   +-----------------+                                   +--------------------+
 //        ^   ^   ^                                                 *
 //        |   |   |           +---------------------+               |
 //        |   |   \----------1|  DeploymentEngineA  |<--------------+
@@ -74,9 +75,8 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides (specifications = BundleManager.class)
 public class DefaultBundleManager implements BundleManager, BundleListener
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultBundleDeployer.class);
+    private final static transient Logger log = LoggerFactory.getLogger (DefaultBundleManager.class);
 
-    private final static String DBM_BUNDLE_STATE_HUMAN = "bundle-status-human";
     private final static String REFERENCE_PREFIX = "reference:";
 
     @Context
@@ -131,9 +131,9 @@ public class DefaultBundleManager implements BundleManager, BundleListener
                 Properties properties = new Properties ();
                 properties.load (new FileInputStream (bundle_data_file));
 
-                if (properties.containsKey (PROP_LOCATION))
+                if (properties.containsKey (Artifact.PROP_LOCATION))
                 {
-                    bundle_prop_cache.put (properties.getProperty (PROP_LOCATION), properties);
+                    bundle_prop_cache.put (properties.getProperty (Artifact.PROP_LOCATION), properties);
                 }
                 else
                 {
@@ -154,7 +154,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         try
         {
             // Always store location so we can populate the bundle cache properly
-            properties.setProperty (PROP_LOCATION, location);
+            properties.setProperty (Artifact.PROP_LOCATION, location);
             properties.store (new FileOutputStream (get_bundle_data_file (location)), null);
             return (true);
         }
@@ -196,8 +196,8 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         }
         
         // Store bundle state
-        properties.setProperty (PROP_BUNDLE_STATE, Integer.toString (bnd.getState ()));
-        properties.setProperty (DBM_BUNDLE_STATE_HUMAN, get_state_string (bnd.getState ()));
+        properties.setProperty (Artifact.PROP_BUNDLE_STATE, Integer.toString (bnd.getState ()));
+        properties.setProperty (Artifact.PROP_BUNDLE_STATE_HUMAN, get_state_string (bnd.getState ()));
         store_properties (location, properties);
 
         switch (bundleEvent.getType ())
@@ -219,7 +219,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
             {
                 try
                 {
-                    if ("transient".equalsIgnoreCase (properties.getProperty (PROP_BUNDLE_START, "normal")))
+                    if ("transient".equalsIgnoreCase (properties.getProperty (Artifact.PROP_BUNDLE_START, "normal")))
                     {
                         log.info ("Bundle {} is resolved -- will start transient now", bnd);
                         bnd.start (Bundle.START_TRANSIENT);
@@ -281,7 +281,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         log.debug ("bundleChanged: {} eventType={} state={}", bnd, msg, get_state_string (bnd.getState ()));
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public Manifest getManifest (File file)
     {
         FileInputStream file_stream = null;
@@ -320,7 +320,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         }
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public Manifest getManifest (String location)
     {
         try
@@ -333,7 +333,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         }
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public Bundle getBundleByDescription (String symbolic_name, Version version)
     {
         // TODO: ADD CACHE
@@ -391,7 +391,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         return (null);
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public Bundle installBundle (String location, Properties properties)
     {
         Bundle new_bundle = null;
@@ -436,8 +436,8 @@ public class DefaultBundleManager implements BundleManager, BundleListener
             }
 
             // Add bundle properties to repository, so we can manage it
-            properties.setProperty (PROP_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
-            properties.setProperty (PROP_BUNDLE_STATE, Integer.toString (Bundle.UNINSTALLED));
+            properties.setProperty (Artifact.PROP_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
+            properties.setProperty (Artifact.PROP_BUNDLE_STATE, Integer.toString (Bundle.UNINSTALLED));
             store_properties (location, properties);
 
             // Install bundle
@@ -452,7 +452,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         return (new_bundle);
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public boolean updateBundle (Bundle bnd)
     {
         try
@@ -470,7 +470,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         }
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public boolean refreshBundle (Bundle bnd)
     {
         String location = bnd.getLocation ();
@@ -483,7 +483,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         }
 
         Properties properties = bundle_prop_cache.get (location);
-        long bundle_lastmodified = Long.parseLong (properties.getProperty (PROP_LAST_MODIFIED));
+        long bundle_lastmodified = Long.parseLong (properties.getProperty (Artifact.PROP_LAST_MODIFIED));
 
         if (bundle_lastmodified != bundle_file.lastModified ())
         {
@@ -492,7 +492,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
 
             if (updateBundle (bnd))
             {
-                properties.setProperty (PROP_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
+                properties.setProperty (Artifact.PROP_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
                 store_properties (location, properties);
                 return (true);
             }
@@ -501,7 +501,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         return false;
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public boolean uninstallBundle (Bundle bnd)
     {
         try
@@ -517,7 +517,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         }
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public Bundle getBundleByLocation (String location)
     {
         if (bundle_prop_cache.containsKey (location))
@@ -529,7 +529,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         return (null);
     }
 
-    @Override // BundleDeployer
+    @Override // BundleManager
     public Bundle getBundleByProperty (String property, String value)
     {
         // TODO: Bundle[] getBundlesByProperty(...)
@@ -566,7 +566,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         return (found_bundle);
     }
 
-    @Override
+    @Override // BundleManager
     public Map<Bundle, Properties> getBundles ()
     {
         Map<Bundle, Properties> bundle_list = new HashMap<> ();
@@ -584,7 +584,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         return (bundle_list);
     }
 
-    @Override
+    @Override // BundleManager
     public Properties getBundleProperties (Bundle bnd)
     {
         return (bundle_prop_cache.get (bnd.getLocation ()));

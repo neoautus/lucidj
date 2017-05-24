@@ -22,12 +22,15 @@ import org.osgi.framework.Bundle;
 
 public interface DeploymentEngine
 {
-    String  getEngineName      ();
+    String  getEngineName ();
     int     compatibleArtifact (String location);
-    Bundle  installBundle      (String location, Properties properties);
-    boolean updateBundle       (Bundle bnd);
-    boolean refreshBundle      (Bundle bnd);
-    boolean uninstallBundle    (Bundle bnd);
+    int     getState  (Bundle bnd);    // One of Artifact.STATE_*
+    Bundle  install   (String location, Properties properties);
+    boolean open      (Bundle bnd);
+    boolean close     (Bundle bnd);
+    boolean update    (Bundle bnd);
+    boolean refresh   (Bundle bnd);
+    boolean uninstall (Bundle bnd);
 }
 
 // EOF

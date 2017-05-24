@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,7 +16,7 @@
 
 package org.lucidj.pkgdeployer;
 
-import org.lucidj.api.BundleDeployer;
+import org.lucidj.api.ArtifactDeployer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ class ResourceMapper implements HttpContext
     private HttpService http_service;
 
     @Requires
-    private BundleDeployer bundle_deployer;
+    private ArtifactDeployer artifactDeployer;
 
     @Context
     public BundleContext context;
@@ -78,7 +78,7 @@ class ResourceMapper implements HttpContext
             String resource_path = resource_spec.substring (resource_path_pos);
 
             // Component is a bundle symbolic name
-            Bundle resource_bundle = bundle_deployer.getBundleByDescription (resource_component, null);
+            Bundle resource_bundle = artifactDeployer.getArtifactByDescription (resource_component, null);
 
             log.debug ("resource_component={}, resource_path=>{}<, resource_bundle={}",
                 resource_component, resource_path, resource_bundle);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -83,7 +83,14 @@ public class SourcePackageDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public Bundle installBundle (String location, Properties properties)
+    public int getState (Bundle bnd)
+    {
+        // TODO: HANDLE open() AND close()
+        return 0;
+    }
+
+    @Override
+    public Bundle install (String location, Properties properties)
     {
         Manifest mf = bundle_manager.getManifest (location);
 
@@ -137,14 +144,28 @@ public class SourcePackageDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public boolean updateBundle (Bundle bnd)
+    public boolean open (Bundle bnd)
+    {
+        // TODO: CHECK!!!
+        return (false);
+    }
+
+    @Override
+    public boolean close (Bundle bnd)
+    {
+        // TODO: CHECK!!!
+        return (false);
+    }
+
+    @Override
+    public boolean update (Bundle bnd)
     {
         // TODO: HANDLE Bundles/ AND Resources/
         return (bundle_manager.updateBundle (bnd));
     }
 
     @Override
-    public boolean refreshBundle (Bundle bnd)
+    public boolean refresh (Bundle bnd)
     {
         return (false);
         // TODO: HANDLE Bundles/ AND Resources/
@@ -152,7 +173,7 @@ public class SourcePackageDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public boolean uninstallBundle (Bundle bnd)
+    public boolean uninstall (Bundle bnd)
     {
         // TODO: HANDLE Bundles/ AND Resources/
         return (bundle_manager.uninstallBundle (bnd));

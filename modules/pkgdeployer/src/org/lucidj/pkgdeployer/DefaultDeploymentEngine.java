@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -31,9 +31,9 @@ import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
-@Provides (specifications = DeploymentEngine.class)
+@Provides
 public class DefaultDeploymentEngine implements DeploymentEngine
 {
     private final static transient Logger log = LoggerFactory.getLogger (DefaultDeploymentEngine.class);
@@ -67,25 +67,47 @@ public class DefaultDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public Bundle installBundle (String location, Properties properties)
+    public int getState (Bundle bnd)
+    {
+        // We handle only simple bundles
+        // TODO: HANDLE open() AND close()
+        return (bnd.getState ());
+    }
+
+    @Override
+    public Bundle install (String location, Properties properties)
     {
         return (bundle_manager.installBundle (location, properties));
     }
 
     @Override
-    public boolean updateBundle (Bundle bnd)
+    public boolean open (Bundle bnd)
+    {
+        // Always open
+        return (true);
+    }
+
+    @Override
+    public boolean close (Bundle bnd)
+    {
+        // Always close
+        return (true);
+    }
+
+    @Override
+    public boolean update (Bundle bnd)
     {
         return (bundle_manager.updateBundle (bnd));
     }
 
     @Override
-    public boolean refreshBundle (Bundle bnd)
+    public boolean refresh (Bundle bnd)
     {
         return (bundle_manager.refreshBundle (bnd));
     }
 
     @Override
-    public boolean uninstallBundle (Bundle bnd)
+    public boolean uninstall (Bundle bnd)
     {
         return (bundle_manager.uninstallBundle (bnd));
     }

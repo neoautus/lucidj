@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,7 +16,8 @@
 
 package org.lucidj.pkgdeployer;
 
-import org.lucidj.api.BundleDeployer;
+import org.lucidj.api.Artifact;
+import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
 import org.slf4j.Logger;
@@ -43,19 +44,16 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true)
 @Instantiate
-@Provides (specifications = BundleDeployer.class)
-public class DefaultBundleDeployer implements BundleDeployer, Runnable
+@Provides (specifications = ArtifactDeployer.class)
+public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultBundleDeployer.class);
+    private final static transient Logger log = LoggerFactory.getLogger (DefaultArtifactDeployer.class);
 
     @Context
     private BundleContext context;
 
     @Requires
     private BundleManager bundle_manager;
-
-    private final static String DBD_DEPLOYMENT_ENGINE = "deployment-engine";
-    private final static String DBD_DEPLOYMENT_SOURCE = "deployment-source";
 
     private Map<String, DeploymentEngine> deployment_engines = new ConcurrentHashMap<> ();
 
@@ -110,11 +108,11 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
             throw (new IllegalStateException ("Bundle is unmanaged: " + bnd));
         }
 
-        String deployment_engine_name = properties.getProperty (DBD_DEPLOYMENT_ENGINE);
+        String deployment_engine_name = properties.getProperty (Artifact.PROP_DEPLOYMENT_ENGINE);
 
         if (deployment_engine_name == null)
         {
-            throw (new IllegalStateException ("Internal error: Missing property: " + DBD_DEPLOYMENT_ENGINE));
+            throw (new IllegalStateException ("Internal error: Missing property: " + Artifact.PROP_DEPLOYMENT_ENGINE));
         }
 
         DeploymentEngine engine = deployment_engines.get (deployment_engine_name);
@@ -128,13 +126,13 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
     }
 
     @Override // BundleDeployer
-    public Bundle getBundleByDescription (String symbolic_name, Version version)
+    public Bundle getArtifactByDescription (String symbolic_name, Version version)
     {
         return (bundle_manager.getBundleByDescription (symbolic_name, version));
     }
 
     @Override // BundleDeployer
-    public Bundle installBundle (String location)
+    public Bundle installArtifact (String location)
     {
         Bundle new_bundle = null;
 
@@ -157,11 +155,11 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
 
             // These properties will be stored alongside the bundle and other internal properties
             Properties properties = new Properties ();
-            properties.setProperty (DBD_DEPLOYMENT_ENGINE, deployment_engine.getEngineName ());
-            properties.setProperty (DBD_DEPLOYMENT_SOURCE, location);
+            properties.setProperty (Artifact.PROP_DEPLOYMENT_ENGINE, deployment_engine.getEngineName ());
+            properties.setProperty (Artifact.PROP_SOURCE, location);
 
             // Install bundle!
-            new_bundle = deployment_engine.installBundle (location, properties);
+            new_bundle = deployment_engine.install (location, properties);
             log.info ("Installing package {} from {}", new_bundle, location);
         }
         catch (Exception e)
@@ -171,12 +169,40 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
         return (new_bundle);
     }
 
-    @Override // BundleDeployer
-    public boolean updateBundle (Bundle bnd)
+    @Override
+    public boolean openArtifact (Bundle bnd)
     {
         try
         {
-            return (get_deployment_engine (bnd).updateBundle (bnd));
+            return (get_deployment_engine (bnd).open (bnd));
+        }
+        catch (IllegalStateException e)
+        {
+            log.error ("Exception opening bundle {}", bnd, e);
+            return (false);
+        }
+    }
+
+    @Override
+    public boolean closeArtifact (Bundle bnd)
+    {
+        try
+        {
+            return (get_deployment_engine (bnd).close (bnd));
+        }
+        catch (IllegalStateException e)
+        {
+            log.error ("Exception closing bundle {}", bnd, e);
+            return (false);
+        }
+    }
+
+    @Override // BundleDeployer
+    public boolean updateArtifact (Bundle bnd)
+    {
+        try
+        {
+            return (get_deployment_engine (bnd).update (bnd));
         }
         catch (IllegalStateException e)
         {
@@ -186,11 +212,11 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
     }
 
     @Override // BundleDeployer
-    public boolean refreshBundle (Bundle bnd)
+    public boolean refreshArtifact (Bundle bnd)
     {
         try
         {
-            return (get_deployment_engine (bnd).refreshBundle (bnd));
+            return (get_deployment_engine (bnd).refresh (bnd));
         }
         catch (IllegalStateException e)
         {
@@ -200,11 +226,11 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
     }
 
     @Override // BundleDeployer
-    public boolean uninstallBundle (Bundle bnd)
+    public boolean uninstallArtifact (Bundle bnd)
     {
         try
         {
-            return (get_deployment_engine (bnd).uninstallBundle (bnd));
+            return (get_deployment_engine (bnd).uninstall (bnd));
         }
         catch (IllegalStateException e)
         {
@@ -214,9 +240,9 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
     }
 
     @Override // BundleDeployer
-    public Bundle getBundleByLocation (String location)
+    public Bundle getArtifactByLocation (String location)
     {
-        return (bundle_manager.getBundleByProperty (DBD_DEPLOYMENT_SOURCE, location));
+        return (bundle_manager.getBundleByProperty (Artifact.PROP_SOURCE, location));
     }
 
     private void poll_repository_for_updates_and_removals ()
@@ -225,21 +251,21 @@ public class DefaultBundleDeployer implements BundleDeployer, Runnable
 
         for (Map.Entry<Bundle, Properties> bundle_entry: bundles.entrySet ())
         {
-            String location = bundle_entry.getValue ().getProperty (BundleManager.PROP_LOCATION);
+            String location = bundle_entry.getValue ().getProperty (Artifact.PROP_LOCATION);
             Bundle bundle = bundle_entry.getKey ();
 
             // TODO: USE DeploymentEngine.validBundle() METHOD INSTEAD
             if (get_valid_file (location) == null)
             {
                 // The bundle probably was removed
-                uninstallBundle (bundle);
+                uninstallArtifact (bundle);
             }
             else // Bundle file exists, check for changes
             {
                 // We only refresh if the bundle is active
                 if (bundle.getState () == Bundle.ACTIVE)
                 {
-                    refreshBundle (bundle);
+                    refreshArtifact (bundle);
                 }
             }
         }

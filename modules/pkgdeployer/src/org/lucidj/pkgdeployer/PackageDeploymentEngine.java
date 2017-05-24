@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -47,9 +47,9 @@ import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
-@Provides (specifications = DeploymentEngine.class)
+@Provides
 public class PackageDeploymentEngine implements DeploymentEngine
 {
     private final static transient Logger log = LoggerFactory.getLogger (PackageDeploymentEngine.class);
@@ -105,6 +105,13 @@ public class PackageDeploymentEngine implements DeploymentEngine
 
         // Not compatible
         return (0);
+    }
+
+    @Override
+    public int getState (Bundle bnd)
+    {
+        // TODO: WE NEED open() AND close()
+        return 0;
     }
 
     private List<String> list_existing_files (List<String> file_list, Path root_path)
@@ -201,7 +208,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public Bundle installBundle (String location, Properties properties)
+    public Bundle install (String location, Properties properties)
     {
         Manifest mf = bundle_manager.getManifest (location);
 
@@ -258,14 +265,26 @@ public class PackageDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public boolean updateBundle (Bundle bnd)
+    public boolean open (Bundle bnd)
+    {
+        return (false);
+    }
+
+    @Override
+    public boolean close (Bundle bnd)
+    {
+        return (false);
+    }
+
+    @Override
+    public boolean update (Bundle bnd)
     {
         // TODO: HANDLE Bundles/ AND Resources/
         return (bundle_manager.updateBundle (bnd));
     }
 
     @Override
-    public boolean refreshBundle (Bundle bnd)
+    public boolean refresh (Bundle bnd)
     {
         return (false);
         // TODO: HANDLE Bundles/ AND Resources/
@@ -273,7 +292,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public boolean uninstallBundle (Bundle bnd)
+    public boolean uninstall (Bundle bnd)
     {
         // TODO: HANDLE Bundles/ AND Resources/
         return (bundle_manager.uninstallBundle (bnd));

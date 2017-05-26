@@ -50,6 +50,7 @@ public class TreeMenuRenderer implements ManagedObject, Renderer, ItemClickEvent
     public TreeMenuRenderer ()
     {
         tree_menu = new Tree ();
+        tree_menu.addStyleName ("ui-treemenu");
 
         tree_menu.addContainerProperty (CP_ENTRY, MenuEntry.class, null);
         tree_menu.addContainerProperty (CP_CAPTION, String.class, null);

@@ -30,7 +30,7 @@ public interface Artifact
 
     // Extended lifecycle inside ACTIVE state
     int STATE_EX_OPENING  = -1;    // Opening the provided services
-    int STATE_EX_RUNNING  = -2;    // All services up and running
+    int STATE_EX_OPEN     = -2;    // All services up and running
     int STATE_EX_CLOSING  = -3;    // Closing provided services
 
     String PROP_SOURCE             = ".Artifact-Source";

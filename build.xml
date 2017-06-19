@@ -531,6 +531,7 @@
         <build.standandalone.bundle modulename="bootstrap"/>
 
         <property name="bootstrap.mvn.dir" value="${stage.dir}/cache/maven2/org/lucidj/bootstrap"/>
+        <delete dir="${bootstrap.mvn.dir}"/>
         <copy todir="${bootstrap.mvn.dir}/bootstrap-features">
             <fileset dir="${basedir}/extras/bootstrap/features">
                 <include name="**/*"/>
@@ -1040,6 +1041,7 @@
                 <copy todir="${stage.dir}/cache/maven2">
                     <fileset dir="${maven2.preload.dir}">
                         <include name="**/*"/>
+                        <exclude name="org/lucidj/bootstrap/**"/>
                     </fileset>
                 </copy>
             </then>

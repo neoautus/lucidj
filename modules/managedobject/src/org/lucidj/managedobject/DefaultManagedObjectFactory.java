@@ -42,7 +42,6 @@ import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
@@ -237,24 +236,21 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
 
     private void clear_components_by_bundle (Bundle provider_bundle)
     {
-        log.info ("clear_components_by_bundle");
-
         synchronized (class_to_provider)
         {
             // Remove all providers/classes originated from provider_bundle
-            // TODO: MAKE IT THREAD SAFE
-            for (Map.Entry<String, Set<ManagedObjectProvider>> clazz: class_to_provider.entrySet ())
-            {
-                log.info ("Scanning: {}", clazz.getKey ());
+            Iterator<Map.Entry<String, Set<ManagedObjectProvider>>> class_it = class_to_provider.entrySet ().iterator ();
 
-                Set<ManagedObjectProvider> providers = clazz.getValue ();
+            while (class_it.hasNext ())
+            {
+                Map.Entry<String, Set<ManagedObjectProvider>> class_entry = class_it.next ();
+                Set<ManagedObjectProvider> providers = class_entry.getValue ();
                 Iterator<ManagedObjectProvider> it = providers.iterator ();
 
                 // Remove all providers originated from provider_bundle
                 while (it.hasNext ())
                 {
                     ManagedObjectProvider provider = it.next ();
-                    log.info ("Verifying {}: {}", clazz, provider);
 
                     if (FrameworkUtil.getBundle (provider.getClass ()) == provider_bundle)
                     {
@@ -267,8 +263,8 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
                 if (providers.isEmpty ())
                 {
                     // We don't have any providers for the class
-                    class_to_provider.remove (clazz.getKey ());
-                    log.info ("Removed class registration: {}", clazz.getKey ());
+                    class_it.remove ();
+                    log.info ("Removed class registration: {}", class_entry.getKey ());
                 }
             }
         }
@@ -278,7 +274,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         // Invalidate all orphaned instances
         if (instance_set != null)
         {
-            log.info ("unbindManagedObjectProvider: Cleaning {} instances from {}", instance_set.size (), provider_bundle);
+            log.info ("Cleaning {} instances from {}", instance_set.size (), provider_bundle);
 
             for (WeakReference<ManagedObjectInstance> instance_ref: instance_set)
             {

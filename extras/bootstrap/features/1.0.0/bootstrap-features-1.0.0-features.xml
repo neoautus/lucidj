@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
   ~ Copyright 2017 NEOautus Ltd. (http://neoautus.com)
   ~
@@ -14,21 +14,13 @@
   ~ License for the specific language governing permissions and limitations under
   ~ the License.
   -->
-<features name="lucidj-bootstrap-1.0.0" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
+<features name="lucidj-bootstrap-1.0.0" xmlns="http://karaf.apache.org/xmlns/features/v1.3.0">
 
-    <feature name="bootstrap-core" version="1.0.0" resolver="(obr)">
+    <feature name="bootstrap-core" version="1.0.0"
+        description="LucidJ Core System Bootstrap utility">
         <bundle>mvn:org.lucidj.bootstrap/bootstrap-core/1.0.0</bundle>
-
         <feature dependency="true">ipojo-all</feature>
-        <requirement>
-            org.apache.felix.ipojo.api
-        </requirement>
-
         <feature dependency="true">http</feature>
-        <requirement>
-            org.osgi.service.http
-        </requirement>
-
     </feature>
 
 </features>

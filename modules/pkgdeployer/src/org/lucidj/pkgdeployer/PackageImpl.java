@@ -17,12 +17,15 @@
 package org.lucidj.pkgdeployer;
 
 import org.lucidj.api.Artifact;
+import org.lucidj.api.EmbeddingManager;
 import org.lucidj.api.Package;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -40,8 +43,12 @@ public class PackageImpl implements Package, ServiceListener, Runnable
     private Thread local_thread;
     private volatile int extended_state;
 
-    public PackageImpl (Bundle bnd)
+    private EmbeddingManager embeddingManager;
+    private Map<String, Object> embedding_map = new HashMap<> ();
+
+    public PackageImpl (Bundle bnd, EmbeddingManager embeddingManager)
     {
+        this.embeddingManager = embeddingManager;
         this.bnd = bnd;
         context = bnd.getBundleContext ();
         context.addServiceListener (this);
@@ -91,13 +98,46 @@ public class PackageImpl implements Package, ServiceListener, Runnable
         extended_state = Artifact.STATE_EX_OPENING;
 
         // List ALL bundle entries
-        Enumeration<URL> e = bnd.findEntries ("/", null, true);
+        Enumeration<URL> entries = bnd.findEntries ("/", null, true);
 
         // Find a specific localization file
-        while (e.hasMoreElements ())
+        while (entries.hasMoreElements ())
         {
-            URL entry = e.nextElement ();
-            log.info ("{} ----> {}", bnd, entry.toString ());
+            URL url = entries.nextElement ();
+            embedding_map.put (url.toString (), url);
+        }
+
+        Map<String, Object> embeddings_to_scan = embedding_map;
+
+        while (!embeddings_to_scan.isEmpty ())
+        {
+            Map<String, Object> new_embeddings = new HashMap<> ();
+
+            for (Map.Entry<String, Object> e: embeddings_to_scan.entrySet ())
+            {
+                String name = e.getKey ();
+                Object obj = e.getValue ();
+                String embedding = embeddingManager.getHandler (name, obj);
+
+                if (embedding != null)
+                {
+                    log.info ("Applying '{}' handler to {}", embedding, obj);
+
+                    if ((obj = embeddingManager.applyHandler (name, obj)) != null)
+                    {
+                        new_embeddings.put (embedding + ":" + name, obj);
+                    }
+                }
+            }
+
+            // Merge back all processed embeddings and scan them
+            embedding_map.putAll (new_embeddings);
+            embeddings_to_scan = new_embeddings;
+        }
+
+        for (Map.Entry<String, Object> e: embedding_map.entrySet ())
+        {
+            log.info ("Embedding: {} -> {}", e.getKey (), e.getValue ());
         }
 
         // After Opening, we are Running
@@ -118,7 +158,17 @@ public class PackageImpl implements Package, ServiceListener, Runnable
     public void run ()
     {
         log.info ("Starting package {} (state = {})", bnd, get_state_str (bnd));
+
         do_opening_transition ();
+
+        if (extended_state != 0)
+        {
+            log.info ("Package {} started (state = {})", bnd, get_state_str (bnd));
+        }
+        else
+        {
+            log.info ("Package {} not started (state = {})", bnd, get_state_str (bnd));
+        }
     }
 
     @Override

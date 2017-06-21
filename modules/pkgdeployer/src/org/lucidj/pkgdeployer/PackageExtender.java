@@ -16,6 +16,7 @@
 
 package org.lucidj.pkgdeployer;
 
+import org.lucidj.api.EmbeddingManager;
 import org.lucidj.api.Package;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
+import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
 @Component
@@ -41,6 +43,9 @@ public class PackageExtender implements BundleTrackerCustomizer<ServiceRegistrat
     private final static transient Logger log = LoggerFactory.getLogger (PackageExtender.class);
 
     private BundleTracker bundleTracker;
+
+    @Requires
+    private EmbeddingManager embeddingManager;
 
     @Context
     private BundleContext context;
@@ -111,7 +116,7 @@ public class PackageExtender implements BundleTrackerCustomizer<ServiceRegistrat
             return (null);
         }
 
-        Package pkg = new PackageImpl (bundle);
+        Package pkg = new PackageImpl (bundle, embeddingManager);
 
         log.debug ("#####> bnd={} ctx={} exstat={}", bundle, bundle_context, pkg);
 

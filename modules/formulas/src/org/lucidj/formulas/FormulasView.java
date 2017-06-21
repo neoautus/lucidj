@@ -92,8 +92,8 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     private long last_save = 0;
     private boolean formulae_changed = false;
 
+    private Object root_object = null;
     private List object_list = null;
-//    private CompositeTask object_list = null;
     private String task_source = null;
     private Object current_object;
     private Map<Object, Cell> active_cells = new ConcurrentHashMap<> ();
@@ -685,7 +685,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
 
         Path formulae_path = userdir.resolve (formulae_name);
 
-        if (!serializer.serializeObject (formulae_path, object_list))
+        if (!serializer.serializeObject (formulae_path, root_object))
         {
             return (false);
         }
@@ -830,7 +830,8 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
         addComponent (content);
 
         // TODO: RETRIEVE RUNNING TASKS WITHOUT LOAD
-        object_list = (List)load_formulae (task_source);
+        root_object = load_formulae (task_source);
+        object_list = Aggregate.adapt (root_object, List.class);
 
         log.info ("object_list: {}", object_list);
 

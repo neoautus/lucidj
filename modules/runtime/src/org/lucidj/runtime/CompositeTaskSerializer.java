@@ -16,6 +16,7 @@
 
 package org.lucidj.runtime;
 
+import org.lucidj.api.Aggregate;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
@@ -23,7 +24,6 @@ import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
-import org.lucidj.console.Console;
 
 import java.util.List;
 
@@ -48,7 +48,7 @@ public class CompositeTaskSerializer implements Serializer, ManagedObjectProvide
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
         instance.setObjectClass (object.getClass ());
-        for (Object item: (List)object)
+        for (Object item: Aggregate.adapt (object, List.class))
         {
             instance.addObject (item);
         }
@@ -61,9 +61,10 @@ public class CompositeTaskSerializer implements Serializer, ManagedObjectProvide
         ManagedObjectInstance object_instance = objectFactory.newInstance (CompositeTask.class, null);
         CompositeTask composite_task = object_instance.adapt (CompositeTask.class);
 
+        List obj_list = Aggregate.adapt (composite_task, List.class);
         for (Object object: instance.getObjects ())
         {
-            composite_task.add (object);
+            obj_list.add (object);
         }
         return (composite_task);
     }

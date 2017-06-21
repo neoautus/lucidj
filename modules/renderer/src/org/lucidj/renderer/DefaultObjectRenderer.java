@@ -24,7 +24,6 @@ import org.lucidj.api.Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.server.VaadinSession;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.ComponentContainer;
 import com.vaadin.ui.Label;
@@ -118,36 +117,11 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         log.info ("apply_renderer: current_renderer={} current_component={}", current_renderer, current_component);
     }
 
-    private void safe_apply_renderer (Object obj)
-    {
-        VaadinSession current_session = VaadinSession.getCurrent ();
-
-        if (current_session != null)
-        {
-            log.info ("===>>> RENDERER LOCK");
-            current_session.lock ();
-        }
-
-        try
-        {
-            // TODO: HANDLE RACING CONDITION WHEN A SESSION STARTS AT THIS POINT
-            apply_renderer (obj);
-        }
-        finally
-        {
-            if (current_session != null)
-            {
-                log.info ("<<<=== RENDERER UNLOCK");
-                current_session.unlock ();
-            }
-        }
-    }
-
     @Override // ObjectRenderer
     public Component link (Object object)
     {
         // TODO: WHEN OBJECT IS UNKNOWN, PUBLISH "BINARY" RENDERER AND WAIT FOR RENDERER ACTIVATION
-        safe_apply_renderer (object);
+        apply_renderer (object);
 
         if (object instanceof Renderer.Observable)
         {
@@ -164,62 +138,21 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
     @Override // ObjectRenderer
     public void unlink ()
     {
-        safe_apply_renderer (null);     // TODO: safe_apply_renderer??
+        apply_renderer (null);
 
         // No more source
         if (current_renderer != null)
         {
-            VaadinSession current_session = VaadinSession.getCurrent ();
-
-            if (current_session != null)
-            {
-                log.info ("===>>> RENDERER LOCK");
-                current_session.lock ();
-            }
-
-            try
-            {
-                // The component was unlinked from UI
-                current_renderer.objectUnlinked ();
-            }
-            finally
-            {
-                if (current_session != null)
-                {
-                    log.info ("<<<=== RENDERER UNLOCK");
-                    current_session.unlock ();
-                }
-            }
+            // The component was unlinked from UI
+            current_renderer.objectUnlinked ();
         }
     }
 
     @Override // ObjectRenderer
     public void updateComponent ()
     {
-        if (current_renderer != null)
-        {
-            VaadinSession current_session = VaadinSession.getCurrent ();
-
-            if (current_session != null)
-            {
-                log.info ("===>>> RENDERER LOCK");
-                current_session.lock ();
-            }
-
-            try
-            {
-                // This tells the component to update it's contents using data object
-                current_renderer.objectUpdated ();
-            }
-            finally
-            {
-                if (current_session != null)
-                {
-                    log.info ("<<<=== RENDERER UNLOCK");
-                    current_session.unlock ();
-                }
-            }
-        }
+        // This tells the component to update it's contents using data object
+        current_renderer.objectUpdated ();
     }
 
     @Override // EventHelper.Subscriber

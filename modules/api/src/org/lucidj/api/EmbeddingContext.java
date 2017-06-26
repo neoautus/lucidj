@@ -16,23 +16,16 @@
 
 package org.lucidj.api;
 
-import org.osgi.framework.Bundle;
+import java.net.URL;
+import java.util.List;
 
-public interface EmbeddingManager
+public interface EmbeddingContext
 {
-    EmbeddingContext newEmbeddingContext (Bundle bnd);
-
-    void    registerHandler (EmbeddingHandler handler);
-    EmbeddingHandler[] getHandlers (String name, Object obj);
-
-    void    addListener     (EmbeddingListener listener);
-    void    removeListener  (EmbeddingListener listener);
-
-    interface EmbeddingListener
-    {
-        void addingHandler   (EmbeddingHandler handler);
-        void removingHandler (EmbeddingHandler handler);
-    }
+    void addFile (URL file);
+    void removeFile (URL file);
+    void updateEmbeddings ();
+    List<Embedding> getEmbeddedFiles ();
+    List<Embedding> getEmbeddings (Embedding embedded_file);
 }
 
 // EOF

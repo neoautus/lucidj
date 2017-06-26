@@ -17,15 +17,13 @@
 package org.lucidj.pkgdeployer;
 
 import org.lucidj.api.Artifact;
+import org.lucidj.api.Embedding;
+import org.lucidj.api.EmbeddingContext;
+import org.lucidj.api.EmbeddingHandler;
 import org.lucidj.api.EmbeddingManager;
 import org.lucidj.api.Package;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -33,7 +31,7 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
-public class PackageImpl implements Package, ServiceListener, Runnable
+public class PackageImpl implements EmbeddingManager.EmbeddingListener, Package, ServiceListener, Runnable
 {
     private final static transient Logger log = LoggerFactory.getLogger (PackageImpl.class);
 
@@ -44,12 +42,17 @@ public class PackageImpl implements Package, ServiceListener, Runnable
     private volatile int extended_state;
 
     private EmbeddingManager embeddingManager;
-    private Map<String, Object> embedding_map = new HashMap<> ();
+    private EmbeddingContext embedding_context;
 
     public PackageImpl (Bundle bnd, EmbeddingManager embeddingManager)
     {
-        this.embeddingManager = embeddingManager;
         this.bnd = bnd;
+
+        this.embeddingManager = embeddingManager;
+        this.embeddingManager.addListener (this);
+
+        embedding_context = embeddingManager.newEmbeddingContext (bnd);
+
         context = bnd.getBundleContext ();
         context.addServiceListener (this);
     }
@@ -73,13 +76,13 @@ public class PackageImpl implements Package, ServiceListener, Runnable
         return ("Unknown");
     }
 
-    @Override
+    @Override // Package
     public Bundle getBundle ()
     {
         return (bnd);
     }
 
-    @Override
+    @Override // Package
     public int getState ()
     {
         int bundle_state = bnd.getState ();
@@ -92,52 +95,29 @@ public class PackageImpl implements Package, ServiceListener, Runnable
         return (bundle_state);
     }
 
+    @Override // Package
+    public EmbeddingContext getEmbeddingContext ()
+    {
+        return (embedding_context);
+    }
+
     private void do_opening_transition ()
     {
         // Assert the state...
         extended_state = Artifact.STATE_EX_OPENING;
 
-        // List ALL bundle entries
-        Enumeration<URL> entries = bnd.findEntries ("/", null, true);
+        // Prepare and load embeddings context
+        embedding_context.updateEmbeddings ();
 
-        // Find a specific localization file
-        while (entries.hasMoreElements ())
+        // RETRIEVE ALL ACTIVE EMBEDDINGS/FILES AND PRINT THEM
+        for (Embedding file: embedding_context.getEmbeddedFiles ())
         {
-            URL url = entries.nextElement ();
-            embedding_map.put (url.toString (), url);
-        }
+            log.info ("Embedding: [{}] -> {}", file.getName (), file.getObject ());
 
-        Map<String, Object> embeddings_to_scan = embedding_map;
-
-        while (!embeddings_to_scan.isEmpty ())
-        {
-            Map<String, Object> new_embeddings = new HashMap<> ();
-
-            for (Map.Entry<String, Object> e: embeddings_to_scan.entrySet ())
+            for (Embedding embedding: embedding_context.getEmbeddings (file))
             {
-                String name = e.getKey ();
-                Object obj = e.getValue ();
-                String embedding = embeddingManager.getHandler (name, obj);
-
-                if (embedding != null)
-                {
-                    log.info ("Applying '{}' handler to {}", embedding, obj);
-
-                    if ((obj = embeddingManager.applyHandler (name, obj)) != null)
-                    {
-                        new_embeddings.put (embedding + ":" + name, obj);
-                    }
-                }
+                log.info ("Embedding: [{}] {} -> {}", file.getName (), embedding.getName (), embedding.getObject ());
             }
-
-            // Merge back all processed embeddings and scan them
-            embedding_map.putAll (new_embeddings);
-            embeddings_to_scan = new_embeddings;
-        }
-
-        for (Map.Entry<String, Object> e: embedding_map.entrySet ())
-        {
-            log.info ("Embedding: {} -> {}", e.getKey (), e.getValue ());
         }
 
         // After Opening, we are Running
@@ -157,17 +137,24 @@ public class PackageImpl implements Package, ServiceListener, Runnable
     @Override
     public void run ()
     {
-        log.info ("Starting package {} (state = {})", bnd, get_state_str (bnd));
-
-        do_opening_transition ();
-
-        if (extended_state != 0)
+        try
         {
-            log.info ("Package {} started (state = {})", bnd, get_state_str (bnd));
+            log.info ("Starting package {} (state = {})", bnd, get_state_str (bnd));
+
+            do_opening_transition ();
+
+            if (extended_state != 0)
+            {
+                log.info ("Package {} started (state = {})", bnd, get_state_str (bnd));
+            }
+            else
+            {
+                log.info ("Package {} not started (state = {})", bnd, get_state_str (bnd));
+            }
         }
-        else
+        catch (Throwable transition_exception)
         {
-            log.info ("Package {} not started (state = {})", bnd, get_state_str (bnd));
+            log.error ("Unhandled exception transitioning states", transition_exception);
         }
     }
 
@@ -199,6 +186,18 @@ public class PackageImpl implements Package, ServiceListener, Runnable
                 log.info ("=====> THIS SERVICE IS UNREGISTERING: reference={}", local_reference);
             }
         }
+    }
+
+    @Override
+    public void addingHandler (EmbeddingHandler handler)
+    {
+
+    }
+
+    @Override
+    public void removingHandler (EmbeddingHandler handler)
+    {
+        // Do nothing for now
     }
 }
 

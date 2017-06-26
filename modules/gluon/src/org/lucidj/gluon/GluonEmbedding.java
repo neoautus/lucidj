@@ -81,7 +81,7 @@ public class GluonEmbedding implements EmbeddingHandler
     @Validate
     private void validate ()
     {
-        embeddingManager.registerProvider (this);
+        embeddingManager.registerHandler (this);
     }
 }
 

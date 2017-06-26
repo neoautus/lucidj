@@ -16,23 +16,10 @@
 
 package org.lucidj.api;
 
-import org.osgi.framework.Bundle;
-
-public interface EmbeddingManager
+public interface Embedding
 {
-    EmbeddingContext newEmbeddingContext (Bundle bnd);
-
-    void    registerHandler (EmbeddingHandler handler);
-    EmbeddingHandler[] getHandlers (String name, Object obj);
-
-    void    addListener     (EmbeddingListener listener);
-    void    removeListener  (EmbeddingListener listener);
-
-    interface EmbeddingListener
-    {
-        void addingHandler   (EmbeddingHandler handler);
-        void removingHandler (EmbeddingHandler handler);
-    }
+    String getName ();
+    Object getObject ();
 }
 
 // EOF

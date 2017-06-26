@@ -16,6 +16,7 @@
 
 package org.lucidj.embedding;
 
+import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.EmbeddingHandler;
 import org.lucidj.api.EmbeddingManager;
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ public class DefaultEmbeddingManager implements EmbeddingManager
 
     private BundleTracker bundle_cleaner;
     private List<EmbeddingHandler> embedding_handlers = new ArrayList<> ();
+    private List<EmbeddingListener> listener_list = new ArrayList<> ();
 
     @Context
     private BundleContext ctx;
@@ -53,51 +55,91 @@ public class DefaultEmbeddingManager implements EmbeddingManager
     // TODO: WE NEED SOME CONSTRUCT TO WAIT FOR A SPECIFIC SERVICE/HANDLER
 
     @Override
-    public void registerProvider (EmbeddingHandler embeddingHandler)
+    public EmbeddingContext newEmbeddingContext (Bundle bnd)
     {
-        log.info ("Adding embedded handler: {}", embeddingHandler.getPrefix ());
-        embedding_handlers.add (embeddingHandler);
+        return (new DefaultEmbeddingContext (this, bnd));
     }
 
-    private EmbeddingHandler find_handler (String name, Object obj)
+    @Override
+    public void registerHandler (EmbeddingHandler handler)
     {
+        log.info ("Adding embedded handler: {}", handler.getPrefix ());
+        embedding_handlers.add (handler);
+
+        // Notify the listeners of the new handler
+        for (EmbeddingListener listener: listener_list)
+        {
+            listener.addingHandler (handler);
+        }
+    }
+
+    @Override
+    public EmbeddingHandler[] getHandlers (String name, Object obj)
+    {
+        List<EmbeddingHandler> found_handlers = new ArrayList<> ();
+
         for (EmbeddingHandler handler: embedding_handlers)
         {
             if (handler.haveHandler (name, obj))
             {
-                return (handler);
+                found_handlers.add (handler);
             }
         }
-        return (null);
+        return (found_handlers.toArray (new EmbeddingHandler [found_handlers.size ()]));
     }
 
     @Override
-    public String getHandler (String name, Object obj)
+    public void addListener (EmbeddingListener listener)
     {
-        EmbeddingHandler handler = find_handler (name, obj);
-        return (handler != null? handler.getPrefix (): null);
+        listener_list.add (listener);
     }
 
     @Override
-    public Object applyHandler (String name, Object obj)
+    public void removeListener (EmbeddingListener listener)
     {
-        EmbeddingHandler handler = find_handler (name, obj);
-        return ((handler == null)? null: handler.applyHandler (name, obj));
+        listener_list.remove (listener);
     }
 
     private void clear_components_by_bundle (Bundle bnd)
     {
-        Iterator<EmbeddingHandler> it = embedding_handlers.iterator ();
+        // First we remove all handlers belonging to the gone bundle, while
+        // also creating a listing of them. This list will be used to notify
+        // the remaining listeners.
+        List<EmbeddingHandler> removed_handlers = new ArrayList<> ();
+        Iterator<EmbeddingHandler> ith = embedding_handlers.iterator ();
 
-        while (it.hasNext ())
+        while (ith.hasNext ())
         {
-            EmbeddingHandler handler = it.next ();
-            Bundle handler_bundle = FrameworkUtil.getBundle (handler.getClass ());
+            EmbeddingHandler handler = ith.next ();
 
-            if (handler_bundle.equals (bnd))
+            if (bnd.equals (FrameworkUtil.getBundle (handler.getClass ())))
             {
                 log.info ("Removing embedded handler: {}", handler.getPrefix ());
-                it.remove ();
+                removed_handlers.add (handler);
+                ith.remove ();
+            }
+        }
+
+        // Now we remove all listeners beloging to the gone bundle, while
+        // also notifying all the remaining listeners.
+        Iterator<EmbeddingListener> itl = listener_list.iterator ();
+
+        while (itl.hasNext ())
+        {
+            EmbeddingListener listener = itl.next ();
+
+            if (bnd.equals (FrameworkUtil.getBundle (listener.getClass ())))
+            {
+                // This listener is being deactivated, just remove
+                itl.remove ();
+            }
+            else
+            {
+                // This listener is valid, so notify it of any departing handler
+                for (EmbeddingHandler handler: removed_handlers)
+                {
+                    listener.removingHandler (handler);
+                }
             }
         }
     }

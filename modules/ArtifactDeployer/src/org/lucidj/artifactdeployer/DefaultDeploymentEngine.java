@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.pkgdeployer;
+package org.lucidj.artifactdeployer;
 
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;

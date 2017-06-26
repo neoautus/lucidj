@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.pkgdeployer;
+package org.lucidj.artifactdeployer;
 
 import org.lucidj.api.ArtifactDeployer;
 import org.slf4j.Logger;
@@ -33,9 +33,9 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 @Component
 @Instantiate
-public class PkgDeployer implements Runnable
+public class DeploymentScanner implements Runnable
 {
-    private final static transient Logger log = LoggerFactory.getLogger (PkgDeployer.class);
+    private final static transient Logger log = LoggerFactory.getLogger (DeploymentScanner.class);
 
     @Context
     private BundleContext context;

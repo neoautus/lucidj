@@ -51,6 +51,13 @@ public class DefaultDeploymentEngine implements DeploymentEngine
     @Override
     public int compatibleArtifact (String location)
     {
+        // The default handling only applies to .jar
+        if (!location.toLowerCase ().endsWith (".jar"))
+        {
+            // This way we avoid confusion with .leap and others
+            return (0);
+        }
+
         Manifest mf = bundle_manager.getManifest (location);
 
         if (mf == null)

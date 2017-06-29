@@ -133,39 +133,30 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
 
     @Override // BundleDeployer
     public Bundle installArtifact (String location)
+        throws Exception
     {
-        Bundle new_bundle = null;
+        File bundle_file = get_valid_file (location);
 
-        try
+        if (bundle_file == null)
         {
-            File bundle_file = get_valid_file (location);
-
-            if (bundle_file == null)
-            {
-                return (null);
-            }
-
-            DeploymentEngine deployment_engine = find_deployment_engine (location);
-
-            if (deployment_engine == null)
-            {
-                log.error ("Package deployer not found for: {}", location);
-                return (null);
-            }
-
-            // These properties will be stored alongside the bundle and other internal properties
-            Properties properties = new Properties ();
-            properties.setProperty (Artifact.PROP_DEPLOYMENT_ENGINE, deployment_engine.getEngineName ());
-            properties.setProperty (Artifact.PROP_SOURCE, location);
-
-            // Install bundle!
-            new_bundle = deployment_engine.install (location, properties);
-            log.info ("Installing package {} from {}", new_bundle, location);
+            throw (new Exception ("Invalid artifact: " + location));
         }
-        catch (Exception e)
+
+        DeploymentEngine deployment_engine = find_deployment_engine (location);
+
+        if (deployment_engine == null)
         {
-            log.error ("Exception on package install: {}", location, e);
+            throw (new Exception ("Deployer service not found for: " + location));
         }
+
+        // These properties will be stored alongside the bundle and other internal properties
+        Properties properties = new Properties ();
+        properties.setProperty (Artifact.PROP_DEPLOYMENT_ENGINE, deployment_engine.getEngineName ());
+        properties.setProperty (Artifact.PROP_SOURCE, location);
+
+        // Install bundle!
+        Bundle new_bundle = deployment_engine.install (location, properties);
+        log.info ("Installing package {} from {}", new_bundle, location);
         return (new_bundle);
     }
 
@@ -265,7 +256,12 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
                 // We only refresh if the bundle is active
                 if (bundle.getState () == Bundle.ACTIVE)
                 {
-                    refreshArtifact (bundle);
+                    try
+                    {
+                        // Refresh the artifact, but ignore if the DeploymentEngine is not available
+                        get_deployment_engine (bundle).refresh (bundle);
+                    }
+                    catch (IllegalStateException ignore) {};
                 }
             }
         }

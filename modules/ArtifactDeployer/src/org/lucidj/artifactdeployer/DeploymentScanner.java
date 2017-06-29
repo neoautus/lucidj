@@ -21,6 +21,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -42,6 +44,8 @@ public class DeploymentScanner implements Runnable
 
     @Requires
     private ArtifactDeployer artifactDeployer;
+
+    private Map<String, Exception> troubled_artifacts = new HashMap<> ();
 
     private String watched_directory;
     private Thread poll_thread;
@@ -66,7 +70,22 @@ public class DeploymentScanner implements Runnable
 
             if (bnd == null) // The bundle isn't installed yet
             {
-                artifactDeployer.installArtifact (package_uri);
+                try
+                {
+                    artifactDeployer.installArtifact (package_uri);
+                    troubled_artifacts.remove (package_uri); // Just in case
+                }
+                catch (Exception e)
+                {
+                    if (!troubled_artifacts.containsKey (package_uri))
+                    {
+                        // Show only first time exceptions
+                        log.warn ("{}", e.getMessage ());
+                    }
+
+                    // Store all last exceptions for every troublesome artifact
+                    troubled_artifacts.put (package_uri, e);
+                }
             }
         }
     }

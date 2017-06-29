@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -302,6 +303,10 @@ public class DefaultBundleManager implements BundleManager, BundleListener
                 return (jar_stream.getManifest ());
             }
         }
+        catch (FileNotFoundException ignore)
+        {
+            return (null);
+        }
         catch (IOException e)
         {
             log.error ("Exception reading MANIFEST.MF from: {}", file, e);
@@ -388,11 +393,13 @@ public class DefaultBundleManager implements BundleManager, BundleListener
             }
         }
         catch (Exception ignore) {};
+        // TODO: NOT FOUND? NOT READABLE? WHAT?
         return (null);
     }
 
     @Override // BundleManager
     public Bundle installBundle (String location, Properties properties)
+        throws Exception
     {
         Bundle new_bundle = null;
 
@@ -404,14 +411,14 @@ public class DefaultBundleManager implements BundleManager, BundleListener
 
             if (bundle_file == null)
             {
-                return (null);
+                throw (new Exception ("Error reading bundle: " + location));
             }
 
             // Fetch base bundle description
             Manifest mf = getManifest (bundle_file);
             Attributes attrs = mf.getMainAttributes ();
             String symbolic_name = attrs.getValue ("Bundle-SymbolicName");
-            Version version = new Version (attrs.getValue ("Bundle-Version"));
+            Version version = new Version ((String)attrs.getOrDefault ("Bundle-Version", "0"));
 
             if ((new_bundle = getBundleByDescription (symbolic_name, version)) != null)
             {
@@ -442,12 +449,10 @@ public class DefaultBundleManager implements BundleManager, BundleListener
 
             // Install bundle
             new_bundle = context.installBundle (location);
-            
-            log.info ("Installing bundle {} from {}", new_bundle, location);
         }
         catch (Exception e)
         {
-            log.error ("Exception on bundle install: {}", location, e);
+            throw (new Exception ("Exception on bundle install: " + location, e));
         }
         return (new_bundle);
     }

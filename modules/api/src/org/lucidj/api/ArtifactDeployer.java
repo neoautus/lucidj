@@ -22,7 +22,7 @@ import org.osgi.framework.Version;
 public interface ArtifactDeployer
 {
     Bundle getArtifactByDescription (String symbolic_name, Version version);
-    Bundle installArtifact (String location);
+    Bundle installArtifact (String location) throws Exception;
     boolean openArtifact (Bundle bnd);
     boolean closeArtifact (Bundle bnd);
     boolean updateArtifact (Bundle bnd);

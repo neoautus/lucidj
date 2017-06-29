@@ -25,7 +25,7 @@ public interface DeploymentEngine
     String  getEngineName ();
     int     compatibleArtifact (String location);
     int     getState  (Bundle bnd);    // One of Artifact.STATE_*
-    Bundle  install   (String location, Properties properties);
+    Bundle  install   (String location, Properties properties) throws Exception;
     boolean open      (Bundle bnd);
     boolean close     (Bundle bnd);
     boolean update    (Bundle bnd);

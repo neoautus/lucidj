@@ -89,8 +89,10 @@ public class SourcePackageDeploymentEngine implements DeploymentEngine
         return 0;
     }
 
+    // TODO: DEPRECATE THIS
     @Override
     public Bundle install (String location, Properties properties)
+        throws Exception
     {
         Manifest mf = bundle_manager.getManifest (location);
 

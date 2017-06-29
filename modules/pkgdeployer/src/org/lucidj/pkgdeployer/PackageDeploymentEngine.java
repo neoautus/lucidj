@@ -209,7 +209,12 @@ public class PackageDeploymentEngine implements DeploymentEngine
 
     @Override
     public Bundle install (String location, Properties properties)
+        throws Exception
     {
+        // Probably we'll need some underlying artifact that can keep track
+        // of overall deployment status, as well as embedded bundle status,
+        // it's deployment status, errors, warnings, configurations and so forth.
+
         Manifest mf = bundle_manager.getManifest (location);
 
         if (mf == null)
@@ -229,7 +234,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
         extract_all (location, extracted_package_dir);
 
         File[] embedded_bundles = new File (extracted_package_dir, "Bundles/").listFiles ();
-        boolean got_errors = false;
+        Exception got_errors = null;
 
         if (embedded_bundles != null)
         {
@@ -239,29 +244,34 @@ public class PackageDeploymentEngine implements DeploymentEngine
                 {
                     String bundle_uri = bundle_file.toURI ().toString ();
 
-                    if (bundle_manager.installBundle (bundle_uri, properties) == null)
+                    try
                     {
-                        got_errors = true;
+                        Bundle new_bundle = bundle_manager.installBundle (bundle_uri, properties);
+                        log.info ("Installing embedded bundle {} from {}", new_bundle, bundle_uri);
+                    }
+                    catch (Exception e)
+                    {
+                        got_errors = e;
+                        break;
                     }
                 }
             }
         }
 
-        if (!got_errors)
+        if (got_errors == null)
         {
             try
             {
                 // Here the native OSGi bundle install
-                return (bundle_manager.installBundle (location, properties));
+                return (bundle_manager.installBundle ("reference:file:" + extracted_package_dir, properties));
             }
             catch (Exception e)
             {
-                log.error ("Exception installing package: {}", location, e);
+                throw (new Exception ("Exception installing bundle: " + location, e));
             }
         }
 
-        log.error ("Errors found when deploying embedded bundles -- will not install package.");
-        return (null);
+        throw (new Exception ("Errors found when deploying embedded bundles -- will not install package.", got_errors));
     }
 
     @Override

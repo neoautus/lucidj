@@ -18,12 +18,13 @@ package org.lucidj.api;
 
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.Future;
 
 public interface EmbeddingContext
 {
-    void addFile (URL file);
-    void removeFile (URL file);
-    void updateEmbeddings ();
+    Future addFile (URL file);
+    Future removeFile (URL file);
+    Future updateEmbeddings ();
     List<Embedding> getEmbeddedFiles ();
     List<Embedding> getEmbeddings (Embedding embedded_file);
 }

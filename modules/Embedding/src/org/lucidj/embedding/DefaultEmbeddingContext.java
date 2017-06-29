@@ -31,14 +31,18 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.osgi.framework.Bundle;
 
-public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject
+public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject, EmbeddingManager.EmbeddingListener
 {
     private final static transient Logger log = LoggerFactory.getLogger (DefaultEmbeddingContext.class);
 
     private List<EmbeddingImpl> embedded_files = new ArrayList<> ();
+    private ExecutorService background = Executors.newSingleThreadExecutor ();
 
     private EmbeddingManager embeddingManager;
     private Bundle bundle;
@@ -54,6 +58,9 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject
             URL file = entries.nextElement ();
             embedded_files.add (new EmbeddingImpl (file.toString (), file));
         }
+
+        // Now we can get asynchronous notifications
+        embeddingManager.addListener (this);
     }
 
     private boolean contains_object_name (LinkedList<EmbeddingImpl> list, String name)
@@ -103,8 +110,7 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject
         }
     }
 
-    @Override // EmbeddingContext
-    public void updateEmbeddings ()
+    private void update_all_file_embeddings ()
     {
         for (EmbeddingImpl embedded_file: embedded_files)
         {
@@ -113,18 +119,32 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject
     }
 
     @Override // EmbeddingContext
-    public void addFile (URL file)
+    public Future updateEmbeddings ()
     {
-        // Create the new embedding and update its handlers
-        EmbeddingImpl file_embedding = new EmbeddingImpl (file.toString (), file);
-        embedded_files.add (file_embedding);
-        update_file_embeddings (file_embedding);
+        // The Future might be used to wait
+        return (background.submit ((Runnable)() ->
+        {
+            update_all_file_embeddings ();
+        }));
     }
 
     @Override // EmbeddingContext
-    public void removeFile (URL file)
+    public Future addFile (URL file)
+    {
+        return (background.submit ((Runnable)() ->
+        {
+            // Create the new embedding and update its handlers
+            EmbeddingImpl file_embedding = new EmbeddingImpl (file.toString (), file);
+            embedded_files.add (file_embedding);
+            update_file_embeddings (file_embedding);
+        }));
+    }
+
+    @Override // EmbeddingContext
+    public Future removeFile (URL file)
     {
         // TODO: CLOSE THE AFFECTED EMBEDDINGS. USE MANAGED OBJECTS??
+        return (null);
     }
 
     @Override // EmbeddingContext
@@ -143,6 +163,20 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject
         return (Collections.emptyList ());
     }
 
+    @Override // EmbeddingManager.EmbeddingListener
+    public void addingHandler (EmbeddingHandler handler)
+    {
+        // Apply and refresh all embeddings, since we may have dependencies between embeddings
+        log.info ("*** Updating embeddings from {}", bundle);
+        updateEmbeddings ();
+    }
+
+    @Override // EmbeddingManager.EmbeddingListener
+    public void removingHandler (EmbeddingHandler handler)
+    {
+        // Nop
+    }
+
     @Override // ManagedObject
     public void validate (ManagedObjectInstance instance)
     {
@@ -152,7 +186,8 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject
     @Override // ManagedObject
     public void invalidate (ManagedObjectInstance instance)
     {
-        // Nop
+        // TODO: GRACEFUL OR NOT...?
+        background.shutdownNow ();
     }
 }
 

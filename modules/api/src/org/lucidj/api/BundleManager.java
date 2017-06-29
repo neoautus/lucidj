@@ -33,7 +33,7 @@ public interface BundleManager
     Bundle     getBundleByProperty    (String property, String value);
     Map<Bundle, Properties> getBundles ();
     Properties getBundleProperties    (Bundle bnd);
-    Bundle     installBundle          (String location, Properties properties);
+    Bundle     installBundle          (String location, Properties properties) throws Exception;
     boolean    updateBundle           (Bundle bnd);
     boolean    refreshBundle          (Bundle bnd);
     boolean    uninstallBundle        (Bundle bnd);

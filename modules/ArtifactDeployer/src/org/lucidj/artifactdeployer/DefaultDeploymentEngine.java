@@ -83,6 +83,7 @@ public class DefaultDeploymentEngine implements DeploymentEngine
 
     @Override
     public Bundle install (String location, Properties properties)
+        throws Exception
     {
         return (bundle_manager.installBundle (location, properties));
     }

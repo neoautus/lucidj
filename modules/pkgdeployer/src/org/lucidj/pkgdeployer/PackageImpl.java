@@ -25,6 +25,8 @@ import org.lucidj.api.Package;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutionException;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
@@ -107,7 +109,14 @@ public class PackageImpl implements EmbeddingManager.EmbeddingListener, Package,
         extended_state = Artifact.STATE_EX_OPENING;
 
         // Prepare and load embeddings context
-        embedding_context.updateEmbeddings ();
+        try
+        {
+            embedding_context.updateEmbeddings ().get ();
+        }
+        catch (InterruptedException | ExecutionException e)
+        {
+            log.error ("Exception opening bundle: {}", bnd, e);
+        }
 
         // RETRIEVE ALL ACTIVE EMBEDDINGS/FILES AND PRINT THEM
         for (Embedding file: embedding_context.getEmbeddedFiles ())

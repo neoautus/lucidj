@@ -26,9 +26,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.DirectoryStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -142,7 +145,74 @@ public class PackageDeploymentEngine implements DeploymentEngine
         return (list_existing_files (new ArrayList<String> (), root_dir.toPath ()));
     }
 
-    private boolean extract_all (String package_dist, final String dest_package_dir)
+    private boolean copy_or_update_file_tree (File source_package, final String dest_package_dir)
+    {
+        File dest_dir = new File (dest_package_dir);
+
+        if (!dest_dir.exists () && !dest_dir.mkdirs ())
+        {
+            log.error ("Unable create directory: {}", dest_package_dir);
+            return (false);
+        }
+
+        // We'll compare what exists with what will be extracted so we can delete excess files later
+        List<String> files_to_remove = list_existing_files (dest_dir);
+        Path dest_path = dest_dir.toPath ();
+        Path source_path = source_package.toPath ();
+
+        try
+        {
+            // Simple and stupid tree copy
+            Files.walkFileTree (source_path, new SimpleFileVisitor<Path> ()
+            {
+                @Override
+                public FileVisitResult preVisitDirectory (final Path dir, final BasicFileAttributes attrs)
+                    throws IOException
+                {
+                    Files.createDirectories (dest_path.resolve (source_path.relativize (dir)));
+                    return (FileVisitResult.CONTINUE);
+                }
+
+                @Override
+                public FileVisitResult visitFile (final Path file, final BasicFileAttributes attrs)
+                    throws IOException
+                {
+                    // TODO: OVERRIDE ONLY NEW/CHANGED FILES
+                    Path dest_file = dest_path.resolve (source_path.relativize (file));
+                    Files.copy (file, dest_file, StandardCopyOption.REPLACE_EXISTING);
+                    Files.setLastModifiedTime (dest_file, Files.getLastModifiedTime (file));
+                    files_to_remove.remove (dest_file.toAbsolutePath ().toString ());
+                    return (FileVisitResult.CONTINUE);
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed (Path file, IOException e)
+                {
+                    // TODO: HANDLE IT!
+                    log.error ("visitFileFailed: file={}", e);
+                    return (FileVisitResult.CONTINUE);
+                }
+            });
+
+            // Delete all excess files
+            for (String file: files_to_remove)
+            {
+                if (!new File (file).delete ())
+                {
+                    log.error ("Unable delete file: {}", file);
+                    return (false);
+                }
+            }
+            return (true);
+        }
+        catch (Exception e)
+        {
+            log.error ("Exception extracting package: {}", source_package, e);
+            return (false);
+        }
+    }
+
+    private boolean extract_all (File source_package, final String dest_package_dir)
     {
         File dest_dir = new File (dest_package_dir);
 
@@ -157,7 +227,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
 
         try
         {
-            ZipFile zipFile = new ZipFile (new File (new URI (package_dist)));
+            ZipFile zipFile = new ZipFile (source_package);
             Enumeration<? extends ZipEntry> entries = zipFile.entries ();
 
             while (entries.hasMoreElements ())
@@ -202,7 +272,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
         }
         catch (Exception e)
         {
-            log.error ("Exception extracting package: {}", package_dist, e);
+            log.error ("Exception extracting package: {}", source_package, e);
             return (false);
         }
     }
@@ -224,14 +294,23 @@ public class PackageDeploymentEngine implements DeploymentEngine
 
         Attributes attrs = mf.getMainAttributes ();
         String bundle_symbolic_name = attrs.getValue ("Bundle-SymbolicName");
-        Version bundle_version = new Version (attrs.getValue ("Bundle-Version"));
+        Version bundle_version = new Version ((String)attrs.getOrDefault ("Bundle-Version", "0"));
 
         // TODO: ALLOW MULTIPLE PACKAGES WITH DIFFERENT VERSIONS WHEN CONFIG SET
         // TODO: AVOID UPDATE BUNDLE __WHILE EXTRACTING__
         // TODO: DELETE EXTRACTED PACKAGE CONTENTS WHEN UNINSTALLING
         // TODO: BUILD AN EMBEDDED Bundles/ DIRECTORY FOR SHARED EMBEDDED BUNDLES USED BY MANY PACKAGES
         String extracted_package_dir = packages_dir + "/" + bundle_symbolic_name + "/" + bundle_version;
-        extract_all (location, extracted_package_dir);
+        File source_location = new File (new URI (location)); // Exceptions are unlikely, but may bubble up
+
+        if (source_location.isDirectory ())
+        {
+            copy_or_update_file_tree (source_location, extracted_package_dir);
+        }
+        else
+        {
+            extract_all (source_location, extracted_package_dir);
+        }
 
         File[] embedded_bundles = new File (extracted_package_dir, "Bundles/").listFiles ();
         Exception got_errors = null;

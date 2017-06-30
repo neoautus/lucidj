@@ -33,9 +33,9 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -57,7 +57,7 @@ public class GluonSerializer implements SerializerEngine
 {
     private final static transient Logger log = LoggerFactory.getLogger (GluonSerializer.class);
 
-    private HashMap<String, Serializer> serializer_lookup = new HashMap<> ();
+    private Map<String, Serializer> serializer_lookup = new ConcurrentHashMap<> ();
 
     @Context
     private BundleContext context;

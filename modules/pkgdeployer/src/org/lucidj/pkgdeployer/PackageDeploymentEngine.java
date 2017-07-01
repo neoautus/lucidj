@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -43,6 +45,7 @@ import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
@@ -57,6 +60,9 @@ public class PackageDeploymentEngine implements DeploymentEngine
 {
     private final static transient Logger log = LoggerFactory.getLogger (PackageDeploymentEngine.class);
     private final static int ENGINE_LEVEL = 50;
+
+    public final static String ATTR_PACKAGE = "X-Package";
+    public final static String ATTR_PACKAGE_VERSION = "1.0";
 
     @Context
     private BundleContext context;
@@ -95,19 +101,9 @@ public class PackageDeploymentEngine implements DeploymentEngine
     @Override
     public int compatibleArtifact (String location)
     {
-        Manifest mf;
-        Attributes attrs;
-
-        // Check compatibility looking for X-Package attribute on manifest
-        if ((mf = bundle_manager.getManifest (location)) != null &&
-            (attrs = mf.getMainAttributes ()) != null &&
-            attrs.getValue ("X-Package") != null)
-        {
-            return (ENGINE_LEVEL);
-        }
-
-        // Not compatible
-        return (0);
+        // LEAP requires only the proper package extension
+        File location_file = new File (location);
+        return (location_file.getName ().toLowerCase ().endsWith (".leap")? ENGINE_LEVEL: 0);
     }
 
     @Override
@@ -145,16 +141,8 @@ public class PackageDeploymentEngine implements DeploymentEngine
         return (list_existing_files (new ArrayList<String> (), root_dir.toPath ()));
     }
 
-    private boolean copy_or_update_file_tree (File source_package, final String dest_package_dir)
+    private boolean copy_or_update_file_tree (File source_package, final File dest_dir)
     {
-        File dest_dir = new File (dest_package_dir);
-
-        if (!dest_dir.exists () && !dest_dir.mkdirs ())
-        {
-            log.error ("Unable create directory: {}", dest_package_dir);
-            return (false);
-        }
-
         // We'll compare what exists with what will be extracted so we can delete excess files later
         List<String> files_to_remove = list_existing_files (dest_dir);
         Path dest_path = dest_dir.toPath ();
@@ -212,16 +200,8 @@ public class PackageDeploymentEngine implements DeploymentEngine
         }
     }
 
-    private boolean extract_all (File source_package, final String dest_package_dir)
+    private boolean extract_all (File source_package, final File dest_dir)
     {
-        File dest_dir = new File (dest_package_dir);
-
-        if (!dest_dir.exists () && !dest_dir.mkdirs ())
-        {
-            log.error ("Unable create directory: {}", dest_package_dir);
-            return (false);
-        }
-
         // We'll compare what exists with what will be extracted so we can delete excess files later
         List<String> files_to_remove = list_existing_files (dest_dir);
 
@@ -234,7 +214,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
             {
                 // Get file or dir from zip entry
                 ZipEntry entry = entries.nextElement();
-                File file_entry = new File (dest_package_dir, entry.getName ());
+                File file_entry = new File (dest_dir, entry.getName ());
 
                 if (entry.isDirectory ()) // Ensure the needed dirs are available
                 {
@@ -255,7 +235,8 @@ public class PackageDeploymentEngine implements DeploymentEngine
                     }
 
                     // Remove the existing file from the deletion list
-                    files_to_remove.remove (dest_package_dir + "/" + entry.getName ());
+                    files_to_remove.remove (dest_dir + "/" + entry.getName ());
+                    // TODO: +++ CHECK FILE STRING MATCH
                 }
             }
 
@@ -277,6 +258,7 @@ public class PackageDeploymentEngine implements DeploymentEngine
         }
     }
 
+    // TODO: PROVIDE A PROPER EXCEPTION CLASS FOR THIS SUBSYSTEM
     @Override
     public Bundle install (String location, Properties properties)
         throws Exception
@@ -285,33 +267,118 @@ public class PackageDeploymentEngine implements DeploymentEngine
         // of overall deployment status, as well as embedded bundle status,
         // it's deployment status, errors, warnings, configurations and so forth.
 
-        Manifest mf = bundle_manager.getManifest (location);
+        // Exceptions are unlikely, but may bubble up
+        File source_location = new File (new URI (location));
 
-        if (mf == null)
+        //-----------------------------------------------------
+        // 1) DETERMINE Bundle-SymbolicName AND Bundle-Version
+        //-----------------------------------------------------
+
+        // The default symbolic name is the package filename without .leap extension
+        String source_filename = source_location.getName ();
+        String bundle_symbolic_name = source_filename.substring (0, source_filename.lastIndexOf ("."));
+        Version bundle_version = new Version ("0");
+
+        // The provided manifest is the primary source of valid information
+        Manifest package_mf = bundle_manager.getManifest (source_location);
+
+        log.info ("###> DEF bundle_symbolic_name={} bundle_version={}", bundle_symbolic_name, bundle_version);
+
+        if (package_mf != null)
         {
-            return (null);
+            Attributes attrs = package_mf.getMainAttributes ();
+            bundle_symbolic_name = (String)attrs.getOrDefault ("Bundle-SymbolicName", bundle_symbolic_name);
+            bundle_version = new Version ((String)attrs.getOrDefault ("Bundle-Version", "0"));
+
+            log.info ("###> MF bundle_symbolic_name={} bundle_version={}", bundle_symbolic_name, bundle_version);
+        }
+        else
+        {
+            // Try to get the defaults from Package.info.
+            // Notice that Package.info is ONLY used with exploded packages, in the
+            // absence of a valid MANIFEST.MF. For zipped packages, we assume that
+            // Package.info attributes were properly copied to MANIFEST.MF.
+            try
+            {
+                Properties attrs = new Properties ();
+                File package_info = new File (source_location, "/meta-inf/Package.info");
+                attrs.load (new FileReader (package_info));
+                bundle_symbolic_name = attrs.getProperty ("Bundle-SymbolicName", bundle_symbolic_name);
+                bundle_version = new Version (attrs.getProperty ("Bundle-Version", "0"));
+
+                log.info ("###> PKG bundle_symbolic_name={} bundle_version={}", bundle_symbolic_name, bundle_version);
+            }
+            catch (Exception ignore) {};
         }
 
-        Attributes attrs = mf.getMainAttributes ();
-        String bundle_symbolic_name = attrs.getValue ("Bundle-SymbolicName");
-        Version bundle_version = new Version ((String)attrs.getOrDefault ("Bundle-Version", "0"));
+        log.info ("###> VALID bundle_symbolic_name={} bundle_version={}", bundle_symbolic_name, bundle_version);
+
+        //----------------------------------------------------
+        // 2) BUILD THE RUNTIME, UNZIPPED COPY OF THE PACKAGE
+        //----------------------------------------------------
 
         // TODO: ALLOW MULTIPLE PACKAGES WITH DIFFERENT VERSIONS WHEN CONFIG SET
         // TODO: AVOID UPDATE BUNDLE __WHILE EXTRACTING__
         // TODO: DELETE EXTRACTED PACKAGE CONTENTS WHEN UNINSTALLING
-        // TODO: BUILD AN EMBEDDED Bundles/ DIRECTORY FOR SHARED EMBEDDED BUNDLES USED BY MANY PACKAGES
         String extracted_package_dir = packages_dir + "/" + bundle_symbolic_name + "/" + bundle_version;
-        File source_location = new File (new URI (location)); // Exceptions are unlikely, but may bubble up
+        File runtime_location = new File (extracted_package_dir);
+
+        if (!runtime_location.exists () && !runtime_location.mkdirs ())
+        {
+            throw (new Exception ("Unable to create runtime directory: " + runtime_location));
+        }
 
         if (source_location.isDirectory ())
         {
-            copy_or_update_file_tree (source_location, extracted_package_dir);
+            copy_or_update_file_tree (source_location, runtime_location);
         }
         else
         {
-            extract_all (source_location, extracted_package_dir);
+            extract_all (source_location, runtime_location);
         }
 
+        //-------------------------------------------------------------------
+        // 3) PROVIDE A SENSIBLE MANIFEST.MF IF THE PACKAGE DOESN'T HAVE ONE
+        //-------------------------------------------------------------------
+
+        // Create a base manifest if needed.
+        // We need a manifest in order to become a valid OSGi bundle
+        if (package_mf == null)
+        {
+            File meta_inf = new File (runtime_location, "META-INF");
+
+            if (!meta_inf.exists () && !meta_inf.mkdirs ())
+            {
+                throw (new Exception ("Unable to create META-INF directory: " + meta_inf));
+            }
+
+            File generated_mf = new File (meta_inf, "MANIFEST.MF");
+
+            Manifest manifest = new Manifest();
+            Attributes atts = manifest.getMainAttributes ();
+            atts.put (Attributes.Name.MANIFEST_VERSION, "1.0");
+            atts.putValue ("Created-By",
+                System.getProperty("java.version") +
+                " (" + System.getProperty("java.vendor") + ") & LucidJ");
+            atts.putValue (Constants.BUNDLE_MANIFESTVERSION, "2");
+            atts.putValue (Constants.BUNDLE_SYMBOLICNAME, bundle_symbolic_name);
+            atts.putValue (ATTR_PACKAGE, ATTR_PACKAGE_VERSION);
+
+            try (FileOutputStream os = new FileOutputStream (generated_mf))
+            {
+                manifest.write (os);
+            }
+            catch (IOException e)
+            {
+                throw (new Exception ("Unable to create MANIFEST.MF: " + generated_mf));
+            }
+        }
+
+        //-------------------------------------------------
+        // 4) EXTRACT NATIVE OSGi BUNDLES AND INSTALL THEM
+        //-------------------------------------------------
+
+        // TODO: BUILD AN EMBEDDED Bundles/ DIRECTORY FOR SHARED EMBEDDED BUNDLES USED BY MANY PACKAGES
         File[] embedded_bundles = new File (extracted_package_dir, "Bundles/").listFiles ();
         Exception got_errors = null;
 
@@ -330,12 +397,17 @@ public class PackageDeploymentEngine implements DeploymentEngine
                     }
                     catch (Exception e)
                     {
+                        // TODO: CLEANUP ON ERRORS
                         got_errors = e;
                         break;
                     }
                 }
             }
         }
+
+        //--------------------------------
+        // 5) INSTALL THIS PACKAGE BUNDLE
+        //--------------------------------
 
         if (got_errors == null)
         {
@@ -349,7 +421,6 @@ public class PackageDeploymentEngine implements DeploymentEngine
                 throw (new Exception ("Exception installing bundle: " + location, e));
             }
         }
-
         throw (new Exception ("Errors found when deploying embedded bundles -- will not install package.", got_errors));
     }
 

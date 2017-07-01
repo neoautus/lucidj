@@ -107,8 +107,9 @@ public class PackageExtender implements BundleTrackerCustomizer<ServiceRegistrat
     {
         log.debug ("#####> addingBundle (bundle={}, state={} bundleEvent={} / {}", bundle, get_state_str (bundle), bundleEvent, get_event_str (bundleEvent));
 
+        // TODO: MAYBE WE SHOULD RELY JUST ON .leap EXTENSION TO ACTIVATE PACKAGE EXTENSIONS
         Dictionary headers = bundle.getHeaders ();
-        String x_package = (String)headers.get ("X-Package");
+        String x_package = (String)headers.get (PackageDeploymentEngine.ATTR_PACKAGE);
         BundleContext bundle_context = bundle.getBundleContext ();
 
         if (x_package == null)

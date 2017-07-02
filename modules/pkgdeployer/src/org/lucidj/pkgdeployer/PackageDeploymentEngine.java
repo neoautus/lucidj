@@ -282,15 +282,11 @@ public class PackageDeploymentEngine implements DeploymentEngine
         // The provided manifest is the primary source of valid information
         Manifest package_mf = bundle_manager.getManifest (source_location);
 
-        log.info ("###> DEF bundle_symbolic_name={} bundle_version={}", bundle_symbolic_name, bundle_version);
-
         if (package_mf != null)
         {
             Attributes attrs = package_mf.getMainAttributes ();
             bundle_symbolic_name = (String)attrs.getOrDefault ("Bundle-SymbolicName", bundle_symbolic_name);
             bundle_version = new Version ((String)attrs.getOrDefault ("Bundle-Version", "0"));
-
-            log.info ("###> MF bundle_symbolic_name={} bundle_version={}", bundle_symbolic_name, bundle_version);
         }
         else
         {
@@ -305,13 +301,9 @@ public class PackageDeploymentEngine implements DeploymentEngine
                 attrs.load (new FileReader (package_info));
                 bundle_symbolic_name = attrs.getProperty ("Bundle-SymbolicName", bundle_symbolic_name);
                 bundle_version = new Version (attrs.getProperty ("Bundle-Version", "0"));
-
-                log.info ("###> PKG bundle_symbolic_name={} bundle_version={}", bundle_symbolic_name, bundle_version);
             }
             catch (Exception ignore) {};
         }
-
-        log.info ("###> VALID bundle_symbolic_name={} bundle_version={}", bundle_symbolic_name, bundle_version);
 
         //----------------------------------------------------
         // 2) BUILD THE RUNTIME, UNZIPPED COPY OF THE PACKAGE
@@ -363,6 +355,29 @@ public class PackageDeploymentEngine implements DeploymentEngine
             atts.putValue (Constants.BUNDLE_MANIFESTVERSION, "2");
             atts.putValue (Constants.BUNDLE_SYMBOLICNAME, bundle_symbolic_name);
             atts.putValue (ATTR_PACKAGE, ATTR_PACKAGE_VERSION);
+
+            Properties package_props = new Properties ();
+
+            // Read the attributes from Package.info, if available
+            try
+            {
+                File package_info = new File (runtime_location, "/meta-inf/Package.info");
+                package_props.load (new FileReader (package_info));
+            }
+            catch (IOException ignore) {};
+
+            // Merge the attributes from Package.info, if any
+            for (String key: package_props.stringPropertyNames ())
+            {
+                try
+                {
+                    atts.putValue (key, package_props.getProperty (key));
+                }
+                catch (IllegalArgumentException e)
+                {
+                    log.warn ("Ignoring invalid Package.info key: {}", key);
+                }
+            }
 
             try (FileOutputStream os = new FileOutputStream (generated_mf))
             {

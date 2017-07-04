@@ -18,6 +18,7 @@ package org.lucidj.explorer;
 
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.NavigatorManager;
 import org.lucidj.api.SecurityEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,9 +166,9 @@ public class ExplorerView extends VerticalLayout implements ManagedObject, View,
                                 WatchEvent.Kind eventKind = event.kind();
 
                                 if (eventKind.equals(StandardWatchEventKinds.OVERFLOW) ||
-                                        eventKind.equals(StandardWatchEventKinds.ENTRY_CREATE) ||
-                                        eventKind.equals(StandardWatchEventKinds.ENTRY_MODIFY) ||
-                                        eventKind.equals(StandardWatchEventKinds.ENTRY_DELETE))
+                                    eventKind.equals(StandardWatchEventKinds.ENTRY_CREATE) ||
+                                    eventKind.equals(StandardWatchEventKinds.ENTRY_MODIFY) ||
+                                    eventKind.equals(StandardWatchEventKinds.ENTRY_DELETE))
                                 {
                                     filesystem_changed = true;
                                     log.debug ("Filesystem changed.");
@@ -267,8 +268,30 @@ public class ExplorerView extends VerticalLayout implements ManagedObject, View,
     {
         // FilesystemContainer uses File as item id
         File item_id = ((File)itemClickEvent.getItemId ());
+        String item_path = userdir.relativize (item_id.toPath ()).toString ();
 
-        if (item_id.isDirectory ())
+        if (item_id.getName ().toLowerCase ().endsWith (".leap"))
+        {
+            log.info ("OPEN item_path={}", item_id.toPath ().toString ());
+
+            try
+            {
+                String view_name = Explorer.OPEN + '/' + item_path;
+                OpenView view = NavigatorManager.getOrCreateView (view_name, OpenView.class);
+
+                if (view != null)
+                {
+                    view.setArtifactURL (item_id.getAbsolutePath ());
+                    UI.getCurrent().getNavigator().navigateTo (view_name);
+                }
+            }
+            catch (Exception e)
+            {
+                log.error ("Exception deploying artifact", e);
+                //show message
+            }
+        }
+        else if (item_id.isDirectory ())
         {
             // Open/close directory
             treetable.setCollapsed (item_id, !treetable.isCollapsed (item_id));
@@ -276,11 +299,7 @@ public class ExplorerView extends VerticalLayout implements ManagedObject, View,
         else
         {
             // Get item relative path
-            String item_path = userdir.relativize (item_id.toPath ()).toString ();
-
-            log.info ("OPEN item_path={}", item_path);
-
-            UI.getCurrent().getNavigator().navigateTo ("formulas:" + item_path);
+            log.info ("CLICK item_path={}", item_path);
         }
     }
 
@@ -303,13 +322,13 @@ public class ExplorerView extends VerticalLayout implements ManagedObject, View,
         }
     }
 
-    @Override
+    @Override // ManagedObject
     public void validate (ManagedObjectInstance instance)
     {
         // Nothing
     }
 
-    @Override
+    @Override // ManagedObject
     public void invalidate (ManagedObjectInstance instance)
     {
         // Nothing

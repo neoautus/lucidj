@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,6 +16,7 @@
 
 package org.lucidj.explorer;
 
+import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
@@ -38,13 +39,17 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Provides
 public class Explorer implements MenuProvider, ViewProvider
 {
-    private final static String NAVID = "home";
+    public final static String NAVID = "home";
+    public final static String OPEN = "open";
 
     @Requires
     private SecurityEngine security;
 
     @Requires
     private ManagedObjectFactory object_factory;
+
+    @Requires
+    private ArtifactDeployer artifactDeployer;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -65,7 +70,11 @@ public class Explorer implements MenuProvider, ViewProvider
         {
             return (NAVID);
         }
-        return null;
+        else if (s.startsWith (OPEN + "/"))  // The '/' is used since 'open' requires args
+        {
+            return (OPEN);
+        }
+        return (null);
     }
 
     @Override // ViewProvider
@@ -76,7 +85,12 @@ public class Explorer implements MenuProvider, ViewProvider
             ManagedObjectInstance view_instance = object_factory.wrapObject (new ExplorerView (security));
             return (view_instance.adapt (View.class));
         }
-        return null;
+        else if (OPEN.equals (s))
+        {
+            ManagedObjectInstance view_instance = object_factory.wrapObject (new OpenView (artifactDeployer));
+            return (view_instance.adapt (View.class));
+        }
+        return (null);
     }
 }
 

@@ -11,7 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/timeseries/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/uiaccess/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/aceeditor/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/formulas/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/Browser/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/librarian/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/beanshell/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/console/src" isTestSource="false" />

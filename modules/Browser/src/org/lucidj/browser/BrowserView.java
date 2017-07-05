@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.formulas;
+package org.lucidj.browser;
 
 import com.vaadin.event.FieldEvents;
 import com.vaadin.event.LayoutEvents;
@@ -62,15 +62,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@StyleSheet ("vaadin://~/formulas_libraries/styles.css")
-public class FormulasView extends VerticalLayout implements ManagedObject, View, ApplicationInterface
+@StyleSheet ("vaadin://~/Browser_libraries/styles.css")
+public class BrowserView extends VerticalLayout implements ManagedObject, View, ApplicationInterface
 {
     // Actually this will be some sort of Bundle Renderer
 
     // TODO: CREATE A PROPER NAVIGATION AID
-    private String navid = "formulas";
+    private String navid = "browse";
 
-    private final transient static Logger log = LoggerFactory.getLogger (FormulasView.class);
+    private final transient static Logger log = LoggerFactory.getLogger (BrowserView.class);
 
     private static final String VM_NOTEBOOK = "view-mode-notebook";
     private static final String VM_SINGLE = "view-mode-single";
@@ -102,7 +102,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     private Cell insert_here_cell;
     private SerializerEngine serializer;
 
-    public FormulasView (SecurityEngine security, SerializerEngine serializer, ComponentManager componentManager)
+    public BrowserView (SecurityEngine security, SerializerEngine serializer, ComponentManager componentManager)
     {
         this.security = security;
         this.serializer = serializer;
@@ -356,7 +356,7 @@ public class FormulasView extends VerticalLayout implements ManagedObject, View,
     {
         log.info ("insert_new_object: canonical_name={} index={}", canonical_name, index);
 
-        ManagedObjectInstance object_instance = Formulas.getObjectFactory ().newInstance (canonical_name, null);
+        ManagedObjectInstance object_instance = Browser.getObjectFactory ().newInstance (canonical_name, null);
         ManagedObject object = object_instance.adapt (ManagedObject.class);
 
         log.info ("*** insert_new_object: object={}", object);

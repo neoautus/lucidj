@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.formulas;
+package org.lucidj.browser;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import org.lucidj.api.Aggregate;
@@ -69,7 +69,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         {
             // Register and render the source object
             source_object = object;
-            object_renderer = Formulas.getRendererFactory ().newRenderer ();
+            object_renderer = Browser.getRendererFactory ().newRenderer ();
             rendered_object = object_renderer.link (source_object);
         }
         else

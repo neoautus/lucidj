@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.formulas;
+package org.lucidj.browser;
 
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ManagedObjectFactory;
@@ -39,9 +39,9 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Component
 @Instantiate
 @Provides
-public class Formulas implements MenuProvider, ViewProvider
+public class Browser implements MenuProvider, ViewProvider
 {
-    private final static String NAVID = "formulas";
+    private final static String NAVID = "browse";
 
     @Requires
     private SecurityEngine security;
@@ -61,7 +61,7 @@ public class Formulas implements MenuProvider, ViewProvider
     private RendererFactory rendererFactory;
     private static RendererFactory static_rendererFactory;
 
-    public Formulas ()
+    public Browser ()
     {
         static_objectFactory = objectFactory;
         static_rendererFactory = rendererFactory;
@@ -92,7 +92,7 @@ public class Formulas implements MenuProvider, ViewProvider
     @Override // MenuProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
-        menu.addMenuEntry (menu.newMenuEntry ("Formulas", FontAwesome.FILE_CODE_O, 500, NAVID));
+        menu.addMenuEntry (menu.newMenuEntry ("Browser", FontAwesome.FILE_CODE_O, 500, NAVID));
     }
 
     @Override // ViewProvider
@@ -117,7 +117,7 @@ public class Formulas implements MenuProvider, ViewProvider
         if (NAVID.equals (s))
         {
             // TODO: wrapObject() IS ANOTHER USE-CASE (FACTORY-LESS ManagedObject)
-            ManagedObjectInstance view_instance = objectFactory.wrapObject (new FormulasView (security, serializer, componentManager));
+            ManagedObjectInstance view_instance = objectFactory.wrapObject (new BrowserView (security, serializer, componentManager));
             return (view_instance.adapt (View.class));
         }
         return null;

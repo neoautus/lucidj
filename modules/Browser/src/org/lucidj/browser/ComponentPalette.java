@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.formulas;
+package org.lucidj.browser;
 
 import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;

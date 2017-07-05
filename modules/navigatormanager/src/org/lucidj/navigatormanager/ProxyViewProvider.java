@@ -89,6 +89,7 @@ public class ProxyViewProvider implements ViewProvider, ManagedObject
 
             view = provider.getView (viewName);
             log.info ("viewName={} view={}", viewName, view);
+            // TODO: INVALIDATE CACHE WHEN BUNDLE GOES AWAY
             view_name_to_view.put (viewName, view);
         }
         log.info ("getView (viewName={}) = {}", viewName, view);

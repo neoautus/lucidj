@@ -28,8 +28,11 @@ import com.vaadin.navigator.ViewProvider;
 import com.vaadin.server.FontAwesome;
 
 import java.util.Map;
+import java.util.regex.Matcher;
 
+import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -41,6 +44,9 @@ public class Explorer implements MenuProvider, ViewProvider
 {
     public final static String NAVID = "home";
     public final static String OPEN = "open";
+
+    @Context
+    private BundleContext context;
 
     @Requires
     private SecurityEngine security;
@@ -64,30 +70,41 @@ public class Explorer implements MenuProvider, ViewProvider
     }
 
     @Override // ViewProvider
-    public String getViewName (String s)
+    public String getViewName (String navigationState)
     {
-        if (NAVID.equals (s))
+        Matcher m;
+
+        if (NAVID.equals (navigationState))
         {
             return (NAVID);
         }
-        else if (s.startsWith (OPEN + "/"))  // The '/' is used since 'open' requires args
+        else if (navigationState.startsWith (OPEN + "/"))  // The '/' is used since 'open' requires args
         {
             return (OPEN);
+        }
+        else if ((m = BundleView.NAV_PATTERN.matcher (navigationState)).find ())
+        {
+            return (m.group ());
         }
         return (null);
     }
 
     @Override // ViewProvider
-    public View getView (String s)
+    public View getView (String viewName)
     {
-        if (NAVID.equals (s))
+        if (NAVID.equals (viewName))
         {
             ManagedObjectInstance view_instance = object_factory.wrapObject (new ExplorerView (security));
             return (view_instance.adapt (View.class));
         }
-        else if (OPEN.equals (s))
+        else if (OPEN.equals (viewName))
         {
             ManagedObjectInstance view_instance = object_factory.wrapObject (new OpenView (artifactDeployer));
+            return (view_instance.adapt (View.class));
+        }
+        else if (BundleView.NAV_PATTERN.matcher (viewName).matches ())
+        {
+            ManagedObjectInstance view_instance = object_factory.wrapObject (new BundleView (context, artifactDeployer));
             return (view_instance.adapt (View.class));
         }
         return (null);

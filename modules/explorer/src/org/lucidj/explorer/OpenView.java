@@ -106,11 +106,16 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
 
     private void start_deploy ()
     {
-        if (install_thread == null)
+        // First try to locate the artifact already installed
+        if ((install_bundle = artifactDeployer.getArtifactByLocation (artifact_url)) == null)
         {
-            install_thread = new Thread (this);
-            install_thread.setName (this.getClass ().getSimpleName ());
-            install_thread.start ();
+            // Not found, should install
+            if (install_thread == null)
+            {
+                install_thread = new Thread (this);
+                install_thread.setName (this.getClass ().getSimpleName ());
+                install_thread.start ();
+            }
         }
     }
 

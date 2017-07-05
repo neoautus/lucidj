@@ -118,17 +118,6 @@ public class PackageImpl implements EmbeddingManager.EmbeddingListener, Package,
             log.error ("Exception opening bundle: {}", bnd, e);
         }
 
-        // RETRIEVE ALL ACTIVE EMBEDDINGS/FILES AND PRINT THEM
-        for (Embedding file: embedding_context.getEmbeddedFiles ())
-        {
-            log.info ("Embedding: [{}] -> {}", file.getName (), file.getObject ());
-
-            for (Embedding embedding: embedding_context.getEmbeddings (file))
-            {
-                log.info ("Embedding: [{}] {} -> {}", file.getName (), embedding.getName (), embedding.getObject ());
-            }
-        }
-
         // After Opening, we are Running
         extended_state = Artifact.STATE_EX_OPEN;
     }

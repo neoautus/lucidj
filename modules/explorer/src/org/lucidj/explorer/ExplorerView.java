@@ -281,7 +281,7 @@ public class ExplorerView extends VerticalLayout implements ManagedObject, View,
 
                 if (view != null)
                 {
-                    view.setArtifactURL (item_id.getAbsolutePath ());
+                    view.setArtifactURL (item_id.toURI ().toString ());
                     UI.getCurrent().getNavigator().navigateTo (view_name);
                 }
             }

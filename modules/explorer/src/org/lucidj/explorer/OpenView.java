@@ -24,14 +24,21 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
-public class OpenView extends VerticalLayout implements ManagedObject, View
+import org.osgi.framework.Bundle;
+
+public class OpenView extends VerticalLayout implements ManagedObject, View, Runnable
 {
     private final transient Logger log = LoggerFactory.getLogger (ExplorerView.class);
 
     private ArtifactDeployer artifactDeployer;
+    private VerticalLayout install_pane;
+    private Thread install_thread;
+    private Bundle install_bundle;
+
     private String artifact_url;
     private String parameters;
 
@@ -59,6 +66,52 @@ public class OpenView extends VerticalLayout implements ManagedObject, View
         addComponent (private_caption);
         addComponent (new Label ("Artifact: " + artifact_url));
         addComponent (new Label ("Parameters: " + parameters));
+
+        install_pane = new VerticalLayout ();
+        addComponent (install_pane);
+    }
+
+    @Override // Runnable
+    public void run ()
+    {
+        install_pane.addComponent (new Label ("Installing " + artifact_url));
+
+        try
+        {
+            install_bundle = artifactDeployer.installArtifact (artifact_url);
+            install_pane.addComponent (new Label ("Bundle installed: " + install_bundle));
+
+            Button go_to_bundle = new Button ("Go to new bundle");
+            go_to_bundle.addClickListener (new Button.ClickListener ()
+            {
+                @Override
+                public void buttonClick (Button.ClickEvent clickEvent)
+                {
+                    getUI ().getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getBundleId ()));
+                }
+            });
+            install_pane.addComponent (go_to_bundle);
+        }
+        catch (Exception e)
+        {
+            String msg = "Exception installing artifact: " + e.toString ();
+            String exception_msg = e.getMessage ();
+            if (exception_msg != null)
+            {
+                msg += " (" + exception_msg + ")";
+            }
+            install_pane.addComponent (new Label (msg));
+        }
+    }
+
+    private void start_deploy ()
+    {
+        if (install_thread == null)
+        {
+            install_thread = new Thread (this);
+            install_thread.setName (this.getClass ().getSimpleName ());
+            install_thread.start ();
+        }
     }
 
     @Override // ManagedObject
@@ -84,6 +137,13 @@ public class OpenView extends VerticalLayout implements ManagedObject, View
         {
             build_view ();
             build_toolbar ();
+            start_deploy ();
+        }
+
+        if (install_bundle != null)
+        {
+            log.info ("Redirecting {} to {}", event.getViewName (), install_bundle);
+            event.getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getBundleId ()));
         }
     }
 }

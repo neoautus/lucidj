@@ -35,7 +35,8 @@ import org.osgi.framework.BundleContext;
 public class BundleView extends VerticalLayout implements ManagedObject, View
 {
     private final static Logger log = LoggerFactory.getLogger (ExplorerView.class);
-    public static Pattern NAV_PATTERN = Pattern.compile ("^bundle\\/(\\d{1,19})");
+    private final static String view_name = "bundle";
+    public static Pattern NAV_PATTERN = Pattern.compile ("^" + view_name + "\\/(\\d{1,19})");
 
     private ArtifactDeployer artifactDeployer;
     private String parameters;
@@ -91,6 +92,11 @@ public class BundleView extends VerticalLayout implements ManagedObject, View
             build_view ();
             build_toolbar ();
         }
+    }
+
+    public static String buildViewName (long bundle_id)
+    {
+        return (view_name + "/" + Long.toString (bundle_id));
     }
 }
 

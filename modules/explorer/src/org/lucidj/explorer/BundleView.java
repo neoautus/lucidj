@@ -17,6 +17,7 @@
 package org.lucidj.explorer;
 
 import org.lucidj.api.ArtifactDeployer;
+import org.lucidj.api.BundleManager;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
 import org.slf4j.Logger;
@@ -30,22 +31,32 @@ import com.vaadin.ui.VerticalLayout;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 public class BundleView extends VerticalLayout implements ManagedObject, View
 {
     private final static Logger log = LoggerFactory.getLogger (ExplorerView.class);
     private final static String view_name = "bundle";
-    public static Pattern NAV_PATTERN = Pattern.compile ("^" + view_name + "\\/(\\d{1,19})");
+    private final static String long_rex = "\\d{1,19}";
+    private final static String nav_rex = "^" + view_name + "\\/(" + long_rex + "|[\\-._a-zA-Z0-9]+)";
+    public static Pattern NAV_PATTERN = Pattern.compile (nav_rex);
 
     private ArtifactDeployer artifactDeployer;
+    private BundleManager bundleManager;
     private String parameters;
-    private long bundle_id;
     private BundleContext context;
+    private Bundle bundle = null;
 
-    public BundleView (BundleContext context, ArtifactDeployer artifactDeployer)
+    static
+    {
+        log.info ("nav_rex = {}", nav_rex);
+    }
+
+    public BundleView (BundleContext context, BundleManager bundleManager, ArtifactDeployer artifactDeployer)
     {
         this.context = context;
+        this.bundleManager = bundleManager;
         this.artifactDeployer = artifactDeployer;
     }
 
@@ -62,8 +73,8 @@ public class BundleView extends VerticalLayout implements ManagedObject, View
         private_caption.addStyleName ("h2");
         addComponent (private_caption);
         addComponent (new Label ("Parameters: " + parameters));
-        addComponent (new Label ("Bundle ID: " + bundle_id));
-        addComponent (new Label ("Bundle: " + context.getBundle (bundle_id)));
+        addComponent (new Label ("Bundle ID: " + bundle.getBundleId ()));
+        addComponent (new Label ("Bundle: " + bundle));
     }
 
     @Override // ManagedObject
@@ -85,7 +96,27 @@ public class BundleView extends VerticalLayout implements ManagedObject, View
 
         parameters = event.getParameters ();
         Matcher m = NAV_PATTERN.matcher (event.getViewName ());
-        bundle_id = m.find()? Long.parseLong (m.group (1)): -1;
+        String bundle_ref = m.find()? m.group (1): null;
+
+        log.info ("bundle_ref = {}", bundle_ref);
+
+        if (bundle_ref != null)
+        {
+            if (bundle_ref.matches (long_rex))
+            {
+                // The long number is the bundle id
+                bundle = context.getBundle (bundle_ref);
+                log.info ("bundle Long {} = {}", m.group (), bundle);
+            }
+            else
+            {
+                // The text is the BSN
+                bundle = bundleManager.getBundleByDescription (bundle_ref, null);
+                log.info ("bundle BSN {} = {}", bundle_ref, bundle);
+            }
+        }
+
+        log.info ("Final bundle = {}", bundle);
 
         if (getComponentCount() == 0)
         {
@@ -97,6 +128,11 @@ public class BundleView extends VerticalLayout implements ManagedObject, View
     public static String buildViewName (long bundle_id)
     {
         return (view_name + "/" + Long.toString (bundle_id));
+    }
+
+    public static String buildViewName (String bundle_symbolic_name)
+    {
+        return (view_name + "/" + bundle_symbolic_name);
     }
 }
 

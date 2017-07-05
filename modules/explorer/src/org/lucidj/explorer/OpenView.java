@@ -87,7 +87,7 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
                 @Override
                 public void buttonClick (Button.ClickEvent clickEvent)
                 {
-                    getUI ().getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getBundleId ()));
+                    getUI ().getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getSymbolicName ()));
                 }
             });
             install_pane.addComponent (go_to_bundle);
@@ -143,7 +143,7 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
         if (install_bundle != null)
         {
             log.info ("Redirecting {} to {}", event.getViewName (), install_bundle);
-            event.getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getBundleId ()));
+            event.getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getSymbolicName ()));
         }
     }
 }

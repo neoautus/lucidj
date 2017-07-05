@@ -17,6 +17,7 @@
 package org.lucidj.explorer;
 
 import org.lucidj.api.ArtifactDeployer;
+import org.lucidj.api.BundleManager;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
@@ -56,6 +57,9 @@ public class Explorer implements MenuProvider, ViewProvider
 
     @Requires
     private ArtifactDeployer artifactDeployer;
+
+    @Requires
+    private BundleManager bundleManager;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -104,7 +108,8 @@ public class Explorer implements MenuProvider, ViewProvider
         }
         else if (BundleView.NAV_PATTERN.matcher (viewName).matches ())
         {
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new BundleView (context, artifactDeployer));
+            ManagedObjectInstance view_instance =
+                object_factory.wrapObject (new BundleView (context, bundleManager, artifactDeployer));
             return (view_instance.adapt (View.class));
         }
         return (null);

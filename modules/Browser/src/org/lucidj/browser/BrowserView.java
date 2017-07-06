@@ -26,7 +26,6 @@ import com.vaadin.server.ExternalResource;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Resource;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.AbstractLayout;
@@ -44,42 +43,48 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 import org.lucidj.api.Aggregate;
 import org.lucidj.api.ApplicationInterface;
+import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentState;
+import org.lucidj.api.Embedding;
+import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.Package;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.SerializerEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @StyleSheet ("vaadin://~/Browser_libraries/styles.css")
 public class BrowserView extends VerticalLayout implements ManagedObject, View, ApplicationInterface
 {
-    // Actually this will be some sort of Bundle Renderer
-
-    // TODO: CREATE A PROPER NAVIGATION AID
-    private String navid = "browse";
-
-    private final transient static Logger log = LoggerFactory.getLogger (BrowserView.class);
+    private final static Logger log = LoggerFactory.getLogger (BrowserView.class);
+    private final static String view_name = "browse";
+    private final static String nav_rex = "^" + view_name + "\\/([\\-._a-zA-Z0-9]+)\\/(.+)";
+    public final static Pattern NAV_PATTERN = Pattern.compile (nav_rex);
 
     private static final String VM_NOTEBOOK = "view-mode-notebook";
     private static final String VM_SINGLE = "view-mode-single";
     private static final String VM_ZOOM_CODE = "view-mode-zoom-code";
     private static final String VM_ZOOM_EXEC = "view-mode-zoom-exec";
 
-    private static final String PROP_FORMULAE_VERSION = "Formulae-Version";
-
-    private String caption = "Formulas";
+    private String caption = "Browse";
     private CssLayout current_toolbar = null;
     private Accordion acSidebar = null;
     private ComponentPalette sidebar = null;
@@ -87,14 +92,16 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
     private BundleContext ctx;
     private SecurityEngine security;
     private ComponentManager componentManager;
+    private BundleManager bundleManager;
 
-    private String view_name = null;
+    private String view_name_alt = null;
     private long last_save = 0;
     private boolean formulae_changed = false;
 
     private Object root_object = null;
     private List object_list = null;
-    private String task_source = null;
+    // TODO: REMOVE ____task_source
+    private String ____task_source = null;
     private Object current_object;
     private Map<Object, Cell> active_cells = new ConcurrentHashMap<> ();
 
@@ -102,11 +109,13 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
     private Cell insert_here_cell;
     private SerializerEngine serializer;
 
-    public BrowserView (SecurityEngine security, SerializerEngine serializer, ComponentManager componentManager)
+    public BrowserView (SecurityEngine security, SerializerEngine serializer, ComponentManager componentManager,
+                        BundleManager bundleManager)
     {
         this.security = security;
         this.serializer = serializer;
         this.componentManager = componentManager;
+        this.bundleManager = bundleManager;
     }
 
     @Override // ManagedObject
@@ -401,24 +410,24 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
         {
             case "save":
             {
-                // TODO: EMBED task_source INTO TaskContext
-                save_formulae (task_source);
+                // TODO: EMBED ____task_source INTO TaskContext
+                save_formulae (____task_source);
                 break;
             }
             case VM_NOTEBOOK:
             {
                 // TODO: CREATE BETTER VIEW REPRESENTATION/REFERENCE
-                UI.getCurrent().getNavigator().navigateTo(navid + ":" +
-                                                          task_source + "/" +
-                                                          VM_NOTEBOOK);
+                UI.getCurrent ().getNavigator ().navigateTo (view_name + ":" +
+                        ____task_source + "/" +
+                        VM_NOTEBOOK);
                 break;
             }
             case VM_SINGLE:
             {
-                UI.getCurrent().getNavigator().navigateTo(navid + ":" +
-                                                          task_source + "/" +
-                                                          VM_SINGLE + "/" +
-                                                          get_current_cell_index());
+                UI.getCurrent ().getNavigator ().navigateTo (view_name + ":" +
+                        ____task_source + "/" +
+                        VM_SINGLE + "/" +
+                        get_current_cell_index ());
                 break;
             }
             case "prev-smartbox":
@@ -641,25 +650,6 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
         acSidebar.addTab (new Label ("Hello world"), "Visualization");
     }
 
-//    @Override
-//    public void changeContents(SmartBox source)
-//    {
-//        formulae_changed = true;
-//
-//        if (!source.getInstanceData().isEmpty() &&
-//            cell_list.indexOf(source) == cell_list.size() - 1)
-//        {
-//            add_smartbox();
-//        }
-//
-//        // Save every 10 seconds
-//        if (last_save + 10000 < System.currentTimeMillis())
-//        {
-//            save_formulae(formula_name);
-//            last_save = System.currentTimeMillis();
-//        }
-//    }
-
     @Override
     public void detach ()
     {
@@ -693,47 +683,6 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
         return (true);
     }
 
-    public Object load_formulae (String formulae_name)
-    {
-        // TODO: REGISTER COMPLETE FILE SOURCE INCLUDING SOURCE FILESYSTEM
-        Path userdir = security.getDefaultUserDir ();
-
-        if (userdir == null)
-        {
-            log.info("Load failed");
-            return (false);
-        }
-
-        Path formulae_path = userdir.resolve (formulae_name);
-
-        formulae_changed = false;
-
-        return (serializer.deserializeObject (formulae_path));
-    }
-
-    private Label get_icon (String icon_name)
-    {
-        int icon_size_px = 48;
-
-        String icon_html =
-            "<div><img src='/VAADIN/themes/kuori/img/" + icon_name + "' " +
-                "width='" + icon_size_px + "px' height='" + icon_size_px + "px' /></div>";
-
-        Label icon_label = new Label (icon_html, ContentMode.HTML);
-        icon_label.addStyleName ("formula-icon");
-        icon_label.setWidthUndefined ();
-        return (icon_label);
-    }
-
-    private Label get_title (String name)
-    {
-        String title_html =
-            "<h1>" + name + "</h1>" +
-            "<div class='formula-info'>Created on 19/Jul/1969</div>";
-
-        return (new Label (title_html, ContentMode.HTML));
-    }
-
     private void unfocus (Component component)
     {
         Component parent = component.getParent();
@@ -752,15 +701,17 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
         }
     }
 
-    private void build_formula_view (String view_mode)
+    private void build_view ()
     {
         setMargin (new MarginInfo (true, false, true, false));
 
-        build_toolbar();
+        build_toolbar ();
         build_sidebar ();
 
         insert_here_cell = new Cell (null);
 
+        // TODO: THIS BLOCK IS ACTUALLY A FILE HEADER OBJECT
+        //+++
         HorizontalLayout header = new HorizontalLayout ();
         header.setWidth (100, Unit.PERCENTAGE);
         {
@@ -824,16 +775,11 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
             header.setExpandRatio (caption, 1.0f);
         }
         addComponent (header);
+        //---
 
         content = new VerticalLayout();
         content.addStyleName ("formula-cells");
         addComponent (content);
-
-        // TODO: RETRIEVE RUNNING TASKS WITHOUT LOAD
-        root_object = load_formulae (task_source);
-        object_list = Aggregate.adapt (root_object, List.class);
-
-        log.info ("object_list: {}", object_list);
 
         synchronize_cell_view ();
 
@@ -841,40 +787,99 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
         update_cell_focus (null, true);
     }
 
-    @Override
-    public void enter(ViewChangeListener.ViewChangeEvent event)
+    public boolean init_component (ViewChangeListener.ViewChangeEvent event)
     {
-        String parameters = event.getParameters ();
-        view_name = event.getViewName ();
+        Matcher m = NAV_PATTERN.matcher (event.getViewName ());
 
-        log.info ("Enter viewName={} parameters={}", view_name, parameters);
-
-        if (!parameters.isEmpty ())
+        if (!m.find ())
         {
-            task_source = parameters;
-        }
-        else
-        {
-            task_source = null;
+            return (false);
         }
 
-        if (getComponentCount() == 0)
+        String bundle_symbolic_name = m.group (1);
+        String object_path = '/' + m.group (2);
+        Bundle bundle = bundleManager.getBundleByDescription (bundle_symbolic_name, null);
+
+        log.info ("bundle_symbolic_name={} object_path={} bundle={}", bundle_symbolic_name, object_path, bundle);
+
+        if (bundle == null)
         {
-            if (!parameters.isEmpty ())
+            return (false);
+        }
+
+        ServiceReference[] service_list = bundle.getServicesInUse ();
+        Package pkg = null;
+
+        // Locate the Package descriptor registered for this bundle
+        for (ServiceReference service : service_list)
+        {
+            if (service.isAssignableTo (bundle, Package.class.getName ()))
             {
-                build_formula_view (parameters);
+                pkg = (Package)ctx.getService (service);
+                break;
             }
-            else
+        }
+
+        log.info ("Final bundle={}, pkg={}", bundle, pkg);
+
+        if (pkg == null)
+        {
+            return (false);
+        }
+
+        EmbeddingContext ec = pkg.getEmbeddingContext ();
+
+        for (Embedding file: ec.getEmbeddedFiles ())
+        {
+            log.info ("Embedding: [{}] -> {}", file.getName (), file.getObject ());
+
+            try
             {
-                // NO MORE!
-                ///buildBrowserView();
+                URI file_uri = new URI (file.getName ());
+                log.info ("file_uri.getPath() = {}", file_uri.getPath ());
+                if (!file_uri.getPath ().equals (object_path))
+                {
+                    // Embedded file path doesn't match
+                    continue;
+                }
+            }
+            catch (URISyntaxException e)
+            {
+                log.warn ("Embedding exception", e);
+                continue;
+            }
+
+            // We have a matching file path, try to find an embedding
+            for (Embedding embedding : ec.getEmbeddings (file))
+            {
+                root_object = embedding.getObject ();
+                log.info ("Embedding: [{}] {} -> {}", file.getName (), embedding.getName (), root_object);
+                break; // Just the first for now
             }
         }
-        else // View already built
+
+        if (root_object == null)
         {
-            if (event.getViewName().contains(":"))
+            return (false);
+        }
+
+        // We have a valid embedding!
+        object_list = Aggregate.adapt (root_object, List.class);
+        log.info ("object_list: {}", object_list);
+        return (true);
+    }
+
+    @Override // View
+    public void enter (ViewChangeListener.ViewChangeEvent event)
+    {
+        log.info ("Enter viewName=" + event.getViewName () + " parameters=" + event.getParameters ());
+
+        if (getComponentCount () == 0)
+        {
+            if (init_component (event))
             {
-                //selectFormulaView(event.getParameters());
+                build_view ();
+                build_toolbar ();
             }
         }
     }

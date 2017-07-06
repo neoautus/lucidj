@@ -29,9 +29,12 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -97,6 +100,26 @@ public class BundleView extends VerticalLayout implements ManagedObject, View
             {
                 log.info ("Embedding: [{}] {} -> {}", file.getName (), embedding.getName (), embedding.getObject ());
                 addComponent (new Label ("&nbsp;&nbsp;&nbsp;&nbsp;Embedding: <b>" + embedding.getName () + ":</b> " + embedding.getObject (), ContentMode.HTML));
+
+                try
+                {
+                    URI file_uri = new URI (file.getName ());
+                    final String browse_nav = "browse/" + bundle.getSymbolicName () + file_uri.getPath ();
+                    Button browse = new Button ("Go to " + embedding.getName ());
+                    browse.addClickListener (new Button.ClickListener ()
+                    {
+                        @Override
+                        public void buttonClick (Button.ClickEvent clickEvent)
+                        {
+                            getUI ().getNavigator ().navigateTo (browse_nav);
+                        }
+                    });
+                    addComponent (browse);
+                }
+                catch (URISyntaxException e)
+                {
+                    log.warn ("Embedding exception", e);
+                }
             }
         }
 

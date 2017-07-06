@@ -16,20 +16,20 @@
 
 package org.lucidj.browser;
 
+import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.MenuInstance;
-import org.lucidj.api.MenuProvider;
 import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.SerializerEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
-import com.vaadin.server.FontAwesome;
 
-import java.util.Map;
+import java.util.regex.Matcher;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -39,9 +39,9 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Component
 @Instantiate
 @Provides
-public class Browser implements MenuProvider, ViewProvider
+public class Browser implements ViewProvider
 {
-    private final static String NAVID = "browse";
+    private final static Logger log = LoggerFactory.getLogger (Browser.class);
 
     @Requires
     private SecurityEngine security;
@@ -60,6 +60,9 @@ public class Browser implements MenuProvider, ViewProvider
     @Requires
     private RendererFactory rendererFactory;
     private static RendererFactory static_rendererFactory;
+
+    @Requires
+    private BundleManager bundleManager;
 
     public Browser ()
     {
@@ -83,41 +86,27 @@ public class Browser implements MenuProvider, ViewProvider
         return (static_componentManager);
     }
 
-    @Override // MenuProvider
-    public Map<String, Object> getProperties ()
+    @Override // ViewProvider
+    public String getViewName (String navigationState)
     {
+        Matcher m;
+
+        if ((m = BrowserView.NAV_PATTERN.matcher (navigationState)).find ())
+        {
+            log.info ("m.group() = {}", m.group ());
+            return (m.group ());
+        }
         return (null);
     }
 
-    @Override // MenuProvider
-    public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
-    {
-        menu.addMenuEntry (menu.newMenuEntry ("Browser", FontAwesome.FILE_CODE_O, 500, NAVID));
-    }
-
     @Override // ViewProvider
-    public String getViewName (String s)
+    public View getView (String viewName)
     {
-        // Split NAVID:ARGS
-        if (s.contains (":"))
-        {
-            s = s.substring (0, s.indexOf (":"));
-        }
-
-        if (NAVID.equals (s))
-        {
-            return (NAVID);
-        }
-        return null;
-    }
-
-    @Override // ViewProvider
-    public View getView (String s)
-    {
-        if (NAVID.equals (s))
+        if (BrowserView.NAV_PATTERN.matcher (viewName).matches ())
         {
             // TODO: wrapObject() IS ANOTHER USE-CASE (FACTORY-LESS ManagedObject)
-            ManagedObjectInstance view_instance = objectFactory.wrapObject (new BrowserView (security, serializer, componentManager));
+            ManagedObjectInstance view_instance =
+                objectFactory.wrapObject (new BrowserView (security, serializer, componentManager, bundleManager));
             return (view_instance.adapt (View.class));
         }
         return null;

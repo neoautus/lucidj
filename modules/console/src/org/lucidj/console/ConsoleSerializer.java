@@ -24,6 +24,7 @@ import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +53,7 @@ public class ConsoleSerializer implements Serializer, ManagedObjectProvider
     private void validate ()
     {
         objectFactory.register (Console.class, this, null);
+        objectFactory.register (Stdio.class, this, null);
         serializer.register (Console.class, this);
     }
 

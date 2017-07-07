@@ -21,6 +21,7 @@ import org.lucidj.api.EventHelper;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Renderer;
+import org.lucidj.api.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +32,7 @@ import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Console implements ManagedObject, Renderer.Observable
+public class Console implements Stdio, ManagedObject, Renderer.Observable
 {
     private final transient Logger log = LoggerFactory.getLogger (Console.class);
 
@@ -51,6 +52,7 @@ public class Console implements ManagedObject, Renderer.Observable
     }
 
     // TODO: AUTODISCOVERY DATA STRUCTURE FROM TEXT (EX. CSV, TABLE, SERIES, ETC)
+    @Override
     public void output (String tag, String text)
     {
         if (text.isEmpty ())
@@ -139,6 +141,25 @@ public class Console implements ManagedObject, Renderer.Observable
         event_helper.publish (this);
     }
 
+    @Override
+    public void stdout (String output)
+    {
+        output (STDOUT, output);
+    }
+
+    @Override
+    public void stderr (String output)
+    {
+        output (STDERR, output);
+    }
+
+    @Override
+    public void stdhtml (String output)
+    {
+        output (HTML, output);
+    }
+
+    @Override
     public void clear ()
     {
         contents = null;
@@ -188,12 +209,12 @@ public class Console implements ManagedObject, Renderer.Observable
                     String text = line.substring (text_pos + 1 + skip_format_space);
                     String safe_text = SafeHtmlUtils.htmlEscape (text).replace ("\\n", "<br/>");
 
-                    if (tag.equals ("ERR"))
+                    if (tag.equals (STDERR))
                     {
                         content_out.append ("<font color='red'>");
                     }
 
-                    if (tag.equals ("HTML"))
+                    if (tag.equals (HTML))
                     {
                         content_out.append (text);
                     }
@@ -202,7 +223,7 @@ public class Console implements ManagedObject, Renderer.Observable
                         content_out.append (safe_text);
                     }
 
-                    if (tag.equals ("ERR"))
+                    if (tag.equals (STDERR))
                     {
                         content_out.append ("</font>");
                     }

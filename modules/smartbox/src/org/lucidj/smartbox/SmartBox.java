@@ -25,7 +25,7 @@ import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
-import org.lucidj.console.Console;
+import org.lucidj.api.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     private String code = "";
 
     // TODO: GET RID OF THESE DEPENDENCIES!!!
-    private Console console;
+    private Stdio console;
 
     private ManagedObjectFactory objectFactory;
     private CodeEngine code_engine;
@@ -71,18 +71,18 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     }
 
     // TODO: DECOUPLE THESE OBJECTS INTO PLUGGABLE STRUCTURES
-    private Console get_console (boolean show)
+    private Stdio get_console (boolean show)
     {
         if (console == null)
         {
-            ManagedObjectInstance console_instance = objectFactory.newInstance (Console.class, null);
-            console = console_instance.adapt (Console.class);
+            ManagedObjectInstance console_instance = objectFactory.newInstance (Stdio.class, null);
+            console = console_instance.adapt (Stdio.class);
         }
 
-        if (show && om.getObject (Console.class.getCanonicalName ()) == null)
+        if (show && om.getObject (Stdio.class.getCanonicalName ()) == null)
         {
             om.showObject (console);
-            om.setObjectTag (console, Console.class.getCanonicalName ());
+            om.setObjectTag (console, Stdio.class.getCanonicalName ());
         }
 
         return (console);
@@ -102,13 +102,13 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             @Override
             public void stdoutPrint (String str)
             {
-                get_console (true).output ("OUT", str);
+                get_console (true).stdout (str);
             }
 
             @Override
             public void stderrPrint (String str)
             {
-                get_console (true).output ("ERR", str);
+                get_console (true).stderr (str);
             }
 
             @Override

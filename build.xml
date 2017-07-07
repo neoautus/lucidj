@@ -1127,7 +1127,7 @@
     <target name="build.modules.store">
         <delete dir="${libraries.class}"/>
         <mkdir dir="${libraries.class}"/>
-        <javac srcdir="${libraries.src.dir}" destdir="${libraries.class}"
+        <javac srcdir="${libraries.src.dir}/api" destdir="${libraries.class}"
             debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
             source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
             includeantruntime="false">
@@ -1155,7 +1155,7 @@
         </ant>
 
         <available file="${bnd.path}" type="dir" property="src.exists"/>
-        <if><isset property="src.exists"/>
+        <if><isset property="src.exists__NO_DO_NOT_RUN_THIS"/>
             <then>
                 <!-- Add library classes to class store -->
                 <javac srcdir="${bnd.path}" destdir="${libraries.class}"
@@ -1194,7 +1194,7 @@
         <delete dir="${bnd.build}"/><!-- Ensures only new .class -->
         <mkdir dir="${bnd.build}"/>
 
-        <!-- Mapeia todas as referências de classpath incorporadas -->
+        <!-- Map all embedded classpath refids  -->
         <for param="cp.refid">
             <mappedresources>
                 <fileset dir="${bnd.root}" id="private.cp.set">
@@ -1220,8 +1220,25 @@
         <!-- Converte para o formato "path1:path2:...:pathN" -->
         <property name="private.cp.literal" refid="private.cp"/>
 
+        <!-- Add extra module dependencies -->
+        <if>
+            <and>
+                <!-- Only if it exists and is not empty (includes the world :) -->
+                <available file="${bnd.root}/ext-classpath.list"/>
+                <length file="${bnd.root}/ext-classpath.list" when="greater" length="0" />
+            </and>
+            <then>
+                <fileset dir="${basedir}" includesfile="${bnd.root}/ext-classpath.list" id="ext-classpath.cp"/>
+                <property name="ext-classpath.cp.literal" refid="ext-classpath.cp"/>
+                <echo message="EXT-CLASSPATH=${ext-classpath.cp.literal}"/>
+            </then>
+            <else>
+                <property name="ext-classpath.cp.literal" value=""/>
+            </else>
+        </if>
+
         <!-- Classpath para compilação do componente -->
-        <property name="bnd.classpath" value="${private.cp.literal}:${bnd.build}:${classpath}"/>
+        <property name="bnd.classpath" value="${private.cp.literal}:${ext-classpath.cp.literal}:${bnd.build}:${classpath}"/>
         <!--echo message="bnd.classpath=${bnd.classpath}"/-->
 
         <available file="${bnd.src}" type="dir" property="src.exists"/>

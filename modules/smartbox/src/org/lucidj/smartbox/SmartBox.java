@@ -139,9 +139,9 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             public void started ()
             {
                 // Set proper ObjectManager and SmartBox _inside_ the new running thread
-                show.setObjectManager (om);
+//                show.setObjectManager (om);
 //                    Pipe.setComponentContext (self);          ---
-                pragma.setSmartBox (self);
+//                pragma.setSmartBox (self);
                 setState (RUNNING);
             }
 

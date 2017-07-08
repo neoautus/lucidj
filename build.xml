@@ -38,10 +38,6 @@
         <fileset dir="${libcache.dir}" includes="slf4j/**/*.jar"/>
     </path>
 
-    <path id="netty.cp">
-        <fileset dir="${libcache.dir}" includes="netty/jar/**/*.jar"/>
-    </path>
-
     <path id="shiro.cp">
         <fileset dir="${libcache.dir}" includes="shiro/bundle/**/*.jar"/>
     </path>
@@ -50,13 +46,6 @@
         <fileset dir="${libcache.dir}">
             <include name="ipojo/jar/**/*.jar"/>
             <include name="ipojo/bundle/**/*.jar"/>
-        </fileset>
-    </path>
-
-    <path id="tinkerpop.cp">
-        <fileset dir="${libcache.dir}">
-            <include name="tinkerpop/jar/**/*.jar"/>
-            <include name="tinkerpop/bundle/**/*.jar"/>
         </fileset>
     </path>
 
@@ -93,87 +82,25 @@
         <fileset dir="${libcache.dir}" includes="karaf-runtime/bundle/**/*.jar"/>
     </path>
 
-    <path id="karaf-util.cp">
-        <fileset dir="${libcache.dir}" includes="karaf-util/jar/**/*.jar"/>
-    </path>
-
     <path id="javaee-api.cp">
         <fileset dir="${libcache.dir}" includes="javaee-api/jar/javaee-api-*.jar"/>
-    </path>
-
-    <!--path id="bsh.cp">
-        <fileset dir="${libcache.dir}" includes="bsh/jar/**/*.jar"/>
-    </path-->
-
-    <path id="gson.cp">
-        <fileset dir="${libcache.dir}" includes="gson/jar/**/*.jar"/>
     </path>
 
     <path id="guava.cp">
         <fileset dir="${libcache.dir}" includes="guava/bundle/**/*.jar"/>
     </path>
 
-    <path id="markdown.cp">
-        <fileset dir="${libcache.dir}" includes="markdown/jar/**/*.jar"/>
-    </path>
-
     <path id="apache-commons.cp">
         <fileset dir="${libcache.dir}" includes="apache-commons/jar/**/*.jar"/>
     </path>
-
-    <path id="apache-commons-exec.cp">
-        <fileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
-    </path>
-
-    <path id="kryo.cp">
-        <fileset dir="${libcache.dir}" includes="kryo/bundle/kryo-*.jar"/>
-        <fileset dir="${libcache.dir}" includes="kryo/jar/objenesis-*.jar"/>
-    </path>
-
-    <path id="jansi.cp">
-        <fileset dir="${libcache.dir}" includes="jansi/jar/*.jar"/>
-    </path>
-
-    <path id="javassist.cp">
-        <fileset dir="${libcache.dir}" includes="javassist/bundle/*.jar"/>
-    </path>
-
-    <!--path id="vaadin-widgets.cp">
-        <fileset dir="${basedir}" includes="build/widgetset/temp-widgetset.jar"/>
-    </path-->
 
     <path id="classpath.static">
 
         <path refid="bnd.cp"/>
         <path refid="slf4j.cp"/>
-        <path refid="netty.cp"/>
         <path refid="shiro.cp"/>
-        <path refid="gson.cp"/>
         <path refid="guava.cp"/>
-        <!--path refid="bsh.cp"/-->
         <path refid="apache-commons.cp"/>
-        <path refid="kryo.cp"/>
-        <path refid="markdown.cp"/>
-        <path refid="jansi.cp"/>
-        <path refid="javassist.cp"/>
-
-        <!-- jsoup -->
-        <!--fileset dir="${lib.dir}/static/jsoup-1.8.x">
-            <include name="*.jar"/>
-        </fileset-->
-
-        <!-- javassist -->
-        <!--fileset dir="${lib.dir}/static/javassist-3.x">
-            <include name="javassist.jar"/>
-        </fileset-->
-
-        <!-- Logback -->
-        <!--fileset dir="${lib.dir}/static/logback-1.x">
-            <include name="logback-core-1.*.jar"/>
-            <exclude name="logback-core-1.*-sources.jar"/>
-            <include name="logback-classic-1.*.jar"/>
-            <exclude name="logback-classic-1.*-sources.jar"/>
-        </fileset-->
 
     </path>
 
@@ -191,7 +118,6 @@
 
         <!-- Vaadin etc -->
         <path refid="vaadin-sass-compiler.cp"/>
-        <!--path refid="vaadin-widgets.cp"/-->
         <path refid="classpath.vaadin.server"/>
         <path refid="classpath.static"/>
 
@@ -479,7 +405,7 @@
                includeantruntime="false">
             <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
             <classpath>
-                <path refid="apache-commons-exec.cp"/>
+                <fileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
             </classpath>
         </javac>
 
@@ -1076,22 +1002,8 @@
                 <exclude name="vaadin/jar/vaadin-client-compiler-*.jar"/>
                 <include name="vaadin/jar/vaadin-icons-*.jar"/>
 
-                <!-- Netty -->
-                <include name="netty/jar/netty-common-*.jar"/>
-                <include name="netty/jar/netty-buffer-*.jar"/>
-                <include name="netty/jar/netty-transport-*.jar"/>
-                <include name="netty/jar/netty-codec-*.jar"/>
-                <include name="netty/jar/netty-handler-*.jar"/>
-                <include name="netty/jar/netty-codec-http-*.jar"/>
-                <include name="netty/jar/netty-codec-socks-*.jar"/>
-                <include name="netty/jar/netty-transport-sctp-*.jar"/>
-
-                <!-- Kryo -->
-                <include name="kryo/bundle/*.jar"/>
-                <include name="kryo/jar/*.jar"/>
-
                 <!-- Misc -->
-                <include name="bnd/jar/bnd-*.jar"/>
+                <!--include name="bnd/jar/bnd-*.jar"/-->
                 <include name="gson/jar/gson-*.jar"/>
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
@@ -1195,20 +1107,25 @@
         <mkdir dir="${bnd.build}"/>
 
         <!-- Map all embedded classpath refids  -->
-        <for param="cp.refid">
-            <mappedresources>
-                <fileset dir="${bnd.root}" id="private.cp.set">
-                    <include name="private/*.cp"/>
-                </fileset>
-                <mapper type="flatten"/>
-            </mappedresources>
-            <sequential>
-                <mkdir dir="${bnd.build}/private/@{cp.refid}"/>
-                <copy todir="${bnd.build}/private/@{cp.refid}" overwrite="true">
-                    <path refid="@{cp.refid}"/>
+        <if>
+            <and>
+                <!-- Only if it exists and is not empty (includes the world :) -->
+                <available file="${bnd.root}/ext-libraries.list"/>
+                <length file="${bnd.root}/ext-libraries.list" when="greater" length="0" />
+            </and>
+            <then>
+                <fileset dir="${basedir}" includesfile="${bnd.root}/ext-libraries.list" id="ext-libraries.cp"/>
+                <property name="ext-libraries.cp.literal" refid="ext-libraries.cp"/>
+                <echo message="EXT-LIBRARIES=${ext-libraries.cp.literal}"/>
+                <mkdir dir="${bnd.build}/private"/>
+                <copy todir="${bnd.build}/private" overwrite="true">
+                    <fileset refid="ext-libraries.cp"/>
                 </copy>
-            </sequential>
-        </for>
+            </then>
+            <else>
+                <property name="ext-libraries.cp.literal" value=""/>
+            </else>
+        </if>
 
         <!-- Inclui as bibliotecas privadas, se existirem -->
         <path id="private.cp">

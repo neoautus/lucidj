@@ -1082,11 +1082,52 @@
                 </javac>
             </then>
         </if>
+    </target>
+
+    <target name="build.module.withdeps">
+        <local name="bnd.dirname"/>
+        <dirname property="bnd.dirname" file="${bnd.path}"/>
+        <local name="module"/>
+        <basename property="module" file="${bnd.dirname}"/>
+        <echo message="Module: ${module}"/>
+
+        <local name="have.deps"/>
+        <available file="${bnd.dirname}/dependencies.list" property="have.deps"/>
+        <if><isset property="have.deps"/>
+            <then>
+                <loadfile property="dep-list" srcFile="${bnd.dirname}/dependencies.list"/>
+                <for list="${dep-list}" param="dep" trim="true">
+                    <sequential>
+                        <echo message="Dependency: @{dep}"/>
+                        <local name="bnd.path"/>
+                        <property name="bnd.path" value="${libraries.src.dir}/@{dep}/src"/>
+                        <!-- Runtarget is sketchy, but works for now -->
+                        <runtarget target="build.module.withdeps"/>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+
+        <if><not><available file="${deps.dir}/${module}"/></not>
+            <then>
+                <ant target="build.bundle">
+                    <property name="type" value="libraries"/>
+                    <property name="bundle" value="${module}"/>
+                    <property name="bnd.src" value="${bnd.path}"/>
+                    <property name="bnd.root" value="${bnd.dirname}"/>
+                    <property name="classpath" value="${classpath.build.literal}"/>
+                </ant>
+                <touch file="${deps.dir}/${module}"/>
+            </then>
+        </if>
 
     </target>
 
     <target name="build.all.modules" depends="build.modules.store">
-        <foreach target="build.modules.bundle" param="bnd.path" inheritall="true">
+        <delete dir="${deps.dir}"/>
+        <mkdir dir="${deps.dir}"/>
+        <!--foreach target="build.modules.bundle" param="bnd.path" inheritall="true"-->
+        <foreach target="build.module.withdeps" param="bnd.path" inheritall="true">
             <path>
                 <dirset dir="${libraries.src.dir}">
                     <include name="*/src"/>
@@ -1596,7 +1637,6 @@
                 <echo message="Make: type=libraries module=${libraries}"/>
                 <ant target="build.modules.bundle">
                     <property name="bnd.path" value="${libraries.src.dir}/${libraries}/src"/>
-                    <property name="auto.deploy" value="true"/>
                 </ant>
             </then>
         </if>

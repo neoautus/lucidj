@@ -25,6 +25,8 @@ import org.lucidj.api.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,12 +47,14 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject,
     private ExecutorService background = Executors.newSingleThreadExecutor ();
 
     private EmbeddingManager embeddingManager;
+    private String artifact_source;
     private Bundle bundle;
 
-    public DefaultEmbeddingContext (EmbeddingManager embeddingManager, Bundle bundle)
+    public DefaultEmbeddingContext (EmbeddingManager embeddingManager, String artifact_source, Bundle bundle)
     {
         this.bundle = bundle;
         this.embeddingManager = embeddingManager;
+        this.artifact_source = artifact_source;
 
         // Find all bundle entries and add them to context file list
         for (Enumeration<URL> entries = bundle.findEntries ("/", null, true); entries.hasMoreElements (); )
@@ -151,6 +155,32 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject,
     public List<Embedding> getEmbeddedFiles ()
     {
         return (Collections.unmodifiableList (embedded_files));
+    }
+
+    @Override
+    public File getWritableFile (Embedding embedded_file)
+    {
+        if (embedded_file instanceof EmbeddingImpl)
+        {
+            EmbeddingImpl e = (EmbeddingImpl)embedded_file;
+
+            if (e.getObject () instanceof URL)
+            {
+                try
+                {
+                    URL file_url = (URL)e.getObject ();
+                    File artifact_source_file = new File (new URI (artifact_source));
+
+                    if (artifact_source_file.isDirectory ())
+                    {
+                        // Returns the base dir plus the embedding
+                        return (new File (artifact_source_file, file_url.getPath ()));
+                    }
+                }
+                catch (Exception ignore) {};
+            }
+        }
+        return (null);
     }
 
     @Override // EmbeddingContext

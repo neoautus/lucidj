@@ -40,7 +40,6 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.TextField;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import org.osgi.framework.Bundle;
@@ -62,9 +61,9 @@ import org.lucidj.api.SerializerEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -94,14 +93,12 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
     private ComponentManager componentManager;
     private BundleManager bundleManager;
 
-    private String view_name_alt = null;
     private long last_save = 0;
-    private boolean formulae_changed = false;
+    private boolean embedding_changed = false;
 
     private Object root_object = null;
+    private File root_source = null;
     private List object_list = null;
-    // TODO: REMOVE ____task_source
-    private String ____task_source = null;
     private Object current_object;
     private Map<Object, Cell> active_cells = new ConcurrentHashMap<> ();
 
@@ -410,26 +407,25 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
         {
             case "save":
             {
-                // TODO: EMBED ____task_source INTO TaskContext
-                save_formulae (____task_source);
+                save_embedding ();
                 break;
             }
-            case VM_NOTEBOOK:
-            {
-                // TODO: CREATE BETTER VIEW REPRESENTATION/REFERENCE
-                UI.getCurrent ().getNavigator ().navigateTo (view_name + ":" +
-                        ____task_source + "/" +
-                        VM_NOTEBOOK);
-                break;
-            }
-            case VM_SINGLE:
-            {
-                UI.getCurrent ().getNavigator ().navigateTo (view_name + ":" +
-                        ____task_source + "/" +
-                        VM_SINGLE + "/" +
-                        get_current_cell_index ());
-                break;
-            }
+//            case VM_NOTEBOOK:
+//            {
+//                // TODO: CREATE BETTER VIEW REPRESENTATION/REFERENCE
+//                UI.getCurrent ().getNavigator ().navigateTo (view_name + ":" +
+//                        ____task_source + "/" +
+//                        VM_NOTEBOOK);
+//                break;
+//            }
+//            case VM_SINGLE:
+//            {
+//                UI.getCurrent ().getNavigator ().navigateTo (view_name + ":" +
+//                        ____task_source + "/" +
+//                        VM_SINGLE + "/" +
+//                        get_current_cell_index ());
+//                break;
+//            }
             case "prev-smartbox":
             {
                 set_current_cell_index(get_current_cell_index() - 1);
@@ -456,7 +452,7 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
                     }
 
                     set_current_cell_index (cell_index);
-                    formulae_changed = true;
+                    embedding_changed = true;
                 }
                 break;
             }
@@ -569,9 +565,9 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
         view_controls.addStyleName("v-component-group");
         view_controls.addStyleName("ui-toolbar-spacer");
         createButton (view_controls, VM_NOTEBOOK,
-            new ExternalResource ("vaadin://~/formulas_libraries/notebook-view.png"));
+            new ExternalResource ("vaadin://~/Browser_libraries/notebook-view.png"));
         createButton (view_controls, VM_SINGLE,
-            new ExternalResource("vaadin://~/formulas_libraries/single-view.png"), null,
+            new ExternalResource("vaadin://~/Browser_libraries/single-view.png"), null,
             ShortcutAction.KeyCode.INSERT, ShortcutAction.ModifierKey.CTRL);
         local_toolbar.addComponent(view_controls);
 
@@ -653,33 +649,21 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
     @Override
     public void detach ()
     {
-        super.detach();
-        //save_formulae(formula_name);
+        super.detach ();
+        if (embedding_changed)
+        {
+            save_embedding ();
+        }
     }
 
-    public boolean save_formulae (String formulae_name)
+    public boolean save_embedding ()
     {
-        if (formulae_name == null /*|| !formulae_changed*/)
-        {
-            log.info ("Nothing to save");
-            return (false);
-        }
-
-        Path userdir = security.getDefaultUserDir ();
-
-        if (userdir == null)
-        {
-            log.info ("Save failed");
-            return (false);
-        }
-
-        Path formulae_path = userdir.resolve (formulae_name);
-
-        if (!serializer.serializeObject (formulae_path, root_object))
+        if (root_source != null // root_source == null -> read-only embedding
+            && !serializer.serializeObject (root_source.toPath (), root_object))
         {
             return (false);
         }
-        formulae_changed = false;
+        embedding_changed = false;
         return (true);
     }
 
@@ -853,7 +837,9 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
             for (Embedding embedding : ec.getEmbeddings (file))
             {
                 root_object = embedding.getObject ();
-                log.info ("Embedding: [{}] {} -> {}", file.getName (), embedding.getName (), root_object);
+                root_source = ec.getWritableFile (file);
+                log.info ("Embedding: [{}] {} -> {}={}",
+                    file.getName (), embedding.getName (), root_source, root_object);
                 break; // Just the first for now
             }
         }

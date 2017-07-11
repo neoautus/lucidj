@@ -16,6 +16,8 @@
 
 package org.lucidj.embedding;
 
+import org.lucidj.api.Artifact;
+import org.lucidj.api.BundleManager;
 import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.EmbeddingHandler;
 import org.lucidj.api.EmbeddingManager;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -36,6 +39,7 @@ import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
@@ -49,6 +53,9 @@ public class DefaultEmbeddingManager implements EmbeddingManager
     private List<EmbeddingHandler> embedding_handlers = new ArrayList<> ();
     private List<EmbeddingListener> listener_list = new ArrayList<> ();
 
+    @Requires
+    private BundleManager bundleManager;
+
     @Context
     private BundleContext ctx;
 
@@ -57,7 +64,9 @@ public class DefaultEmbeddingManager implements EmbeddingManager
     @Override
     public EmbeddingContext newEmbeddingContext (Bundle bnd)
     {
-        return (new DefaultEmbeddingContext (this, bnd));
+        Properties props = bundleManager.getBundleProperties (bnd);
+        String artifact_source = props.getProperty (Artifact.PROP_SOURCE);
+        return (new DefaultEmbeddingContext (this, artifact_source, bnd));
     }
 
     @Override

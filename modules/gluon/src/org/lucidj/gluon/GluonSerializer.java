@@ -33,6 +33,7 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -277,6 +278,65 @@ public class GluonSerializer implements SerializerEngine
         {
             log.error ("Exception handling object deserialization", e);
             return (false);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getProperties (Reader reader)
+    {
+        GluonInstance instance = new GluonInstance (this);
+
+        try
+        {
+            GluonReader greader = new GluonReader (reader);
+
+            if (!greader.readRepresentation (instance))
+            {
+                return (null);
+            }
+        }
+        catch (IOException e)
+        {
+            log.error ("Exception reading {}", reader, e);
+        }
+
+        GluonUtil.dumpRepresentation (instance, "deserialize_properties.txt");
+
+        Map<String, Object> properties = new HashMap<> ();
+
+        for (String key: instance.getPropertyKeys ())
+        {
+            properties.put (key, instance.getProperty (key));
+        }
+        return (properties);
+    }
+
+    @Override
+    public Map<String, Object> getProperties (Path path)
+    {
+        Charset cs = Charset.forName ("UTF-8");
+        Reader reader = null;
+
+        try
+        {
+            reader = Files.newBufferedReader (path, cs);
+            return (getProperties (reader));
+        }
+        catch (Exception e)
+        {
+            log.info ("Exception on deserialization", e);
+            return (null);
+        }
+        finally
+        {
+            try
+            {
+                if (reader != null)
+                {
+                    reader.close();
+                }
+            }
+            catch (Exception ignore) {};
         }
     }
 

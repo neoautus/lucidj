@@ -19,6 +19,7 @@ package org.lucidj.api;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.util.Map;
 
 public interface SerializerEngine
 {
@@ -26,6 +27,8 @@ public interface SerializerEngine
     boolean register (Class type, Serializer serializer);
     boolean serializeObject (Writer wrt, Object obj);
     boolean serializeObject (Path path, Object obj);
+    Map<String, Object> getProperties (Reader reader);
+    Map<String, Object> getProperties (Path path);
     Object deserializeObject (Reader reader);
     Object deserializeObject (Path path);
 }

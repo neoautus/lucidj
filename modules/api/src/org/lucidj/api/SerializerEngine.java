@@ -23,6 +23,9 @@ import java.util.Map;
 
 public interface SerializerEngine
 {
+    String EMBEDDED_TYPES = ".embeddedTypes";
+    String REFERRED_TYPES = ".referredTypes";
+
     boolean register (String type, Serializer serializer);
     boolean register (Class type, Serializer serializer);
     boolean serializeObject (Writer wrt, Object obj);

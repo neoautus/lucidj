@@ -79,8 +79,9 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject,
         return (false);
     }
 
-    private void apply_handlers (String name, Object object, LinkedList<EmbeddingImpl> embedding_queue)
+    private boolean apply_handlers (String name, Object object, LinkedList<EmbeddingImpl> embedding_queue)
     {
+        boolean missing_dependencies = false;
         EmbeddingHandler[] handler_list = embeddingManager.getHandlers (name, object);
 
         for (EmbeddingHandler handler: handler_list)
@@ -92,34 +93,78 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject,
             {
                 log.info ("Applying '{}' handler to {}", handler.getPrefix (), object);
                 Object new_object = handler.applyHandler (name, object);
-                embedding_queue.add (new EmbeddingImpl (new_embedding_name, new_object));
+
+                if (new_object != null)
+                {
+                    embedding_queue.add (new EmbeddingImpl (new_embedding_name, new_object));
+                }
+                else
+                {
+                    missing_dependencies = true;
+                }
             }
         }
+        return (!missing_dependencies);
     }
 
-    private void update_file_embeddings (EmbeddingImpl file_embedding)
+    private boolean update_file_embeddings (EmbeddingImpl file_embedding)
     {
         LinkedList<EmbeddingImpl> embedding_queue = file_embedding.getChildren ();
         int current_embedding_pos = 0;
+        boolean all_updated = true;
 
         // Apply the first pass on the file
-        apply_handlers (file_embedding.getName (), file_embedding.getObject (), embedding_queue);
+        all_updated &= apply_handlers (file_embedding.getName (), file_embedding.getObject (), embedding_queue);
 
         // Cycle the created embeddings until no more embeddings are created on the queue
         while (current_embedding_pos < embedding_queue.size ())
         {
             // Fetch the current embedding and apply all handlers
             EmbeddingImpl current_embedding = embedding_queue.get (current_embedding_pos++);
-            apply_handlers (current_embedding.getName (), current_embedding.getObject (), embedding_queue);
+            all_updated &= apply_handlers (current_embedding.getName (), current_embedding.getObject (), embedding_queue);
         }
+        return (all_updated);
     }
 
-    private void update_all_file_embeddings ()
+    private boolean update_all_file_embeddings ()
     {
-        for (EmbeddingImpl embedded_file: embedded_files)
+        boolean all_updated;
+        int delay = 1000;
+        int retries = 10;
+
+        do
         {
-            update_file_embeddings (embedded_file);
+            all_updated = true;
+
+            // Scan all available files/embeddings for new embeddings
+            for (EmbeddingImpl embedded_file: embedded_files)
+            {
+                if (!update_file_embeddings (embedded_file))
+                {
+                    log.warn ("Missing dependencies found for: {}", embedded_file.getName ());
+                    all_updated = false;
+                }
+            }
+
+            if (all_updated)
+            {
+                break;
+            }
+
+            try
+            {
+                log.warn ("Missing dependencies found on {}, will retry update embeddings in {}ms", bundle, delay);
+                Thread.sleep (delay);
+            }
+            catch (Exception ignore) {};
         }
+        while (--retries > 0);
+
+        if (!all_updated)
+        {
+            log.error ("Missing dependencies on {}, will NOT retry update", bundle);
+        }
+        return (all_updated);
     }
 
     @Override // EmbeddingContext

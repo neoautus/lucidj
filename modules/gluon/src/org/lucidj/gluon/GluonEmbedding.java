@@ -19,7 +19,10 @@ package org.lucidj.gluon;
 import com.google.common.io.Files;
 import org.lucidj.api.EmbeddingHandler;
 import org.lucidj.api.EmbeddingManager;
+import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,8 +30,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -39,6 +46,8 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class GluonEmbedding implements EmbeddingHandler
 {
+    private final static Logger log = LoggerFactory.getLogger (GluonEmbedding.class);
+
     private final String HANDLER_PREFIX = "gluon";
 
     @Requires
@@ -46,6 +55,9 @@ public class GluonEmbedding implements EmbeddingHandler
 
     @Requires
     private SerializerEngine serializer;
+
+    @Context
+    private BundleContext context;
 
     @Override
     public String getPrefix ()
@@ -68,14 +80,48 @@ public class GluonEmbedding implements EmbeddingHandler
     {
         try
         {
-            InputStream is = ((URL)obj).openStream ();
-            InputStreamReader isr = new InputStreamReader (is, StandardCharsets.UTF_8);
-            return (serializer.deserializeObject (new BufferedReader (isr)));
+            InputStream prop_is = ((URL)obj).openStream ();
+            InputStreamReader prop_isr = new InputStreamReader (prop_is, StandardCharsets.UTF_8);
+
+            Map<String, Object> properties = serializer.getProperties (new BufferedReader (prop_isr));
+            boolean some_missing = false;
+
+            if (properties.containsKey (SerializerEngine.EMBEDDED_TYPES))
+            {
+                String[] embedded_types = (String[])properties.get (SerializerEngine.EMBEDDED_TYPES);
+
+                // Check whether all embedded types are available, so deserialization can succeed
+                for (String type: embedded_types)
+                {
+                    String filter = "(@type=" + type + ")";
+
+                    try
+                    {
+                        if (context.getServiceReferences (Serializer.class.getName (), filter) != null)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            log.warn ("Missing dependency: {}/{}", Serializer.class.getName (), filter);
+                        }
+                    }
+                    catch (InvalidSyntaxException ignore) {};
+
+                    // Either error or missing service
+                    some_missing = true;
+                }
+            }
+
+            if (!some_missing)
+            {
+                InputStream obj_is = ((URL)obj).openStream ();
+                InputStreamReader obj_isr = new InputStreamReader (obj_is, StandardCharsets.UTF_8);
+                return (serializer.deserializeObject (new BufferedReader (obj_isr)));
+            }
         }
-        catch (IOException e)
-        {
-            return (null);
-        }
+        catch (IOException ignore) {};
+        return (null);
     }
 
     @Validate

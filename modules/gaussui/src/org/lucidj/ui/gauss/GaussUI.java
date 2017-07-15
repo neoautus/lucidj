@@ -35,6 +35,7 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.navigator.ViewDisplay;
 import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Page;
 import com.vaadin.server.Sizeable;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.ui.label.ContentMode;
@@ -42,11 +43,13 @@ import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
+import com.vaadin.ui.Notification;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
@@ -77,6 +80,12 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     //  | +------------------+--------------------+--------------+ |
     //  +----------------------------------------------------------+
 
+    private final static int MIN_DEF_COLUMN_WIDTH_PX = 240;
+    private final static int MIN_LEFT_PANEL_WIDTH_PX = 120;
+    private final static int MIN_RIGHT_PANEL_WIDTH_PX = 120;
+    private int default_left_panel_width_px;
+    private int default_right_panel_width_px;
+
     private VerticalLayout vAppLayout = new VerticalLayout ();
     private HorizontalSplitPanel hsMenuContents = new HorizontalSplitPanel ();
     private HorizontalSplitPanel hsContentsSidebar = new HorizontalSplitPanel ();
@@ -87,7 +96,6 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     private HorizontalLayout hSecurityArea = new HorizontalLayout ();
     private Button toggle_sidebar;
     private Accordion acMenu = new Accordion ();
-    private int default_sidebar_width_pixels = 250;
 
     private String DAMN = "damage.report";
     private ErrorView damage_report_view = new ErrorView ();
@@ -100,6 +108,99 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     private MenuInstance main_menu;
     private RendererFactory rendererFactory;
     private ObjectRenderer objectRenderer;
+
+    //=========================================================================================
+    // DEFAULTS
+    //=========================================================================================
+
+    private int get_def_column_width_px ()
+    {
+        Page page = UI.getCurrent ().getPage ();
+        int page_width = page.getBrowserWindowWidth ();
+        int column_width = page_width / 6;
+
+        if (column_width < MIN_DEF_COLUMN_WIDTH_PX)
+        {
+            return (MIN_DEF_COLUMN_WIDTH_PX);
+        }
+        return (column_width);
+    }
+
+    private int get_default_left_panel_width ()
+    {
+        if (default_left_panel_width_px == 0)
+        {
+            default_left_panel_width_px = get_def_column_width_px ();
+        }
+        return (default_left_panel_width_px);
+    }
+
+    private int get_default_right_panel_width ()
+    {
+        if (default_right_panel_width_px == 0)
+        {
+            default_right_panel_width_px = get_def_column_width_px ();
+        }
+        return (default_right_panel_width_px);
+    }
+
+    //=========================================================================================
+    // RIGHT SIDEBAR
+    //=========================================================================================
+
+    private boolean sidebar_visible ()
+    {
+        return (!hsContentsSidebar.isLocked ());
+    }
+
+    private void show_sidebar (boolean visible)
+    {
+        if (visible == sidebar_visible ())
+        {
+            // Nothing changed
+            return;
+        }
+
+        if (visible)
+        {
+            hsContentsSidebar.setLocked (false);
+            hsContentsSidebar.setMinSplitPosition (MIN_RIGHT_PANEL_WIDTH_PX, Unit.PIXELS);
+            hsContentsSidebar.setSplitPosition (get_default_right_panel_width (), Unit.PIXELS, true);
+        }
+        else
+        {
+            if (default_right_panel_width_px != 0) // Record size only after proper init
+            {
+                default_right_panel_width_px = (int)hsContentsSidebar.getSplitPosition ();
+            }
+            hsContentsSidebar.setMinSplitPosition (0, Unit.PIXELS);
+            hsContentsSidebar.setSplitPosition (0, Unit.PIXELS, true);
+            hsContentsSidebar.setLocked (true);
+        }
+    }
+
+    private void set_contents (Component contents)
+    {
+        hsContentsSidebar.setFirstComponent (contents);
+    }
+
+    private void set_sidebar (Component sidebar)
+    {
+        if (sidebar != null)
+        {
+            // Sidebar visible and toggle button enabled
+            hsContentsSidebar.setSecondComponent (sidebar);
+            toggle_sidebar.setEnabled (true);
+            show_sidebar (true);
+        }
+        else
+        {
+            // No contents, sidebar hidden and toggle button disabled
+            show_sidebar (false);
+            hsContentsSidebar.setSecondComponent (emptySidebar);
+            toggle_sidebar.setEnabled (false);
+        }
+    }
 
     //=========================================================================================
     // LAYOUTS
@@ -141,15 +242,16 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
         emptyContents = new CssLayout ();
         emptyContents.addStyleName ("fancy-grid-background");
-        hsContentsSidebar.setFirstComponent (emptyContents);
+        set_contents (emptyContents);
 
         emptySidebar.addStyleName ("fancy-grid-background");
         hsContentsSidebar.setSecondComponent (emptySidebar);
+        show_sidebar (false);
 
-        hsContentsSidebar.setSplitPosition (default_sidebar_width_pixels, Sizeable.Unit.PIXELS, true);
         hsMenuContents.setFirstComponent (acMenu);
         hsMenuContents.setSecondComponent (hsContentsSidebar);
-        hsMenuContents.setSplitPosition (default_sidebar_width_pixels, Sizeable.Unit.PIXELS);
+        hsMenuContents.setMinSplitPosition (MIN_LEFT_PANEL_WIDTH_PX, Unit.PIXELS);
+        hsMenuContents.setSplitPosition (get_default_left_panel_width (), Sizeable.Unit.PIXELS);
     }
 
     @Override // MenuInstance.EventListener
@@ -166,42 +268,49 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
         CssLayout home_buttons = new CssLayout ();
         home_buttons.setStyleName ("ui-toolbar-area-home");
-        home_buttons.setWidth (default_sidebar_width_pixels, Sizeable.Unit.PIXELS);
+        home_buttons.setWidth (get_default_left_panel_width (), Sizeable.Unit.PIXELS);
         home_buttons.setId ("_home_buttons");
 
         final Button toggle_menu = new Button ();
         toggle_menu.setIcon (FontAwesome.BARS);
-        toggle_menu.addStyleName("tiny");
+        toggle_menu.addStyleName ("tiny");
         toggle_menu.addStyleName ("link");
-        toggle_menu.addStyleName("ui-toolbar-spacer");
-        toggle_menu.setId("_toggle_menu");
+        toggle_menu.addStyleName ("ui-toolbar-spacer");
+        toggle_menu.addStyleName ("ui-toggle-button");
+        toggle_menu.setId ("_toggle_menu");
         home_buttons.addComponent (toggle_menu);
+
         toggle_menu.addClickListener (new Button.ClickListener ()
         {
             @Override
             public void buttonClick (Button.ClickEvent clickEvent)
             {
-                if (acMenu.isVisible ()) // or (hsMenuContents.getSplitPosition () != 0)
+                if (!hsMenuContents.isLocked ())
                 {
+                    default_left_panel_width_px = (int)hsMenuContents.getSplitPosition ();
                     acMenu.setVisible (false);
+                    hsMenuContents.setMinSplitPosition (0, Unit.PIXELS);
                     hsMenuContents.setSplitPosition (0, Sizeable.Unit.PIXELS);
                     hsMenuContents.setLocked (true);
                 }
                 else
                 {
-                    acMenu.setVisible (true);
-                    hsMenuContents.setSplitPosition (default_sidebar_width_pixels, Unit.PIXELS);
                     hsMenuContents.setLocked (false);
+                    acMenu.setVisible (true);
+                    hsMenuContents.setMinSplitPosition (MIN_LEFT_PANEL_WIDTH_PX, Unit.PIXELS);
+                    hsMenuContents.setSplitPosition (get_default_left_panel_width (), Unit.PIXELS);
                 }
             }
         });
 
         final Button home = new Button ("Home");
         home.setIcon (FontAwesome.HOME);
-        home.addStyleName("tiny");
-        home.addStyleName("ui-toolbar-spacer");
-        home.setId("_home");
+        home.addStyleName ("tiny");
+        home.addStyleName ("ui-toolbar-spacer");
+        home.addStyleName ("ui-toggle-button");
+        home.setId ("_home");
         home_buttons.addComponent (home);
+
         home.addClickListener (new Button.ClickListener ()
         {
             @Override
@@ -213,15 +322,17 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
         final Button compose = new Button ("New");
         compose.setIcon (FontAwesome.EDIT);
-        compose.addStyleName("tiny");
-        compose.addStyleName("primary");
-        compose.setId("_new");
+        compose.addStyleName ("tiny");
+        compose.addStyleName ("primary");
+        compose.addStyleName ("ui-toggle-button");
+        compose.setId ("_new");
         home_buttons.addComponent (compose);
         compose.addClickListener (new Button.ClickListener ()
         {
             @Override
             public void buttonClick (Button.ClickEvent clickEvent)
             {
+                navigator.navigateTo ("compose");
             }
         });
 
@@ -234,26 +345,18 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
         final Button eject_view = new Button ();
         eject_view.setIcon (FontAwesome.EXTERNAL_LINK);
-        eject_view.addStyleName("tiny");
+        eject_view.addStyleName ("tiny");
         eject_view.addStyleName ("link");
-        //eject_view.addStyleName("ui-toolbar-spacer");
-        eject_view.setId("_eject_view");
+        eject_view.addStyleName ("ui-toggle-button");
+        eject_view.setId ("_eject_view");
         hToolbarArea.addComponent (eject_view);
+
         eject_view.addClickListener (new Button.ClickListener ()
         {
             @Override
             public void buttonClick (Button.ClickEvent clickEvent)
             {
-                if (hsContentsSidebar.isLocked ())
-                {
-                    hsContentsSidebar.setSplitPosition (default_sidebar_width_pixels, Unit.PIXELS, true);
-                    hsContentsSidebar.setLocked (false);
-                }
-                else
-                {
-                    hsContentsSidebar.setSplitPosition (0, Unit.PIXELS, true);
-                    hsContentsSidebar.setLocked (true);
-                }
+                Notification.show ("Not implemented", Notification.Type.HUMANIZED_MESSAGE);
             }
         });
 
@@ -262,6 +365,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
         toggle_sidebar.addStyleName ("tiny");
         toggle_sidebar.addStyleName ("link");
         toggle_sidebar.addStyleName ("ui-toolbar-spacer");
+        toggle_sidebar.addStyleName ("ui-toggle-button");
         toggle_sidebar.setId ("_toggle_sidebar");
         hToolbarArea.addComponent (toggle_sidebar);
 
@@ -270,19 +374,9 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             @Override
             public void buttonClick (Button.ClickEvent clickEvent)
             {
-                if (hsContentsSidebar.isLocked ())
-                {
-                    hsContentsSidebar.setSplitPosition (default_sidebar_width_pixels, Unit.PIXELS, true);
-                    hsContentsSidebar.setLocked (false);
-                }
-                else
-                {
-                    hsContentsSidebar.setSplitPosition (0, Unit.PIXELS, true);
-                    hsContentsSidebar.setLocked (true);
-                }
+                show_sidebar (!sidebar_visible ());
             }
         });
-
     }
 
     private void initSecurityArea ()
@@ -329,12 +423,12 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             {
                 if (view instanceof com.vaadin.ui.Component)
                 {
-                    hsContentsSidebar.setFirstComponent ((com.vaadin.ui.Component)view);
+                    set_contents ((com.vaadin.ui.Component)view);
                 }
                 else
                 {
                     String msg = "Invalid component:\n" + view.getClass ().getCanonicalName ();
-                    hsContentsSidebar.setFirstComponent (emptyContents);
+                    set_contents (emptyContents);
                 }
             }
         });
@@ -385,30 +479,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
                 // Place sidebar
                 //---------------
 
-                if (sidebar != null)
-                {
-                    log.info ("Setting sidebar: {}", sidebar);
-                    hsContentsSidebar.setSecondComponent (sidebar);
-
-                    // Sidebar visible at default position
-                    hsContentsSidebar.setSplitPosition (default_sidebar_width_pixels, Unit.PIXELS, true);
-                    hsContentsSidebar.setLocked (false);
-
-                    // Enable toggle sidebar button
-                    toggle_sidebar.setEnabled (true);
-                }
-                else
-                {
-                    // No contents
-                    hsContentsSidebar.setSecondComponent (emptySidebar);
-
-                    // Sidebar is hidden
-                    hsContentsSidebar.setSplitPosition (0, Unit.PIXELS, true);
-                    hsContentsSidebar.setLocked (true);
-
-                    // Disable toggle sidebar button
-                    toggle_sidebar.setEnabled (false);
-                }
+                set_sidebar (sidebar);
 
                 //---------------
                 // Place toolbar
@@ -462,7 +533,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     public void detach()
     {
         // TODO: COMPONENT CLEANUP!
-        log.info("detach() " + this);
+        log.info ("detach() " + this);
     }
 
     @Override // ManagedObject

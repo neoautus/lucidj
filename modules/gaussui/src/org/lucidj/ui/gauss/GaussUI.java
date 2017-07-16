@@ -166,6 +166,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             hsContentsSidebar.setLocked (false);
             hsContentsSidebar.setMinSplitPosition (MIN_RIGHT_PANEL_WIDTH_PX, Unit.PIXELS);
             hsContentsSidebar.setSplitPosition (get_default_right_panel_width (), Unit.PIXELS, true);
+            toggle_sidebar.setIcon (FontAwesome.CHEVRON_DOWN);
         }
         else
         {
@@ -176,6 +177,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             hsContentsSidebar.setMinSplitPosition (0, Unit.PIXELS);
             hsContentsSidebar.setSplitPosition (0, Unit.PIXELS, true);
             hsContentsSidebar.setLocked (true);
+            toggle_sidebar.setIcon (FontAwesome.CHEVRON_LEFT);
         }
     }
 
@@ -197,6 +199,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
         {
             // No contents, sidebar hidden and toggle button disabled
             show_sidebar (false);
+            toggle_sidebar.setIcon (FontAwesome.CHEVRON_DOWN); // Down+disable = no sidebar
             hsContentsSidebar.setSecondComponent (emptySidebar);
             toggle_sidebar.setEnabled (false);
         }
@@ -272,7 +275,8 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
         home_buttons.setId ("_home_buttons");
 
         final Button toggle_menu = new Button ();
-        toggle_menu.setIcon (FontAwesome.BARS);
+        toggle_menu.setWidth (3, Unit.EM);
+        toggle_menu.setIcon (FontAwesome.CHEVRON_DOWN);
         toggle_menu.addStyleName ("tiny");
         toggle_menu.addStyleName ("link");
         toggle_menu.addStyleName ("ui-toolbar-spacer");
@@ -291,6 +295,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
                     acMenu.setVisible (false);
                     hsMenuContents.setMinSplitPosition (0, Unit.PIXELS);
                     hsMenuContents.setSplitPosition (0, Sizeable.Unit.PIXELS);
+                    toggle_menu.setIcon (FontAwesome.CHEVRON_RIGHT);
                     hsMenuContents.setLocked (true);
                 }
                 else
@@ -299,6 +304,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
                     acMenu.setVisible (true);
                     hsMenuContents.setMinSplitPosition (MIN_LEFT_PANEL_WIDTH_PX, Unit.PIXELS);
                     hsMenuContents.setSplitPosition (get_default_left_panel_width (), Unit.PIXELS);
+                    toggle_menu.setIcon (FontAwesome.CHEVRON_DOWN);
                 }
             }
         });
@@ -361,7 +367,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
         });
 
         toggle_sidebar = new Button ();
-        toggle_sidebar.setIcon (FontAwesome.BARS);
+        toggle_sidebar.setWidth (3, Unit.EM);
         toggle_sidebar.addStyleName ("tiny");
         toggle_sidebar.addStyleName ("link");
         toggle_sidebar.addStyleName ("ui-toolbar-spacer");

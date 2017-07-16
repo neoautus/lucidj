@@ -77,7 +77,8 @@ public class BaseVaadinUI extends UI
     private HorizontalLayout ui_header;
     private Layout empty_desktop = new CssLayout ();
     private Layout user_component;
-    private int default_sidebar_width_pixels = 250;
+    // TODO: DEFINE A WAY TO SHARE GLOBAL DEFINES/CONFIGS
+    private int default_sidebar_width_pixels = 240;
 
     @Requires
     private SecurityEngine security;

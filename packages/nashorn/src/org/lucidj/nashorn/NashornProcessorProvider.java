@@ -17,7 +17,6 @@
 package org.lucidj.nashorn;
 
 import org.lucidj.api.Aggregate;
-import org.lucidj.api.BundleRegistry;
 import org.lucidj.api.CodeEngine;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ComponentDescriptor;
@@ -54,9 +53,6 @@ public class NashornProcessorProvider implements ManagedObjectProvider, Serializ
 
     @Requires
     private ManagedObjectFactory objectFactory;
-
-    @Requires
-    private BundleRegistry bundleRegistry;
 
     @Requires
     private CodeEngineManager engineManager;

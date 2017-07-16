@@ -17,7 +17,6 @@
 package org.lucidj.beanshell;
 
 import org.lucidj.api.Aggregate;
-import org.lucidj.api.BundleRegistry;
 import org.lucidj.api.CodeEngine;
 import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ComponentDescriptor;
@@ -57,9 +56,6 @@ public class BeanShellProcessorProvider implements Serializer, ManagedObjectProv
 
     @Requires
     private ComponentManager componentManager;
-
-    @Requires
-    private BundleRegistry bundleRegistry;
 
     @Requires
     private CodeEngineManager engineManager;

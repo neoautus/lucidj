@@ -239,6 +239,7 @@
         <if><not><available file="${vaadin.static.jar}"/></not>
             <then>
                 <ant target="zero"/>
+                <ant target="build.launcher"/>
                 <ant target="build.vaadin.static"/>
             </then>
         </if>
@@ -267,7 +268,7 @@
 
     <target name="run">
         <!-- TODO: BUILD STAGE IF NOT AVAILABLE -->
-        <java jar="${stage.dir}/bin/launcher.jar" fork="true" failonerror="true">
+        <java jar="${launcher.bin}/launcher.jar" fork="true" failonerror="true">
             <arg value="start"/>
         </java>
     </target>
@@ -277,7 +278,7 @@
     </target>
 
     <target name="stop">
-        <java jar="${stage.dir}/bin/launcher.jar" fork="true" failonerror="true">
+        <java jar="${launcher.bin}/launcher.jar" fork="true" failonerror="true">
             <arg value="stop"/>
         </java>
     </target>
@@ -367,13 +368,51 @@
             </classpath>
         </taskdef>
 
+    </target>
+
+    <target name="build.launcher" depends="launch4j">
+
+        <delete dir="${launcher.dir}"/>
+        <mkdir dir="${launcher.dir}"/>
+
+        <copy todir="${launcher.bin}">
+            <fileset dir="${product.dir}/bin">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+
+        <property name="launcher.classes.dir" value="${launcher.dir}/classes"/>
+        <delete dir="${launcher.classes.dir}"/>
+        <mkdir dir="${launcher.classes.dir}"/>
+
+        <property name="launcher.src.dir" value="${basedir}/extras/launcher/src"/>
+        <javac srcdir="${launcher.src.dir}" destdir="${launcher.classes.dir}"
+               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+               includeantruntime="false">
+            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <classpath>
+                <fileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
+            </classpath>
+        </javac>
+
+        <!-- Package it to run with 'java -jar' !!!!!!!!!!!!!!!!!!!!! weird place /bin -->
+        <jar destfile="${launcher.bin}/launcher.jar" filesonly="true">
+            <manifest>
+                <attribute name="Main-Class" value="org.lucidj.launcher.Main"/>
+            </manifest>
+            <fileset dir="${launcher.classes.dir}" includes="**/*"/>
+            <fileset dir="${launcher.src.dir}" excludes="**/*.java"/>
+            <zipgroupfileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
+        </jar>
+
         <!-- Build windows exe -->
         <launch4j>
             <config
                 dontWrapJar="false"
                 headerType="gui"
-                jar="${stage.dir}/bin/launcher.jar"
-                outfile="${stage.dir}/bin/lucidj.exe"
+                jar="${launcher.bin}/launcher.jar"
+                outfile="${launcher.bin}/lucidj.exe"
                 downloadUrl="http://www.azul.com/downloads/zulu"
                 icon="${launcher.src.dir}/org/lucidj/launcher/tangram_64.ico">
                 <jre
@@ -388,39 +427,19 @@
 
         <!-- Strip -x from .exe -->
         <chmod perm="uog-x">
-            <fileset dir="${stage.dir}" includes="bin/*.exe"/>
+            <fileset dir="${launcher.bin}" includes="*.exe"/>
         </chmod>
 
-    </target>
-
-    <target name="build.launcher">
-
-        <property name="launcher.classes.dir" value="${build.dir}/launcher/classes"/>
-        <property name="launcher.src.dir" value="${basedir}/extras/launcher/src"/>
-        <mkdir dir="${launcher.classes.dir}"/>
-
-        <javac srcdir="${launcher.src.dir}" destdir="${launcher.classes.dir}"
-               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
-               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
-               includeantruntime="false">
-            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
-            <classpath>
-                <fileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
-            </classpath>
-        </javac>
-
-        <!-- Package it to run with 'java -jar' !!!!!!!!!!!!!!!!!!!!! weird place /bin -->
-        <delete file="${stage.dir}/bin/launcher.jar"/>
-        <jar destfile="${stage.dir}/bin/launcher.jar" filesonly="true">
-            <manifest>
-                <attribute name="Main-Class" value="org.lucidj.launcher.Main"/>
-            </manifest>
-            <fileset dir="${launcher.classes.dir}" includes="**/*"/>
-            <fileset dir="${launcher.src.dir}" excludes="**/*.java"/>
-            <zipgroupfileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
-        </jar>
-
-        <ant target="launch4j"/>
+        <!-- Add +x to sh -->
+        <chmod perm="uog+rx">
+            <fileset dir="${launcher.bin}">
+                <include name="*"/>
+                <!--<include name="*.sh"/>-->
+                <exclude name="*.exe"/>
+                <exclude name="*.bat"/>
+                <exclude name="*.jar"/>
+            </fileset>
+        </chmod>
 
     </target>
 
@@ -973,8 +992,10 @@
             </then>
         </if>
 
-        <!-- Build platform independent launcher -->
-        <ant target="build.launcher"/>
+        <!-- Copy platform independent launcher -->
+        <copy todir="${stage.dir}/bin" overwrite="true">
+            <fileset dir="${launcher.bin}" includes="**/*"/>
+        </copy>
 
         <!-- Build Karaf deployment bootstrap -->
         <ant target="build.bootstrap"/>

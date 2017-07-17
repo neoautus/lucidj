@@ -25,13 +25,14 @@ public class Main
     static String path_separator = System.getProperty ("path.separator");
     static String exe_suffix = System.getProperty ("os.name").startsWith ("Win")? ".exe": "";
     static String bin_dir = file_separator + "bin" + file_separator;
+    static String cache_launcher_dir = file_separator + "cache" + file_separator + "launcher" + file_separator;
 
     static String rq_home;
     static String jdk_home;
 
     private static boolean check_path (String path)
     {
-        int bin_pos = path.indexOf (bin_dir);
+        int bin_pos = path.lastIndexOf (bin_dir);
 
         if (bin_pos != -1)
         {
@@ -71,6 +72,16 @@ public class Main
             {
                 return (true);
             }
+        }
+
+        // We may be using launcher.jar for development stage
+        if (check_path (user_dir + "stage" + bin_dir))
+        {
+            return (true);
+        }
+        else if (check_path (user_dir.substring (0, user_dir.indexOf (cache_launcher_dir) + 1) + "stage" + bin_dir))
+        {
+            return (true);
         }
 
         // Not yet? One last try....

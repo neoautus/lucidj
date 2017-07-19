@@ -139,13 +139,13 @@ public class PackageImpl implements EmbeddingManager.EmbeddingListener, Package,
 
             do_opening_transition ();
 
-            if (extended_state != Artifact.STATE_EX_OPEN)
+            if (extended_state == Artifact.STATE_EX_ERROR)
             {
-                log.info ("Package {} started (state = {})", bnd, get_state_str (bnd));
+                log.warn ("Package {} not started (state = {})", bnd, get_state_str (bnd));
             }
             else
             {
-                log.info ("Package {} not started (state = {})", bnd, get_state_str (bnd));
+                log.info ("Package {} started (state = {})", bnd, get_state_str (bnd));
             }
         }
         catch (Throwable transition_exception)

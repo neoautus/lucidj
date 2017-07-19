@@ -16,6 +16,7 @@
 
 package org.lucidj.explorer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
@@ -30,7 +31,7 @@ import com.vaadin.ui.VerticalLayout;
 
 import org.osgi.framework.Bundle;
 
-public class OpenView extends VerticalLayout implements ManagedObject, View, Runnable
+public class OpenView extends VerticalLayout implements ManagedObject, View, Runnable, Thread.UncaughtExceptionHandler
 {
     private final transient Logger log = LoggerFactory.getLogger (ExplorerView.class);
 
@@ -71,6 +72,12 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
         addComponent (install_pane);
     }
 
+    @Override
+    public void uncaughtException (Thread t, Throwable e)
+    {
+        log.error ("UncaughtException on thread {}", t, e);
+    }
+
     @Override // Runnable
     public void run ()
     {
@@ -90,7 +97,42 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
                     getUI ().getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getSymbolicName ()));
                 }
             });
-            install_pane.addComponent (go_to_bundle);
+
+            boolean artifact_open = false;
+            String opening = "Opening";
+            Label animation_label = new Label ();
+            install_pane.addComponent (animation_label);
+
+            for (;;)
+            {
+                opening += ".";
+                animation_label.setValue (opening);
+
+                int ext_state = artifactDeployer.getExtState (install_bundle);
+
+                if (ext_state == Artifact.STATE_EX_OPEN)
+                {
+                    install_pane.addComponent (new Label ("Artifact is now Open"));
+                    artifact_open = true;
+                    break;
+                }
+                else if (ext_state == Artifact.STATE_EX_ERROR)
+                {
+                    install_pane.addComponent (new Label ("Error opening artifact (ext state " + ext_state + ")"));
+                    break;
+                }
+
+                try
+                {
+                    Thread.sleep (250);
+                }
+                catch (InterruptedException ignore) {};
+            }
+
+            if (artifact_open)
+            {
+                install_pane.addComponent (go_to_bundle);
+            }
         }
         catch (Exception e)
         {
@@ -114,6 +156,7 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
             {
                 install_thread = new Thread (this);
                 install_thread.setName (this.getClass ().getSimpleName ());
+                install_thread.setUncaughtExceptionHandler (this);
                 install_thread.start ();
             }
         }

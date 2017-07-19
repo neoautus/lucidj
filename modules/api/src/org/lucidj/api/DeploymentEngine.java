@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,7 +24,8 @@ public interface DeploymentEngine
 {
     String  getEngineName ();
     int     compatibleArtifact (String location);
-    int     getState  (Bundle bnd);    // One of Artifact.STATE_*
+    int     getState  (Bundle bnd) throws IllegalStateException;
+    int     getExtState (Bundle bnd);
     Bundle  install   (String location, Properties properties) throws Exception;
     boolean open      (Bundle bnd);
     boolean close     (Bundle bnd);

@@ -22,6 +22,7 @@ public interface Package
 {
     Bundle getBundle ();
     int getState ();
+    int getExtState ();
     EmbeddingContext getEmbeddingContext ();
 }
 

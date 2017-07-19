@@ -16,22 +16,14 @@
 
 package org.lucidj.api;
 
-import org.osgi.framework.Bundle;
-
 public interface Artifact
 {
-    // Normal lifecycle, mirrors OSGi
-    int	STATE_UNINSTALLED = Bundle.UNINSTALLED;
-    int	STATE_INSTALLED   = Bundle.INSTALLED;
-    int	STATE_RESOLVED    = Bundle.RESOLVED;
-    int	STATE_STARTING    = Bundle.STARTING;
-    int	STATE_STOPPING    = Bundle.STOPPING;    // Automatically fires CLOSING if state is RUNNING
-    int	STATE_ACTIVE      = Bundle.ACTIVE;
-
-    // Extended lifecycle inside ACTIVE state
-    int STATE_EX_OPENING  = -1;    // Opening the provided services
-    int STATE_EX_OPEN     = -2;    // All services up and running
-    int STATE_EX_CLOSING  = -3;    // Closing provided services
+    // Extended states
+    int STATE_EX_ERROR    = -1;    // Error obtaining extended state
+    int STATE_EX_NONE     = 0;     // No extended state available
+    int STATE_EX_OPENING  = 1;     // Opening the provided services
+    int STATE_EX_OPEN     = 2;     // All services up and running
+    int STATE_EX_CLOSING  = 3;     // Closing provided services
 
     String PROP_SOURCE             = ".Artifact-Source";
     String PROP_DEPLOYMENT_ENGINE  = ".Artifact-Deployment-Engine";

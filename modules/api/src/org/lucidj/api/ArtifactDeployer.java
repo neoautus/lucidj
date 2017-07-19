@@ -23,6 +23,8 @@ public interface ArtifactDeployer
 {
     Bundle getArtifactByDescription (String symbolic_name, Version version);
     Bundle installArtifact (String location) throws Exception;
+    int getState (Bundle bnd) throws IllegalStateException;
+    int getExtState (Bundle bnd);
     boolean openArtifact (Bundle bnd);
     boolean closeArtifact (Bundle bnd);
     boolean updateArtifact (Bundle bnd);

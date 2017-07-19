@@ -16,6 +16,7 @@
 
 package org.lucidj.artifactdeployer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
 import org.slf4j.Logger;
@@ -79,6 +80,12 @@ public class DefaultDeploymentEngine implements DeploymentEngine
         // We handle only simple bundles
         // TODO: HANDLE open() AND close()
         return (bnd.getState ());
+    }
+
+    @Override
+    public int getExtState (Bundle bnd)
+    {
+        return (Artifact.STATE_EX_NONE);
     }
 
     @Override

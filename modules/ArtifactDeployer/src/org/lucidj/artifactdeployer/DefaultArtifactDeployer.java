@@ -125,13 +125,13 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         return (engine);
     }
 
-    @Override // BundleDeployer
+    @Override // ArtifactDeployer
     public Bundle getArtifactByDescription (String symbolic_name, Version version)
     {
         return (bundle_manager.getBundleByDescription (symbolic_name, version));
     }
 
-    @Override // BundleDeployer
+    @Override // ArtifactDeployer
     public Bundle installArtifact (String location)
         throws Exception
     {
@@ -160,7 +160,28 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         return (new_bundle);
     }
 
-    @Override
+    @Override // ArtifactDeployer
+    public int getState (Bundle bnd)
+        throws IllegalStateException // TODO: THROW A CHECKED EXCEPTION INSTEAD!
+    {
+        return (get_deployment_engine (bnd).getState (bnd));
+    }
+
+    @Override // ArtifactDeployer
+    public int getExtState (Bundle bnd)
+    {
+        try
+        {
+            return (get_deployment_engine (bnd).getExtState (bnd));
+        }
+        catch (IllegalStateException e)
+        {
+            log.error ("Exception reading extended state for bundle {}", bnd, e);
+            return (Artifact.STATE_EX_ERROR);
+        }
+    }
+
+    @Override // ArtifactDeployer
     public boolean openArtifact (Bundle bnd)
     {
         try
@@ -174,7 +195,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         }
     }
 
-    @Override
+    @Override // ArtifactDeployer
     public boolean closeArtifact (Bundle bnd)
     {
         try
@@ -188,7 +209,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         }
     }
 
-    @Override // BundleDeployer
+    @Override // ArtifactDeployer
     public boolean updateArtifact (Bundle bnd)
     {
         try
@@ -202,7 +223,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         }
     }
 
-    @Override // BundleDeployer
+    @Override // ArtifactDeployer
     public boolean refreshArtifact (Bundle bnd)
     {
         try
@@ -216,7 +237,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         }
     }
 
-    @Override // BundleDeployer
+    @Override // ArtifactDeployer
     public boolean uninstallArtifact (Bundle bnd)
     {
         try
@@ -230,7 +251,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         }
     }
 
-    @Override // BundleDeployer
+    @Override // ArtifactDeployer
     public Bundle getArtifactByLocation (String location)
     {
         return (bundle_manager.getBundleByProperty (Artifact.PROP_SOURCE, location));
@@ -329,7 +350,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         poll_thread.setName (this.getClass ().getSimpleName ());
         poll_thread.start ();
 
-        log.info ("DefaultBundleDeployer started");
+        log.info ("DefaultArtifactDeployer started");
     }
 
     @Invalidate
@@ -343,7 +364,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         }
         catch (InterruptedException ignore) {};
 
-        log.info ("DefaultBundleDeployer stopped");
+        log.info ("DefaultArtifactDeployer stopped");
     }
 }
 

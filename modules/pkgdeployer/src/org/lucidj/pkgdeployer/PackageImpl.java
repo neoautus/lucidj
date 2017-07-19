@@ -17,7 +17,6 @@
 package org.lucidj.pkgdeployer;
 
 import org.lucidj.api.Artifact;
-import org.lucidj.api.Embedding;
 import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.EmbeddingHandler;
 import org.lucidj.api.EmbeddingManager;
@@ -41,7 +40,7 @@ public class PackageImpl implements EmbeddingManager.EmbeddingListener, Package,
     private BundleContext context;
     private ServiceReference local_reference;
     private Thread local_thread;
-    private volatile int extended_state;
+    private volatile int extended_state = Artifact.STATE_EX_NONE;
 
     private EmbeddingManager embeddingManager;
     private EmbeddingContext embedding_context;
@@ -87,14 +86,13 @@ public class PackageImpl implements EmbeddingManager.EmbeddingListener, Package,
     @Override // Package
     public int getState ()
     {
-        int bundle_state = bnd.getState ();
+        return (bnd.getState ());
+    }
 
-        // Extended states are non-zero and derive from valid ACTIVE states
-        if (bundle_state == Bundle.ACTIVE && extended_state != 0)
-        {
-            return (extended_state);
-        }
-        return (bundle_state);
+    @Override // Package
+    public int getExtState ()
+    {
+        return (bnd.getState () == Bundle.ACTIVE? extended_state: Artifact.STATE_EX_NONE);
     }
 
     @Override // Package
@@ -129,7 +127,7 @@ public class PackageImpl implements EmbeddingManager.EmbeddingListener, Package,
         // Incredibly complex things....
 
         // Back to pure OSGi state
-        extended_state = 0;
+        extended_state = Artifact.STATE_EX_NONE;
     }
 
     @Override
@@ -141,7 +139,7 @@ public class PackageImpl implements EmbeddingManager.EmbeddingListener, Package,
 
             do_opening_transition ();
 
-            if (extended_state != 0)
+            if (extended_state != Artifact.STATE_EX_OPEN)
             {
                 log.info ("Package {} started (state = {})", bnd, get_state_str (bnd));
             }

@@ -16,8 +16,10 @@
 
 package org.lucidj.pkgdeployer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
+import org.lucidj.api.Package;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +48,8 @@ import java.util.zip.ZipFile;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
@@ -110,7 +114,40 @@ public class PackageDeploymentEngine implements DeploymentEngine
     public int getState (Bundle bnd)
     {
         // TODO: WE NEED open() AND close()
-        return 0;
+        return (bnd.getState ());
+    }
+
+    @Override
+    public int getExtState (Bundle bnd)
+    {
+        String filter = "(service.bundleid=" + bnd.getBundleId () + ")";
+        int ext_state = Artifact.STATE_EX_ERROR;
+
+        try
+        {
+            ServiceReference[] ref = context.getServiceReferences (Package.class.getName (), filter);
+
+            if (ref != null)
+            {
+                // If ref != null, it must be >= 1
+                if (ref.length > 1)
+                {
+                    log.warn ("Internal error: More than 1 package descriptor found: {}", ref);
+                }
+
+                // We have a Package assigned to the bundle, get extended state
+                Package pkg = (Package)context.getService (ref [0]);
+                ext_state = pkg.getExtState ();
+                context.ungetService (ref [0]);
+            }
+            else // ref==null implies no Package service yet for this bundle
+            {
+                // No Package yet, let's assume no extended state
+                ext_state = Artifact.STATE_EX_NONE;
+            }
+        }
+        catch (InvalidSyntaxException ignore) {};
+        return (ext_state);
     }
 
     private List<String> list_existing_files (List<String> file_list, Path root_path)

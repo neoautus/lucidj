@@ -96,11 +96,16 @@ public class BootstrapDeployer extends Thread implements BundleListener
 
     private File get_bundle_data_file (Bundle bnd)
     {
-        return (bnd.getDataFile (Long.toString (bnd.getBundleId ()) + ".internal.lastModified"));
+        return (context.getDataFile (Long.toString (bnd.getBundleId ()) + ".internal.lastModified"));
     }
 
     private void store_lastmodified ( Bundle bnd, long lastmodified)
     {
+        //-------------------------------------------------------------------------------------------------------------
+        // We store our own lastModified value because Bundle.getLastModified() actually returns the just a timestamp
+        // (using System.getCurrentTimeMillis()) of the last change, and not the date/time belonging to the source jar
+        // which fired the change. So we need to keep track of the jar date/time (lastModified) value too.
+        //-------------------------------------------------------------------------------------------------------------
         File bdf = get_bundle_data_file (bnd);
         DataOutputStream out = null;
 
@@ -182,6 +187,8 @@ public class BootstrapDeployer extends Thread implements BundleListener
         }
     }
 
+    // TODO: DEPRECATE ALL THE BOOTSTRAP MECHANISM AND REPLACE WITH ArticactDeployer
+    // TODO: SPLIT INSTALL/UPDATE LOGIC
     private void update_if_changed (Bundle bnd, File bnd_file)
     {
         long bundle_lastmodified = load_lastmodified (bnd);
@@ -191,9 +198,25 @@ public class BootstrapDeployer extends Thread implements BundleListener
             log.debug ("Modified ==> bnd={} bnd.getLastModified={} bnd_file.lastModified={}",
                 bnd, bundle_lastmodified, bnd_file.lastModified ());
 
+            String bnd_uri = bnd_file.toURI ().toString ();
+            if (bnd.getState () == Bundle.UNINSTALLED)
+            {
+                try
+                {
+                    bnd = context.installBundle (bnd_uri);
+                }
+                catch (BundleException e)
+                {
+                    log.info ("Exception reinstalling bundle: {}", bnd_file, e);
+                }
+            }
+            else
+            {
+                update_bundle (bnd);
+            }
+            managed_bundles.put (bnd_uri, bnd);
             store_lastmodified (bnd, bnd_file.lastModified ());
             installing_bundles.add (bnd);
-            update_bundle (bnd);
         }
     }
 

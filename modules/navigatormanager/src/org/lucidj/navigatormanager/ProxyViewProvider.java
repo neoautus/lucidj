@@ -16,29 +16,38 @@
 
 package org.lucidj.navigatormanager;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.NavigatorManager;
+import org.lucidj.api.ServiceContext;
+import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
+import com.vaadin.server.VaadinSession;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ProxyViewProvider implements ViewProvider, ManagedObject
+public class ProxyViewProvider implements ViewProvider, ServiceObject.Listener
 {
-    private final static transient Logger log = LoggerFactory.getLogger (ProxyViewProvider.class);
+    private final static Logger log = LoggerFactory.getLogger (ProxyViewProvider.class);
 
     private Map<String, ViewProvider> view_name_to_provider;
     private Map<String, View> view_name_to_view;
 
     private DefaultNavigatorManager navigatorManager;
+    private Navigator navigator;
 
-    public ProxyViewProvider (DefaultNavigatorManager navigatorManager)
+    @ServiceObject.Context
+    private ServiceContext serviceContext;
+
+    public ProxyViewProvider (DefaultNavigatorManager navigatorManager, Navigator navigator)
     {
         this.navigatorManager = navigatorManager;
+        this.navigator = navigator;
         view_name_to_provider = new ConcurrentHashMap<> ();
         view_name_to_view = new ConcurrentHashMap<> ();
     }
@@ -46,20 +55,15 @@ public class ProxyViewProvider implements ViewProvider, ManagedObject
     @Override // ViewProvider
     public String getViewName (String s)
     {
-        log.info ("getViewName: {}", s);
-
         ViewProvider view_provider = navigatorManager.findViewProvider (s);
 
         if (view_provider != null)
         {
             String view_name = view_provider.getViewName (s);
 
-            log.info ("provider={} view_name={}", view_provider, view_name);
-
             if (view_name != null)
             {
                 // We're actually looking for a provider which knowns the requested view
-                log.info ("Provider found! {} => {}", view_name, view_provider);
                 view_name_to_provider.put (view_name, view_provider);
                 return (view_name);
             }
@@ -70,8 +74,6 @@ public class ProxyViewProvider implements ViewProvider, ManagedObject
     @Override // ViewProvider
     public View getView (String viewName)
     {
-        log.info ("getView: {}", viewName);
-
         View view = view_name_to_view.get (viewName);
 
         // Do we have a cached view?
@@ -84,28 +86,91 @@ public class ProxyViewProvider implements ViewProvider, ManagedObject
                 log.error ("Provider not found for view: {}", viewName);
                 return (null);
             }
-
-            log.info ("getView: provider={}", provider);
-
             view = provider.getView (viewName);
-            log.info ("viewName={} view={}", viewName, view);
-            // TODO: INVALIDATE CACHE WHEN BUNDLE GOES AWAY
             view_name_to_view.put (viewName, view);
         }
-        log.info ("getView (viewName={}) = {}", viewName, view);
+        log.info ("ProxyViewProvider.getView (viewName={}) => {}", viewName, view);
         return (view);
     }
 
-    @Override
-    public void validate (ManagedObjectInstance instance)
+    private void clear_view (Object departing_view)
     {
-        // Nop
+        String current_state = navigator.getState ();
+        View current_view = navigator.getCurrentView ();
+
+        Iterator<Map.Entry<String, View>> it_view = view_name_to_view.entrySet ().iterator ();
+
+        while (it_view.hasNext ())
+        {
+            Map.Entry<String, View> entry = it_view.next ();
+
+            if (entry.getValue () == departing_view)
+            {
+                it_view.remove ();
+
+                if (entry.getKey ().equals (current_state)
+                    || entry.getValue ().equals (current_view))
+                {
+                    // We are running from system land, no sessions at all, so
+                    // we need to set Vaadin session from navigator UI session
+                    VaadinSession current = VaadinSession.getCurrent ();
+                    VaadinSession.setCurrent (navigator.getUI ().getSession ());
+
+                    // TODO: ACTUALLY 'HOME' SHOULD BE TOPMOST MENU ENTRY
+                    navigator.navigateTo (NavigatorManager.HOME);
+
+                    // Back to system land defaults
+                    VaadinSession.setCurrent (current);
+                }
+            }
+        }
     }
 
-    @Override
-    public void invalidate (ManagedObjectInstance instance)
+    private void clear_view_provider (Object departing_view_provider)
+    {
+        Iterator<Map.Entry<String, ViewProvider>> it_provider = view_name_to_provider.entrySet ().iterator ();
+
+        while (it_provider.hasNext ())
+        {
+            Map.Entry<String, ViewProvider> entry = it_provider.next ();
+
+            if (entry.getValue () == departing_view_provider)
+            {
+                it_provider.remove ();
+            }
+        }
+    }
+
+    @Override // ServiceObject.Listener
+    public void event (int type, Object serviceObject)
+    {
+        if (type == ServiceObject.INVALIDATE)
+        {
+            if (serviceObject instanceof View)
+            {
+                clear_view (serviceObject);
+            }
+            else if (serviceObject instanceof ViewProvider)
+            {
+                clear_view_provider (serviceObject);
+            }
+        }
+    }
+
+    @ServiceObject.Validate
+    public void validate ()
+    {
+        serviceContext.addListener (this, null);
+    }
+
+    @ServiceObject.Invalidate
+    public void invalidate ()
     {
         // Make null local vars
+        view_name_to_provider = null;
+        view_name_to_view = null;
+        navigatorManager = null;
+        navigator = null;
     }
 }
 

@@ -16,9 +16,8 @@
 
 package org.lucidj.navigatormanager;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.NavigatorManager;
+import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,14 +48,14 @@ class DefaultNavigatorManager implements NavigatorManager
     private Map<String, ViewProvider> view_providers;
 
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     public DefaultNavigatorManager ()
     {
         view_providers = new ConcurrentHashMap<> ();
     }
 
-    private ViewProvider get_or_create_proxy_view_provider ()
+    private ViewProvider get_or_create_proxy_view_provider (Navigator navigator)
     {
         UI current_ui = UI.getCurrent ();
         VaadinSession current_session = (current_ui != null)? current_ui.getSession (): null;
@@ -69,12 +68,12 @@ class DefaultNavigatorManager implements NavigatorManager
 
             if (view_provider_obj instanceof ViewProvider)
             {
+                // TODO: WHAT IF NAVIGATOR CHANGES INSIDE THE SAME UI? CREATE SOME WAY TO UPDATE IT.
                 proxy_view_provider = (ViewProvider)view_provider_obj;
             }
             else
             {
-                ManagedObjectInstance view_instance = objectFactory.wrapObject (new ProxyViewProvider (this));
-                proxy_view_provider = view_instance.adapt (ViewProvider.class);
+                proxy_view_provider = serviceContext.wrapObject (ProxyViewProvider.class, new ProxyViewProvider (this, navigator));
                 current_session.setAttribute (ATTR_VIEW_PROVIDER, proxy_view_provider);
             }
         }
@@ -84,18 +83,13 @@ class DefaultNavigatorManager implements NavigatorManager
     @Override // NavigatorManager
     public ViewProvider findViewProvider (String navigationState)
     {
-        log.info ("getViewProvider: navigationState={}", navigationState);
-
         for (Map.Entry<String, ViewProvider> provider_entry: view_providers.entrySet ())
         {
             ViewProvider view_provider = provider_entry.getValue ();
             String view_name = view_provider.getViewName (navigationState);
 
-            log.info ("getViewProvider: view_provider={} view_name={}", view_provider, view_name);
-
             if (view_name != null)
             {
-                log.info ("getViewProvider: Provider found! {} => {}", view_name, provider_entry.getKey ());
                 return (view_provider);
             }
         }
@@ -105,7 +99,7 @@ class DefaultNavigatorManager implements NavigatorManager
     @Override // NavigatorManager
     public boolean configureNavigator (Navigator navigator, Map<String, Object> properties)
     {
-        ViewProvider proxy_view_provider = get_or_create_proxy_view_provider ();
+        ViewProvider proxy_view_provider = get_or_create_proxy_view_provider (navigator);
 
         if (proxy_view_provider == null)
         {

@@ -267,14 +267,13 @@ public class DefaultServiceContext implements ServiceContext
 
     private Object create_using_reflection (String objectClassName, Map<String, Object> properties)
     {
-        long bundleid = service_classes_to_bundleid.get (objectClassName);
-
-        if (bundleid == 0)
+        if (!service_classes_to_bundleid.containsKey (objectClassName))
         {
             log.error ("ServiceObject {} not found", objectClassName);
             return (null);
         }
 
+        long bundleid = service_classes_to_bundleid.get (objectClassName);
         Bundle source_bundle = context.getBundle (bundleid);
         Class serviceClass;
 

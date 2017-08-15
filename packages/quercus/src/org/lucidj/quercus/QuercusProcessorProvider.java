@@ -22,13 +22,11 @@ import org.lucidj.api.CodeEngineManager;
 import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentManager;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.ServiceContext;
+import org.lucidj.api.ServiceObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,8 +41,8 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
-@Provides
-public class QuercusProcessorProvider implements ManagedObjectProvider, Serializer
+@Provides (specifications = Serializer.class)
+public class QuercusProcessorProvider implements ServiceObject.Provider, Serializer
 {
     private ComponentDescriptor descriptor;
 
@@ -52,7 +50,7 @@ public class QuercusProcessorProvider implements ManagedObjectProvider, Serializ
     private BundleContext context;
 
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     @Requires
     private CodeEngineManager engineManager;
@@ -72,23 +70,22 @@ public class QuercusProcessorProvider implements ManagedObjectProvider, Serializ
         componentManager.register (context, descriptor);
     }
 
-    @Override
-    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
+    @Override // ServiceObject.Provider
+    public Object newObject (String objectClassName, Map<String, Object> properties)
     {
         // TODO: CodeEngineManager CAN HAVE AN ObjectFactory ASPECT
         CodeEngine code_engine = engineManager.getEngineByName ("quercus");
         ComponentInterface code_container;
 
-        if (instance.containsKey (ComponentInterface.class.getName ()))
+        if (properties.containsKey (ComponentInterface.class.getName ()))
         {
             // Use the provided code container
-            code_container = (ComponentInterface)instance.getProperty (ComponentInterface.class.getName ());
+            code_container = (ComponentInterface)properties.get (ComponentInterface.class.getName ());
         }
         else
         {
             // Provide a brand new code container
-            ManagedObjectInstance new_instance = objectFactory.newInstance ("org.lucidj.smartbox.SmartBox", null);
-            code_container = new_instance.adapt (ComponentInterface.class);
+            code_container = (ComponentInterface)serviceContext.newServiceObject ("org.lucidj.smartbox.SmartBox");
         }
 
         // Add the UI descriptor
@@ -99,13 +96,13 @@ public class QuercusProcessorProvider implements ManagedObjectProvider, Serializ
         return (new QuercusProcessor (code_container, code_engine));
     }
 
-    @Override
+    @Override // Serializer
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
         return (instance.serializeAs (Aggregate.identity (object), QuercusProcessor.class.getName ()));
     }
 
-    @Override
+    @Override // Serializer
     public Object deserializeObject (SerializerInstance instance)
     {
         // Use another deserializer to build our object
@@ -114,14 +111,13 @@ public class QuercusProcessorProvider implements ManagedObjectProvider, Serializ
         // Create the new processor providing the code_container
         Map<String, Object> props = new HashMap<> ();
         props.put (ComponentInterface.class.getName (), code_container);
-        ManagedObjectInstance new_instance = objectFactory.newInstance (QuercusProcessor.class, props);
-        return (new_instance.adapt (QuercusProcessor.class));
+        return (serviceContext.newServiceObject (QuercusProcessor.class, props));
     }
 
     @Validate
     private void validate ()
     {
-        objectFactory.register (QuercusProcessor.class, this, null);
+        serviceContext.register (QuercusProcessor.class, this);
         serializerEngine.register (QuercusProcessor.class, this);
         register_component_descriptor ();
     }

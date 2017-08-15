@@ -53,11 +53,10 @@ import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.Embedding;
 import org.lucidj.api.EmbeddingContext;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Package;
-import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SerializerEngine;
+import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,8 +69,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@StyleSheet ("vaadin://~/Browser_libraries/styles.css")
-public class BrowserView extends VerticalLayout implements ManagedObject, View, ApplicationInterface
+@StyleSheet ("vaadin://~/Browser_libraries/styles.css") // <-- does this works??
+public class BrowserView extends VerticalLayout implements View, ApplicationInterface
 {
     private final static Logger log = LoggerFactory.getLogger (BrowserView.class);
     private final static String view_name = "browse";
@@ -88,10 +87,11 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
     private Accordion acSidebar = null;
     private ComponentPalette sidebar = null;
 
+    private ServiceContext serviceContext;
     private BundleContext ctx;
-    private SecurityEngine security;
     private ComponentManager componentManager;
     private BundleManager bundleManager;
+    private RendererFactory rendererFactory;
 
     private long last_save = 0;
     private boolean embedding_changed = false;
@@ -106,26 +106,14 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
     private Cell insert_here_cell;
     private SerializerEngine serializer;
 
-    public BrowserView (SecurityEngine security, SerializerEngine serializer, ComponentManager componentManager,
-                        BundleManager bundleManager)
+    public BrowserView (ServiceContext serviceContext, BundleContext bundleContext)
     {
-        this.security = security;
-        this.serializer = serializer;
-        this.componentManager = componentManager;
-        this.bundleManager = bundleManager;
-    }
-
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
-    {
-        ctx = instance.getBundle ().getBundleContext ();
-    }
-
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        security = null;
-        serializer = null;
+        this.serviceContext = serviceContext;
+        ctx = bundleContext;
+        serializer = serviceContext.getService (bundleContext, SerializerEngine.class);
+        componentManager = serviceContext.getService (bundleContext, ComponentManager.class);
+        bundleManager = serviceContext.getService (bundleContext, BundleManager.class);
+        rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
     }
 
     @Override // ApplicationInterface
@@ -151,7 +139,7 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
         public Cell (Object object)
         {
             // Cell formatting, decoration and event handling is located at AbstractCell
-            super (object);
+            super (rendererFactory, object);
         }
 
         @Override
@@ -362,8 +350,8 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
     {
         log.info ("insert_new_object: canonical_name={} index={}", canonical_name, index);
 
-        ManagedObjectInstance object_instance = Browser.getObjectFactory ().newInstance (canonical_name, null);
-        ManagedObject object = object_instance.adapt (ManagedObject.class);
+        // TODO: HANDLE NPE WHEN OBJECT CLASS DOESN'T EXISTS
+        Object object = serviceContext.newServiceObject (canonical_name);
 
         log.info ("*** insert_new_object: object={}", object);
 
@@ -791,6 +779,7 @@ public class BrowserView extends VerticalLayout implements ManagedObject, View, 
             return (false);
         }
 
+        // TODO: REFACTOR THIS CONVOLUTED THING
         ServiceReference[] service_list = bundle.getServicesInUse ();
         Package pkg = null;
 

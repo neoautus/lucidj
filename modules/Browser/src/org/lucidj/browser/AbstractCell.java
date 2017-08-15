@@ -23,6 +23,7 @@ import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.EditorInterface;
 import org.lucidj.api.ObjectRenderer;
+import org.lucidj.api.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +62,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
     private Label running;
     private Label component_icon;
 
-    public AbstractCell (Object object)
+    public AbstractCell (RendererFactory rendererFactory, Object object)
     {
         log.info("Cell: object = {}", object);
 
@@ -69,7 +70,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         {
             // Register and render the source object
             source_object = object;
-            object_renderer = Browser.getRendererFactory ().newRenderer ();
+            object_renderer = rendererFactory.newRenderer ();
             rendered_object = object_renderer.link (source_object);
         }
         else

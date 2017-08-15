@@ -19,10 +19,10 @@ package org.lucidj.browser;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.SerializerEngine;
+import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,60 +31,44 @@ import com.vaadin.navigator.ViewProvider;
 
 import java.util.regex.Matcher;
 
+import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
-@Component
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class Browser implements ViewProvider
 {
     private final static Logger log = LoggerFactory.getLogger (Browser.class);
 
+    @Context
+    private BundleContext context;
+
     @Requires
-    private SecurityEngine security;
+    private SecurityEngine securityEngine;
 
     @Requires
     private ManagedObjectFactory objectFactory;
-    private static ManagedObjectFactory static_objectFactory;
 
     @Requires
-    private SerializerEngine serializer;
+    private SerializerEngine serializerEngine;
 
     @Requires
     private ComponentManager componentManager;
-    private static ComponentManager static_componentManager;
 
     @Requires
     private RendererFactory rendererFactory;
-    private static RendererFactory static_rendererFactory;
 
     @Requires
     private BundleManager bundleManager;
 
-    public Browser ()
-    {
-        static_objectFactory = objectFactory;
-        static_rendererFactory = rendererFactory;
-        static_componentManager = componentManager;
-    }
-
-    public static ManagedObjectFactory getObjectFactory ()
-    {
-        return (static_objectFactory);
-    }
-
-    public static RendererFactory getRendererFactory ()
-    {
-        return (static_rendererFactory);
-    }
-
-    public static ComponentManager getComponentManager ()
-    {
-        return (static_componentManager);
-    }
+    @Requires
+    private ServiceContext serviceContext;
 
     @Override // ViewProvider
     public String getViewName (String navigationState)
@@ -93,7 +77,6 @@ public class Browser implements ViewProvider
 
         if ((m = BrowserView.NAV_PATTERN.matcher (navigationState)).find ())
         {
-            log.info ("m.group() = {}", m.group ());
             return (m.group ());
         }
         return (null);
@@ -104,12 +87,21 @@ public class Browser implements ViewProvider
     {
         if (BrowserView.NAV_PATTERN.matcher (viewName).matches ())
         {
-            // TODO: wrapObject() IS ANOTHER USE-CASE (FACTORY-LESS ManagedObject)
-            ManagedObjectInstance view_instance =
-                objectFactory.wrapObject (new BrowserView (security, serializer, componentManager, bundleManager));
-            return (view_instance.adapt (View.class));
+            return (serviceContext.newServiceObject (BrowserView.class));
         }
         return null;
+    }
+
+    @Validate
+    private void validate ()
+    {
+        serviceContext.putService (context, SecurityEngine.class, securityEngine);
+        serviceContext.putService (context, ManagedObjectFactory.class, objectFactory);
+        serviceContext.putService (context, RendererFactory.class, rendererFactory);
+        serviceContext.putService (context, ComponentManager.class, componentManager);
+        serviceContext.putService (context, SerializerEngine.class, serializerEngine);
+        serviceContext.putService (context, BundleManager.class, bundleManager);
+        serviceContext.register (BrowserView.class);
     }
 }
 

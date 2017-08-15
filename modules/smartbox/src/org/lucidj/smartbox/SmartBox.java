@@ -20,11 +20,12 @@ import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
-import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectManagerProperty;
+import org.lucidj.api.ServiceContext;
+import org.lucidj.api.ServiceObject;
 import org.lucidj.api.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,11 +34,11 @@ import com.vaadin.ui.AbstractComponent;
 
 import java.util.HashMap;
 
-public class SmartBox implements ManagedObject, ComponentInterface, ObjectManagerProperty, ComponentState
+import org.osgi.framework.BundleContext;
+
+public class SmartBox implements ComponentInterface, ObjectManagerProperty, ComponentState
 {
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
-
-    private final SmartBox self = this;
 
     private int component_state = ACTIVE;
     private ComponentState.ChangeListener state_listener;
@@ -48,21 +49,15 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
     private String code = "";
 
-    // TODO: GET RID OF THESE DEPENDENCIES!!!
     private Stdio console;
 
     private ManagedObjectFactory objectFactory;
     private CodeEngine code_engine;
     private CodeContext code_context;
 
-    public SmartBox ()
+    public SmartBox (ServiceContext serviceContext, BundleContext bundleContext)
     {
-//        init ();
-    }
-
-    public SmartBox (ManagedObjectFactory objectFactory)
-    {
-        this.objectFactory = objectFactory;
+        objectFactory = serviceContext.getService (bundleContext, ManagedObjectFactory.class);
         log.info ("objectFactory = {}", objectFactory);
 
         // Create our own ObjectManager
@@ -310,14 +305,14 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         state_listener = listener;
     }
 
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
+    @ServiceObject.Validate // ManagedObject
+    public void validate ()
     {
         // Nothing for now
     }
 
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
+    @ServiceObject.Invalidate // ManagedObject
+    public void invalidate ()
     {
         // Nothing for now
     }

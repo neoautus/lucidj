@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngineFactory;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -111,10 +111,9 @@ public class FelixCodeEngineManager implements CodeEngineManager
     }
 
     @Override
-    public List<String> getEngines ()
+    public Set<String> getEngines ()
     {
-        // TODO: Name+version
-        return null;
+        return (name_to_provider.keySet ());
     }
 
     @Override

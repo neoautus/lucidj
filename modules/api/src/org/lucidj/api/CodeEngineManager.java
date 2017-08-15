@@ -18,7 +18,7 @@ package org.lucidj.api;
 
 import javax.script.ScriptEngineFactory;
 
-import java.util.List;
+import java.util.Set;
 
 import org.osgi.framework.Bundle;
 
@@ -41,7 +41,7 @@ public interface CodeEngineManager
 //    ScriptEngine getEngineByExtension (String extension);
 //    ScriptEngine getEngineByMimeType (String mimeType);
     CodeEngine getEngineByName (String shortName);
-    List<String> getEngines ();
+    Set<String> getEngines ();
 
     CodeContext newContext (Bundle parentBundle);
 }

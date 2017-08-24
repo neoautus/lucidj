@@ -124,10 +124,9 @@ public class TreeMenuRenderer implements ManagedObject, Renderer, ItemClickEvent
         log.debug ("render_tree_menu: updateUI rendering finished");
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof MenuInstance);
+        return (object instanceof MenuInstance);
     }
 
     @Override // Renderer

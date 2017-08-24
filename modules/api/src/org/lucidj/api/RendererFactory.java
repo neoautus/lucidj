@@ -19,7 +19,7 @@ package org.lucidj.api;
 public interface RendererFactory
 {
     ObjectRenderer newRenderer ();
-    Renderer getCompatibleRenderer (Object object);
+    ObjectRenderer newRenderer (Object object);
 }
 
 // EOF

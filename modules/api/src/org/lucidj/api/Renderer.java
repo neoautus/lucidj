@@ -20,7 +20,6 @@ import com.vaadin.ui.Component;
 
 public interface Renderer
 {
-    boolean compatibleObject (Object object);
     void objectLinked (Object obj);
     void objectUnlinked ();
     Component renderingComponent ();

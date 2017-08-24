@@ -24,12 +24,11 @@ import com.vaadin.ui.VerticalLayout;
 import com.ejt.vaadin.sizereporter.ComponentResizeEvent;
 import com.ejt.vaadin.sizereporter.ComponentResizeListener;
 import com.ejt.vaadin.sizereporter.SizeReporter;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectManager;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererFactory;
+import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.vaadin.jouni.restrain.Restrain;
@@ -37,9 +36,12 @@ import org.vaadin.jouni.restrain.Restrain;
 import java.util.HashMap;
 import java.util.Map;
 
-// LayoutManager is the default renderer for ObjectManager.
+import org.osgi.framework.BundleContext;
 
-public class LayoutManager implements Renderer, ObjectManager.ObjectEventListener, ComponentResizeListener, ManagedObject
+// LayoutManager is the default renderer for ObjectManager.
+// TODO: RENAME IT TO ObjectManagerRenderer
+
+public class LayoutManager implements Renderer, ObjectManager.ObjectEventListener, ComponentResizeListener
 {
     private final transient static Logger log = LoggerFactory.getLogger (LayoutManager.class);
 
@@ -52,9 +54,11 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
 
     private RendererFactory rendererFactory;
 
-    private LayoutManager (AbstractOrderedLayout base_layout)
+    public LayoutManager (BundleContext bundleContext, ServiceContext serviceContext)
     {
-        layout = base_layout;
+        rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
+
+        layout = new VerticalLayout ();
         layout.addStyleName ("renderer-layout");
 
         layout.addAttachListener (new ClientConnector.AttachListener ()
@@ -80,13 +84,7 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
             }
         });
 
-        log.info ("new LayoutManager () base_layout={}", base_layout);
-    }
-
-    public LayoutManager (RendererFactory rendererFactory)
-    {
-        this (new VerticalLayout ());
-        this.rendererFactory = rendererFactory;
+        log.info ("new LayoutManager () base_layout={}", layout);
     }
 
     private String get_object_hash (Object obj)
@@ -114,14 +112,14 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
     @Override // ObjectEventListener
     public Object addingObject (Object obj, int index)
     {
-        ObjectRenderer or = rendererFactory.newRenderer ();
+        ObjectRenderer renderer = rendererFactory.newRenderer (obj);
         // TODO: VAADIN SESSION HANDLING
-        layout.addComponent (or.link (obj), index);
-        active_renderers.put (get_object_hash (obj), or);
+        layout.addComponent (renderer, index);
+        active_renderers.put (get_object_hash (obj), renderer);
 
         log.info ("<<RENDERER>> addingObject() layout height = {} {}", layout.getHeight (), layout.getHeightUnits ().toString ());
 
-        log.info ("Add new renderer {}: obj={} or={} /// active_renderers={}", this, get_object_hash (obj), or, active_renderers);
+        log.info ("Add new renderer {}: obj={} or={} /// active_renderers={}", this, get_object_hash (obj), renderer, active_renderers);
         return (obj);
     }
 
@@ -141,15 +139,15 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
     public void removingObject (Object obj, int index)
     {
         String hash = get_object_hash (obj);
-        ObjectRenderer or = active_renderers.get (hash);
+        ObjectRenderer renderer = active_renderers.get (hash);
 
-        log.info ("removingObject: obj={} or={} layout={} /// active_renderers={}", hash, or, layout, active_renderers);
+        log.info ("removingObject: obj={} or={} layout={} /// active_renderers={}", hash, renderer, layout, active_renderers);
 
         // Only deal with valid renderers
-        if (or != null)
+        if (renderer != null)
         {
             // TODO: VAADIN SESSION HANDLING
-            layout.removeComponent (or.renderingComponent ());
+            layout.removeComponent (renderer);
 
             log.info ("<<RENDERER>> removingObject() layout height = {} {}", layout.getHeight (), layout.getHeightUnits ().toString ());
         }
@@ -157,11 +155,11 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
         active_renderers.remove (hash);
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof ObjectManager);
+        return (object instanceof ObjectManager);
     }
+
 
     @Override // Renderer
     public void objectLinked (Object obj)
@@ -193,18 +191,6 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
     {
         log.debug ("<<RESIZE>> width={} height={}", componentResizeEvent.getWidth(), componentResizeEvent.getHeight());
         current_height = componentResizeEvent.getHeight();
-    }
-
-    @Override
-    public void validate (ManagedObjectInstance instance)
-    {
-        // Nop
-    }
-
-    @Override
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        // Nop
     }
 }
 

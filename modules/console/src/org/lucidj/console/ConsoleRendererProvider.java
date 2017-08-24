@@ -31,15 +31,13 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Provides
 public class ConsoleRendererProvider implements RendererProvider
 {
-    private ConsoleRenderer console_filter = new ConsoleRenderer ();
-
     @Requires
     private ManagedObjectFactory objectFactory;
 
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
-        if (console_filter.compatibleObject (object))
+        if (ConsoleRenderer.isCompatible (object))
         {
             ManagedObjectInstance object_instance = objectFactory.wrapObject (new ConsoleRenderer ());
             return (object_instance.adapt (ConsoleRenderer.class));

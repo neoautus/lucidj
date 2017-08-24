@@ -195,10 +195,9 @@ public class MarkdownRenderer extends VerticalLayout implements Renderer, Editor
         return (editor_toolbar);
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof Markdown);
+        return (object instanceof Markdown);
     }
 
     @Override // Renderer

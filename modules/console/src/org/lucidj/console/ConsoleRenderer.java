@@ -37,11 +37,10 @@ public class ConsoleRenderer implements Renderer, ManagedObject
         console_out_err.setHeightUndefined ();
     }
 
-    @Override
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
         // TODO: BE COMPATIBLE WITH DIFFERENT OBJECT VERSIONS
-        return (obj_to_check instanceof org.lucidj.console.Console);
+        return (object instanceof org.lucidj.console.Console);
     }
 
     @Override

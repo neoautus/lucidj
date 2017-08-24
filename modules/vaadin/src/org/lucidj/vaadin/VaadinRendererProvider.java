@@ -32,8 +32,6 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Provides
 public class VaadinRendererProvider implements RendererProvider
 {
-    private VaadinRenderer console_filter = new VaadinRenderer ();
-
     @Requires
     private ManagedObjectFactory objectFactory;
 
@@ -43,7 +41,7 @@ public class VaadinRendererProvider implements RendererProvider
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
-        if (console_filter.compatibleObject (object))
+        if (VaadinRenderer.isCompatible (object))
         {
             VaadinRenderer renderer = new VaadinRenderer ();
             ManagedObjectInstance object_instance = objectFactory.wrapObject (renderer);

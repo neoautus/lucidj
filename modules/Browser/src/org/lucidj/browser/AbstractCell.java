@@ -53,7 +53,6 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
 
     private Object source_object;
     private ObjectRenderer object_renderer;
-    private Component rendered_object;
     private DragAndDropWrapper cell_wrap;
     private CssLayout left_panel;
     private CssLayout right_panel;
@@ -64,14 +63,15 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
 
     public AbstractCell (RendererFactory rendererFactory, Object object)
     {
+        Component rendered_object;
+
         log.info("Cell: object = {}", object);
 
         if (object != null)
         {
             // Register and render the source object
             source_object = object;
-            object_renderer = rendererFactory.newRenderer ();
-            rendered_object = object_renderer.link (source_object);
+            rendered_object = object_renderer = rendererFactory.newRenderer (source_object);
         }
         else
         {
@@ -300,9 +300,9 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
     
     public void scrollIntoView ()
     {
-        EditorInterface ei = (EditorInterface)rendered_object;
+        EditorInterface ei = object_renderer.adapt (EditorInterface.class);
 
-        if (ei.getFocusComponent () != null)
+        if (ei != null && ei.getFocusComponent () != null)
         {
             // TODO: BETTER HANDLING OF SCROLL INTO
             ei.getFocusComponent ().focus();
@@ -312,9 +312,11 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
 
     public void setFocus ()
     {
-        if (rendered_object instanceof EditorInterface)
+        EditorInterface ei = object_renderer.adapt (EditorInterface.class);
+
+        if (ei != null)
         {
-            setToolbar (((EditorInterface)rendered_object).toolbar ());
+            setToolbar (ei.toolbar ());
         }
         else // No toolbar interface
         {

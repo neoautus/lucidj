@@ -107,7 +107,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
 
     private MenuInstance main_menu;
     private RendererFactory rendererFactory;
-    private ObjectRenderer objectRenderer;
+    private ObjectRenderer main_menu_renderer;
 
     //=========================================================================================
     // DEFAULTS
@@ -232,14 +232,13 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
             main_menu.setEventListener (this);
 
             // Create the menu renderer
-            objectRenderer = rendererFactory.newRenderer ();
-            com.vaadin.ui.Component main_menu_component = objectRenderer.link (main_menu);
-            main_menu_component.setWidth (100, Unit.PERCENTAGE);
-            main_menu_component.setHeightUndefined ();
+            main_menu_renderer = rendererFactory.newRenderer (main_menu);
+            main_menu_renderer.setWidth (100, Unit.PERCENTAGE);
+            main_menu_renderer.setHeightUndefined ();
 
             // Add the rendered component into navigation panel
             acMenu.addStyleName ("borderless");
-            acMenu.addTab (main_menu_component, "Navigation");
+            acMenu.addTab (main_menu_renderer, "Navigation");
             acMenu.setSizeFull ();
         }
 

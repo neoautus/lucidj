@@ -17,21 +17,21 @@
 package org.lucidj.renderer;
 
 import org.lucidj.api.EventHelper;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.server.Sizeable;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Label;
 
-public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, EventHelper.Subscriber
+public class DefaultObjectRenderer extends CustomComponent implements ObjectRenderer, EventHelper.Subscriber
 {
-    private final transient static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
 
+    private Object current_object;
     private Renderer current_renderer;
     private Component current_component;
     private Label default_component;
@@ -53,12 +53,6 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         return (current_component != null && current_renderer != null);
     }
 
-    @Override // ObjectRenderer
-    public Component renderingComponent ()
-    {
-        return (current_component);
-    }
-
     // TODO: ADD LINK/UNLINK NOTIFICATIONS
     @Override // ObjectRenderer
     public <A> A adapt (Class<A> type)
@@ -68,7 +62,6 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         {
             return ((A)current_renderer);
         }
-
         return (null);
     }
 
@@ -77,13 +70,14 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         Component new_component = null;
 
         log.info ("apply_renderer: obj={}", obj);
+        current_object = obj;
 
         if (obj == null)
         {
             // Will use the default component to display 'null'
             current_renderer = null;
         }
-        else if ((current_renderer = renderer_factory.getCompatibleRenderer (obj)) != null)
+        else if ((current_renderer = renderer_factory.locateAndBindRenderer (this, obj)) != null)
         {
             // Issue initial update
             current_renderer.objectUpdated ();
@@ -104,21 +98,27 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
             new_component.setHeight (current_component.getHeight (), current_component.getHeightUnits ());
 
             // Replace the rendered component with default_component
-            if (current_component.getParent () instanceof ComponentContainer)
-            {
-                ComponentContainer container = (ComponentContainer)current_component.getParent ();
-                container.replaceComponent (current_component, new_component);
-                current_component = new_component;
-            }
+//            if (current_component.getParent () instanceof ComponentContainer)
+//            {
+//                ComponentContainer container = (ComponentContainer)current_component.getParent ();
+//                container.replaceComponent (current_component, new_component);
+//                current_component = new_component;
+//            }
         }
 
         current_component = new_component;
+        setCompositionRoot (new_component);
 
         log.info ("apply_renderer: current_renderer={} current_component={}", current_renderer, current_component);
     }
 
+    public void refreshRenderer ()
+    {
+        apply_renderer (current_object);
+    }
+
     @Override // ObjectRenderer
-    public Component link (Object object)
+    public void link (Object object)
     {
         // TODO: WHEN OBJECT IS UNKNOWN, PUBLISH "BINARY" RENDERER AND WAIT FOR RENDERER ACTIVATION
         apply_renderer (object);
@@ -132,7 +132,6 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         // TODO: ADD CALLBACK custom_renderer.objectLinked ()
 
         log.info ("link: returning {}", current_component);
-        return (current_component);
     }
 
     @Override // ObjectRenderer
@@ -152,7 +151,10 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
     public void updateComponent ()
     {
         // This tells the component to update it's contents using data object
-        current_renderer.objectUpdated ();
+        if (current_renderer != null)
+        {
+            current_renderer.objectUpdated ();
+        }
     }
 
     @Override // EventHelper.Subscriber
@@ -161,16 +163,37 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         updateComponent ();
     }
 
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
+    @Override
+    public void setWidth (float width, Sizeable.Unit unit)
     {
-        // Nop
+        super.setWidth (width, unit);
+
+        if (current_component != null)
+        {
+            current_component.setWidth (width, unit);
+        }
     }
 
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
+    @Override
+    public void setWidth (String width)
     {
-        // Nop
+        super.setWidth (width);
+
+        if (current_component != null)
+        {
+            current_component.setWidth (width);
+        }
+    }
+
+    @Override
+    public void setWidthUndefined ()
+    {
+        super.setWidthUndefined ();
+
+        if (current_component != null)
+        {
+            current_component.setWidthUndefined ();
+        }
     }
 }
 

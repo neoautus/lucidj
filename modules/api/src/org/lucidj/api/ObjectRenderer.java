@@ -18,12 +18,11 @@ package org.lucidj.api;
 
 import com.vaadin.ui.Component;
 
-public interface ObjectRenderer
+public interface ObjectRenderer extends Component
 {
     boolean   isRendered         ();
-    Component renderingComponent ();
     <A> A     adapt              (Class<A> type);
-    Component link               (Object source);
+    void      link               (Object source);
     void      unlink             ();
     void      updateComponent    ();
 

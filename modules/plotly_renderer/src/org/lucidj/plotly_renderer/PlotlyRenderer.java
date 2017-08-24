@@ -271,11 +271,9 @@ public class PlotlyRenderer extends AbstractJavaScriptComponent implements Rende
         set_layout (key, value);
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof Plotly ||
-                obj_to_check instanceof Trace);
+        return (object instanceof Plotly || object instanceof Trace);
     }
 
     @Override // Renderer

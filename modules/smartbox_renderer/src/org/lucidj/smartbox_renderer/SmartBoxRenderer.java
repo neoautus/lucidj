@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -31,17 +31,17 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 import org.lucidj.api.EditorInterface;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererFactory;
+import org.lucidj.api.ServiceContext;
 import org.lucidj.smartbox.SmartBox;
 import org.lucidj.aceeditor.AceEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SmartBoxRenderer extends VerticalLayout implements Renderer, EditorInterface, ManagedObject
+import org.osgi.framework.BundleContext;
+
+public class SmartBoxRenderer extends VerticalLayout implements Renderer, EditorInterface
 {
     private static final transient Logger log = LoggerFactory.getLogger (SmartBoxRenderer.class);
 
@@ -54,17 +54,15 @@ public class SmartBoxRenderer extends VerticalLayout implements Renderer, Editor
     private CssLayout cell_toolbar;
 
     private RendererFactory rendererFactory;
-    private ObjectRenderer object_renderer;
 
-    public SmartBoxRenderer (RendererFactory rendererFactory)
+    public SmartBoxRenderer (ServiceContext serviceContext, BundleContext bundleContext)
     {
-        this.rendererFactory = rendererFactory;
+        rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
     }
 
     private void init ()
     {
-        object_renderer = rendererFactory.newRenderer ();
-        output_layout = object_renderer.link (source.getObjectManager ());
+        output_layout = rendererFactory.newRenderer (source.getObjectManager ());
         init_main ();
         init_toolbar ();
     }
@@ -249,10 +247,9 @@ public class SmartBoxRenderer extends VerticalLayout implements Renderer, Editor
         log.info ("*** <<<< DETACH: {} ui={} parent={}", this, getUI (), getParent ());
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof SmartBox);
+        return (object instanceof SmartBox);
     }
 
     @Override // Renderer
@@ -280,17 +277,6 @@ public class SmartBoxRenderer extends VerticalLayout implements Renderer, Editor
         commands.setValue ((String)source.getValue ());
     }
 
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
-    {
-        // Nop
-    }
-
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        // Nop
-    }
 }
 
 // EOF

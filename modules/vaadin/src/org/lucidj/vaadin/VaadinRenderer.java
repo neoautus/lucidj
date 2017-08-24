@@ -27,18 +27,16 @@ public class VaadinRenderer implements Renderer, ManagedObject
     // TODO: VAADIN CANNOT BE PIPED
     private Component vaadin_component;
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        if (obj_to_check instanceof Vaadin)
+        if (object instanceof Vaadin)
         {
             return (true);
         }
-        else if (obj_to_check instanceof Component)
+        else if (object instanceof Component)
         {
             return (true);
         }
-
         return (false);
     }
 

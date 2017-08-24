@@ -16,26 +16,29 @@
 
 package org.lucidj.layoutmanager;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererFactory;
 import org.lucidj.api.RendererProvider;
+import org.lucidj.api.ServiceContext;
 
+import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class LayoutManagerProvider implements RendererProvider
 {
-    private LayoutManager instance_filter = new LayoutManager (null);
+    @Context
+    private BundleContext bundleContext;
 
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     @Requires
     private RendererFactory rendererFactory;
@@ -43,13 +46,18 @@ public class LayoutManagerProvider implements RendererProvider
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
-        if (instance_filter.compatibleObject (object))
+        if (LayoutManager.isCompatible (object))
         {
-            LayoutManager renderer = new LayoutManager (rendererFactory);
-            ManagedObjectInstance object_instance = objectFactory.wrapObject (renderer);
-            return (object_instance.adapt (LayoutManager.class));
+            return (serviceContext.newServiceObject (LayoutManager.class));
         }
         return (null);
+    }
+
+    @Validate
+    private void validate ()
+    {
+        serviceContext.putService (bundleContext, RendererFactory.class, rendererFactory);
+        serviceContext.register (LayoutManager.class);
     }
 }
 

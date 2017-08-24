@@ -148,15 +148,9 @@ public class IconListRenderer extends CssLayout implements Renderer, LayoutEvent
 //        layout_click_listener = listener;
 //    }
 
-    public static boolean isCompatible (Object object) // TODO: DEPRECATE compatibleObject
+    public static boolean isCompatible (Object object)
     {
         return (object instanceof List);
-    }
-
-    @Override // Renderer
-    public boolean compatibleObject (Object object)
-    {
-        return (isCompatible (object));
     }
 
     @Override // Renderer

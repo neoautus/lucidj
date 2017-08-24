@@ -123,6 +123,7 @@ public class DefaultRendererFactory implements RendererFactory
             if (entry.getValue () == provider)
             {
                 log.info ("===> refreshing {} / {}", entry.getKey (), entry.getValue ());
+                entry.setValue (null);
                 entry.getKey ().refreshRenderer ();
             }
         }

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.server.Sizeable;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CustomComponent;
+import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Label;
 
 public class DefaultObjectRenderer extends CustomComponent implements ObjectRenderer, EventHelper.Subscriber
@@ -96,14 +97,6 @@ public class DefaultObjectRenderer extends CustomComponent implements ObjectRend
             // Copy current component dimensions
             new_component.setWidth (current_component.getWidth (), current_component.getWidthUnits ());
             new_component.setHeight (current_component.getHeight (), current_component.getHeightUnits ());
-
-            // Replace the rendered component with default_component
-//            if (current_component.getParent () instanceof ComponentContainer)
-//            {
-//                ComponentContainer container = (ComponentContainer)current_component.getParent ();
-//                container.replaceComponent (current_component, new_component);
-//                current_component = new_component;
-//            }
         }
 
         current_component = new_component;
@@ -163,7 +156,33 @@ public class DefaultObjectRenderer extends CustomComponent implements ObjectRend
         updateComponent ();
     }
 
-    @Override
+    @Override // CustomComponent
+    protected void setCompositionRoot (Component compositionRoot)
+    {
+        // Avoid the greedy CustomComponent problem
+        if (compositionRoot != null)
+        {
+            HasComponents old_parent = compositionRoot.getParent();
+
+            if (old_parent instanceof DefaultObjectRenderer)
+            {
+                DefaultObjectRenderer greedy_parent = (DefaultObjectRenderer)old_parent;
+
+                if (greedy_parent.getCompositionRoot () == compositionRoot)
+                {
+                    // Makes the greedy CustomComponent drop the compositionRoot we need to
+                    // assign to another CustomComponent, otherwise we get
+                    // IllegalArgumentException: Content is already attached to another parent
+                    greedy_parent.setCompositionRoot (null);
+                }
+            }
+        }
+
+        // Proceed as intended
+        super.setCompositionRoot (compositionRoot);
+    }
+
+    @Override // CustomComponent
     public void setWidth (float width, Sizeable.Unit unit)
     {
         super.setWidth (width, unit);
@@ -174,7 +193,7 @@ public class DefaultObjectRenderer extends CustomComponent implements ObjectRend
         }
     }
 
-    @Override
+    @Override // CustomComponent
     public void setWidth (String width)
     {
         super.setWidth (width);
@@ -185,7 +204,7 @@ public class DefaultObjectRenderer extends CustomComponent implements ObjectRend
         }
     }
 
-    @Override
+    @Override // CustomComponent
     public void setWidthUndefined ()
     {
         super.setWidthUndefined ();

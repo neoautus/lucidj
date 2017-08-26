@@ -32,6 +32,7 @@ import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -40,7 +41,7 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@org.apache.felix.ipojo.annotations.Component (immediate = true, publicFactory = false)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class DefaultRendererFactory implements RendererFactory
@@ -102,12 +103,15 @@ public class DefaultRendererFactory implements RendererFactory
         log.info ("===> Adding renderer provider: {}", provider);
         renderer_providers.add (provider);
 
-        for (Map.Entry<DefaultObjectRenderer, RendererProvider> entry: renderer_mapping.entrySet ())
+        DefaultObjectRenderer[] active_renderers =
+            renderer_mapping.keySet ().toArray (new DefaultObjectRenderer [0]);
+
+        for (DefaultObjectRenderer renderer: active_renderers)
         {
-            if (entry.getValue () == null)
+            if (renderer_mapping.get (renderer) == null)
             {
-                log.info ("===> refreshing {} / {}", entry.getKey (), entry.getValue ());
-                entry.getKey ().refreshRenderer ();
+                log.info ("===> refreshing {}", renderer);
+                renderer.refreshRenderer ();
             }
         }
     }
@@ -118,13 +122,16 @@ public class DefaultRendererFactory implements RendererFactory
         log.info ("===> Removing renderer provider: {}", provider);
         renderer_providers.remove (provider);
 
-        for (Map.Entry<DefaultObjectRenderer, RendererProvider> entry: renderer_mapping.entrySet ())
+        DefaultObjectRenderer[] active_renderers =
+                renderer_mapping.keySet ().toArray (new DefaultObjectRenderer [0]);
+
+        for (DefaultObjectRenderer renderer: active_renderers)
         {
-            if (entry.getValue () == provider)
+            if (renderer_mapping.get (renderer) == provider)
             {
-                log.info ("===> refreshing {} / {}", entry.getKey (), entry.getValue ());
-                entry.setValue (null);
-                entry.getKey ().refreshRenderer ();
+                log.info ("===> refreshing {} / {}", renderer, renderer_mapping.get (renderer));
+                renderer_mapping.replace (renderer, null);
+                renderer.refreshRenderer ();
             }
         }
     }

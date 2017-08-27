@@ -20,10 +20,9 @@ import org.lucidj.api.CodeContext;
 import org.lucidj.api.CodeEngine;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
+import org.lucidj.api.DisplayManager;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ObjectManager;
-import org.lucidj.api.ObjectManagerProperty;
 import org.lucidj.api.ServiceContext;
 import org.lucidj.api.ServiceObject;
 import org.lucidj.api.Stdio;
@@ -36,7 +35,7 @@ import java.util.HashMap;
 
 import org.osgi.framework.BundleContext;
 
-public class SmartBox implements ComponentInterface, ObjectManagerProperty, ComponentState
+public class SmartBox implements ComponentInterface, ComponentState
 {
     private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
 
@@ -45,7 +44,7 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
 
     private HashMap<String, Object> properties = new HashMap<>();
 
-    private ObjectManager om;
+    private DisplayManager displayManager;
 
     private String code = "";
 
@@ -60,9 +59,9 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
         objectFactory = serviceContext.getService (bundleContext, ManagedObjectFactory.class);
         log.info ("objectFactory = {}", objectFactory);
 
-        // Create our own ObjectManager
-        ManagedObjectInstance om_instance = objectFactory.newInstance (ObjectManager.class, null);
-        om = om_instance.adapt (ObjectManager.class);
+        // Create our own DisplayManager
+        ManagedObjectInstance om_instance = objectFactory.newInstance (DisplayManager.class, null);
+        displayManager = om_instance.adapt (DisplayManager.class);
     }
 
     // TODO: DECOUPLE THESE OBJECTS INTO PLUGGABLE STRUCTURES
@@ -74,10 +73,10 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
             console = console_instance.adapt (Stdio.class);
         }
 
-        if (show && om.getObject (Stdio.class.getCanonicalName ()) == null)
+        if (show && displayManager.getObject (Stdio.class.getCanonicalName ()) == null)
         {
-            om.showObject (console);
-            om.setObjectTag (console, Stdio.class.getCanonicalName ());
+            displayManager.showObject (console);
+            displayManager.setObjectTag (console, Stdio.class.getCanonicalName ());
         }
 
         return (console);
@@ -115,11 +114,11 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
                 // it is added automatically on the object output
                 if (svcObject instanceof AbstractComponent)
                 {
-                    if (om.getObject (svcName) == null)
+                    if (displayManager.getObject (svcName) == null)
                     {
                         log.info ("fetchService: will show");
-                        om.showObject (svcObject);
-                        om.setObjectTag (svcObject, svcName);
+                        displayManager.showObject (svcObject);
+                        displayManager.setObjectTag (svcObject, svcName);
                     }
                 }
             }
@@ -127,14 +126,14 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
             @Override
             public void outputObject (Object obj)
             {
-                om.showObject (obj);
+                displayManager.showObject (obj);
             }
 
             @Override
             public void started ()
             {
-                // Set proper ObjectManager and SmartBox _inside_ the new running thread
-//                show.setObjectManager (om);
+                // Set proper DisplayManager and SmartBox _inside_ the new running thread
+//                show.setObjectManager (displayManager);
 //                    Pipe.setComponentContext (self);          ---
 //                pragma.setSmartBox (self);
                 setState (RUNNING);
@@ -149,7 +148,7 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
                 {
                     Object obj = code_context.getOutput ();
 
-                    om.showObject (obj);
+                    displayManager.showObject (obj);
 
                     if (obj instanceof Throwable)
                     {
@@ -166,7 +165,7 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
                 }
 
                 // Release screen update if not already done
-                om.release ();
+                displayManager.release ();
 
                 // TODO: ADD LATER SOME AUTO UPDATE
                 //update_pragmas ();
@@ -179,8 +178,8 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
         log.info (">>> RUN {}", code);
         get_console (false).clear ();
 //        get_vaadin (false).removeAllComponents ();
-        om.restrain ();
-        om.clearObjects ();
+        displayManager.restrain ();
+        displayManager.clearObjects ();
         code_engine.exec (code, null);
     }
 
@@ -229,7 +228,7 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
     {
 //        if (Pipe.PIPE_PROPERTY_NAME.equals (name))        // ---
 //        {
-//            return (om);
+//            return (displayManager);
 //        }
         return (properties.get (name));
     }
@@ -251,10 +250,9 @@ public class SmartBox implements ComponentInterface, ObjectManagerProperty, Comp
         return (code);
     }
 
-    @Override // ObjectManagerProperty
-    public ObjectManager getObjectManager ()
+    public DisplayManager _getDisplayManager ()
     {
-        return (om);
+        return (displayManager);
     }
 
     @Override

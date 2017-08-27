@@ -16,9 +16,9 @@
 
 package org.lucidj.objectmanager;
 
+import org.lucidj.api.DisplayManager;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ObjectManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,11 +30,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DefaultObjectManager implements ObjectManager, ManagedObject
+public class DefaultDisplayManager implements DisplayManager, ManagedObject
 {
-    private final transient static Logger log = LoggerFactory.getLogger (DefaultObjectManager.class);
+    private final transient static Logger log = LoggerFactory.getLogger (DefaultDisplayManager.class);
 
-    private List<ObjectManager.ObjectEventListener> objectevent_listeners = new ArrayList<> ();
+    private List<DisplayManager.ObjectEventListener> objectevent_listeners = new ArrayList<> ();
 
     private List<Object> object_list = Collections.synchronizedList (new ArrayList<> ()); // Ugly :P
     private Map<String, Object> tagged_objects = new HashMap<> ();
@@ -47,7 +47,7 @@ public class DefaultObjectManager implements ObjectManager, ManagedObject
 
     public void showObject (Object obj)
     {
-        log.info ("### ObjectManager {} showObject ({})", this, get_object_hash (obj));
+        log.info ("### DisplayManager {} showObject ({})", this, get_object_hash (obj));
 
         // TODO: SUPPORT SHOW NULL OBJECTS
 
@@ -60,7 +60,7 @@ public class DefaultObjectManager implements ObjectManager, ManagedObject
 
     public void showObject (int index, Object obj)
     {
-        for (ObjectManager.ObjectEventListener listener: objectevent_listeners)
+        for (DisplayManager.ObjectEventListener listener: objectevent_listeners)
         {
             // TODO: MAKE ALL THESE Throables BE VISIBLE WHEN SHOWING OBJECTS
             try
@@ -80,7 +80,7 @@ public class DefaultObjectManager implements ObjectManager, ManagedObject
 
     public void removeObject (Object obj)
     {
-        for (ObjectManager.ObjectEventListener listener: objectevent_listeners)
+        for (DisplayManager.ObjectEventListener listener: objectevent_listeners)
         {
             try
             {
@@ -97,7 +97,7 @@ public class DefaultObjectManager implements ObjectManager, ManagedObject
         {
             if (object_list.get (i) != null)
             {
-                for (ObjectManager.ObjectEventListener listener: objectevent_listeners)
+                for (DisplayManager.ObjectEventListener listener: objectevent_listeners)
                 {
                     try
                     {
@@ -114,7 +114,7 @@ public class DefaultObjectManager implements ObjectManager, ManagedObject
 
     public void restrain ()
     {
-        for (ObjectManager.ObjectEventListener listener: objectevent_listeners)
+        for (DisplayManager.ObjectEventListener listener: objectevent_listeners)
         {
             try
             {
@@ -126,7 +126,7 @@ public class DefaultObjectManager implements ObjectManager, ManagedObject
 
     public void release ()
     {
-        for (ObjectManager.ObjectEventListener listener: objectevent_listeners)
+        for (DisplayManager.ObjectEventListener listener: objectevent_listeners)
         {
             try
             {
@@ -205,7 +205,7 @@ public class DefaultObjectManager implements ObjectManager, ManagedObject
 
         log.info ("markAsDirty: om={} obj={}", this, obj);
 
-        for (ObjectManager.ObjectEventListener listener: objectevent_listeners)
+        for (DisplayManager.ObjectEventListener listener: objectevent_listeners)
         {
             log.info ("markAsDirty: changingObject {}", obj);
             try
@@ -228,7 +228,7 @@ public class DefaultObjectManager implements ObjectManager, ManagedObject
     }
 
     @Override
-    public void setObjectEventListener (ObjectManager.ObjectEventListener listener)
+    public void setObjectEventListener (DisplayManager.ObjectEventListener listener)
     {
         objectevent_listeners.add (listener);
 

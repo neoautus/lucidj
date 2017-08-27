@@ -62,7 +62,7 @@ public class SmartBoxRenderer extends VerticalLayout implements Renderer, Editor
 
     private void init ()
     {
-        output_layout = rendererFactory.newRenderer (source.getObjectManager ());
+        output_layout = rendererFactory.newRenderer (source._getDisplayManager ());
         init_main ();
         init_toolbar ();
     }

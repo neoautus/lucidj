@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -18,7 +18,7 @@ package org.lucidj.api;
 
 import java.util.Set;
 
-public interface ObjectManager
+public interface DisplayManager
 {
     void showObject (Object obj);
     void showObject (int index, Object obj);
@@ -38,13 +38,24 @@ public interface ObjectManager
     Set<Object> getDirtyObjects ();
     void setObjectEventListener (ObjectEventListener listener);
 
-    public interface ObjectEventListener
+    interface ObjectEventListener
     {
         void restrain ();
         void release ();
         Object addingObject (Object obj, int index);
         void changingObject (Object obj);
         void removingObject (Object obj, int index);
+    }
+
+    interface Autodisplay
+    {
+        // The component requests automatic display on use
+    }
+
+    interface Clearable
+    {
+        // The component can be cleared (???)
+        void clear ();
     }
 }
 

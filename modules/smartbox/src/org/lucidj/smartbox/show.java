@@ -18,16 +18,17 @@ package org.lucidj.smartbox;
 
 //import bsh.CallStack;
 //import bsh.Interpreter;
-//import org.lucidj.api.ObjectManager;
+//import org.lucidj.api.DisplayManager;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 
+// TODO: MAKE A COMPATIBLE CROSS-LANGUAGE EQUIVALENT
 public class show
 {
 //    private final transient static Logger log = LoggerFactory.getLogger (show.class);
-//    private static ThreadLocal<ObjectManager> current_om = new InheritableThreadLocal<> ();
+//    private static ThreadLocal<DisplayManager> current_om = new InheritableThreadLocal<> ();
 //
-//    public static void setObjectManager (ObjectManager om)
+//    public static void setObjectManager (DisplayManager om)
 //    {
 //        current_om.set (om);
 //    }

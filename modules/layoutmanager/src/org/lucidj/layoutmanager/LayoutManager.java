@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,7 +24,7 @@ import com.vaadin.ui.VerticalLayout;
 import com.ejt.vaadin.sizereporter.ComponentResizeEvent;
 import com.ejt.vaadin.sizereporter.ComponentResizeListener;
 import com.ejt.vaadin.sizereporter.SizeReporter;
-import org.lucidj.api.ObjectManager;
+import org.lucidj.api.DisplayManager;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererFactory;
@@ -38,10 +38,10 @@ import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 
-// LayoutManager is the default renderer for ObjectManager.
-// TODO: RENAME IT TO ObjectManagerRenderer
+// LayoutManager is the default renderer for DisplayManager.
+// TODO: RENAME IT TO DisplayManagerRenderer
 
-public class LayoutManager implements Renderer, ObjectManager.ObjectEventListener, ComponentResizeListener
+public class LayoutManager implements Renderer, DisplayManager.ObjectEventListener, ComponentResizeListener
 {
     private final transient static Logger log = LoggerFactory.getLogger (LayoutManager.class);
 
@@ -157,14 +157,14 @@ public class LayoutManager implements Renderer, ObjectManager.ObjectEventListene
 
     public static boolean isCompatible (Object object)
     {
-        return (object instanceof ObjectManager);
+        return (object instanceof DisplayManager);
     }
 
 
     @Override // Renderer
     public void objectLinked (Object obj)
     {
-        ObjectManager om = (ObjectManager)obj;
+        DisplayManager om = (DisplayManager)obj;
         om.setObjectEventListener (this);
     }
 

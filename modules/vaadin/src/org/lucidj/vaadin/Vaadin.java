@@ -21,6 +21,7 @@ import org.lucidj.api.ManagedObjectInstance;
 
 import com.vaadin.ui.VerticalLayout;
 
+// TODO: MAKE IT _AUTOSERVICE_-COMPATIBLE -- vaadin.etcEtc()
 public class Vaadin extends VerticalLayout implements ManagedObject
 {
     public Vaadin ()

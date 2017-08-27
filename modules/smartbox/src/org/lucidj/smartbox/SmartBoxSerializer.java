@@ -82,7 +82,7 @@ public class SmartBoxSerializer implements Serializer
         instance.setValue ((String)smartbox.getValue ());
 
         // Runtime properties
-        instance.setProperty ("output", smartbox.getObjectManager ().getObjects ());
+        instance.setProperty ("output", smartbox._getDisplayManager ().getObjects ());
         return (true);
     }
 
@@ -108,7 +108,7 @@ public class SmartBoxSerializer implements Serializer
                 log.info ("*** output = {}", object);
                 if (object != null)
                 {
-                    smartbox.getObjectManager ().showObject (object);
+                    smartbox._getDisplayManager ().showObject (object);
                 }
             }
         }

@@ -16,11 +16,11 @@
 
 package org.lucidj.objectmanager;
 
+import org.lucidj.api.DisplayManager;
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ManagedObjectProvider;
-import org.lucidj.api.ObjectManager;
 
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -38,13 +38,13 @@ public class DefaultObjectManagerProvider implements ManagedObjectProvider
     @Validate
     private void validate ()
     {
-        objectFactory.register (ObjectManager.class, this, null);
+        objectFactory.register (DisplayManager.class, this, null);
     }
 
     @Override
     public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
     {
-        return (new DefaultObjectManager ());
+        return (new DefaultDisplayManager ());
     }
 }
 

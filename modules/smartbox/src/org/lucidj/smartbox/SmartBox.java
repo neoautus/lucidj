@@ -50,12 +50,14 @@ public class SmartBox implements ComponentInterface, ComponentState
 
     private Stdio console;
 
+    private ServiceContext serviceContext;
     private ManagedObjectFactory objectFactory;
     private CodeEngine code_engine;
     private CodeContext code_context;
 
     public SmartBox (ServiceContext serviceContext, BundleContext bundleContext)
     {
+        this.serviceContext = serviceContext;
         objectFactory = serviceContext.getService (bundleContext, ManagedObjectFactory.class);
         log.info ("objectFactory = {}", objectFactory);
 
@@ -69,8 +71,7 @@ public class SmartBox implements ComponentInterface, ComponentState
     {
         if (console == null)
         {
-            ManagedObjectInstance console_instance = objectFactory.newInstance (Stdio.class, null);
-            console = console_instance.adapt (Stdio.class);
+            console = serviceContext.newServiceObject (Stdio.class);
         }
 
         if (show && displayManager.getObject (Stdio.class.getCanonicalName ()) == null)

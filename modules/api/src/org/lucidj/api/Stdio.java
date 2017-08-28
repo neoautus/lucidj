@@ -20,13 +20,15 @@ public interface Stdio
 {
     String STDOUT = "OUT";
     String STDERR = "ERR";
-    String HTML = "HTML";
+    String HTML   = "HTML";
 
     void output (String stream, String output);
     void stdout (String output);
     void stderr (String output);
     void stdhtml (String output);
     void clear ();
+    String getRawBuffer ();
+    void setRawBuffer (String value);
 }
 
 // EOF

@@ -17,31 +17,33 @@
 package org.lucidj.console;
 
 import org.lucidj.api.EventHelper;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.ServiceContext;
+import org.lucidj.api.ServiceObject;
 import org.lucidj.api.Stdio;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
+import org.osgi.framework.BundleContext;
+import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@org.apache.felix.ipojo.annotations.Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class ConsoleSerializer implements Serializer, ManagedObjectProvider
+public class ConsoleProvider implements Serializer, ServiceObject.Provider
 {
-    private final static transient Logger log = LoggerFactory.getLogger (ConsoleSerializer.class);
+    @Context
+    private BundleContext bundleContext;
 
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     @Requires
     private SerializerEngine serializer;
@@ -52,8 +54,8 @@ public class ConsoleSerializer implements Serializer, ManagedObjectProvider
     @Validate
     private void validate ()
     {
-        objectFactory.register (Console.class, this, null);
-        objectFactory.register (Stdio.class, this, null);
+        serviceContext.register (Console.class, this);
+        serviceContext.register (Stdio.class, this);
         serializer.register (Console.class, this);
     }
 
@@ -61,7 +63,7 @@ public class ConsoleSerializer implements Serializer, ManagedObjectProvider
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
         // Complete content log including timestamps and tags
-        instance.setValue (((Console)object).getValue ());
+        instance.setValue (((Console)object).getRawBuffer ());
         instance.setObjectClass (Console.class);
         return (true);
     }
@@ -69,16 +71,16 @@ public class ConsoleSerializer implements Serializer, ManagedObjectProvider
     @Override // Serializer
     public Object deserializeObject (SerializerInstance instance)
     {
-        ManagedObjectInstance console_instance = objectFactory.newInstance (Console.class, null);
-        Console console = console_instance.adapt (Console.class);
-        console.setValue (instance.getValue ());
+        Console console = serviceContext.newServiceObject (Console.class);
+        console.setRawBuffer (instance.getValue ());
         return (console);
     }
 
     @Override
-    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
+    public Object newObject (String objectClassName, Map<String, Object> properties)
     {
-        return (new Console (eventHelperFactory.newInstance ()));
+        EventHelper new_event_helper = eventHelperFactory.newInstance ();
+        return (serviceContext.wrapObject (Console.class, new Console (new_event_helper)));
     }
 }
 

@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.layoutmanager;
+package org.lucidj.displaymanager.renderer;
 
 import com.vaadin.server.ClientConnector;
 import com.vaadin.ui.AbstractComponent;
@@ -38,14 +38,11 @@ import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 
-// LayoutManager is the default renderer for DisplayManager.
-// TODO: RENAME IT TO DisplayManagerRenderer
-
-public class LayoutManager implements Renderer, DisplayManager.ObjectEventListener, ComponentResizeListener
+public class DisplayManagerRenderer implements Renderer, DisplayManager.ObjectEventListener, ComponentResizeListener
 {
-    private final transient static Logger log = LoggerFactory.getLogger (LayoutManager.class);
+    private final static Logger log = LoggerFactory.getLogger (DisplayManagerRenderer.class);
 
-    private LayoutManager self = this;
+    private DisplayManagerRenderer self = this;
     private Map<Object, ObjectRenderer> active_renderers = new HashMap<> ();
     private AbstractOrderedLayout layout;
     private SizeReporter sizeReporter;
@@ -54,7 +51,7 @@ public class LayoutManager implements Renderer, DisplayManager.ObjectEventListen
 
     private RendererFactory rendererFactory;
 
-    public LayoutManager (BundleContext bundleContext, ServiceContext serviceContext)
+    public DisplayManagerRenderer (BundleContext bundleContext, ServiceContext serviceContext)
     {
         rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
 
@@ -66,7 +63,7 @@ public class LayoutManager implements Renderer, DisplayManager.ObjectEventListen
             @Override
             public void attach (ClientConnector.AttachEvent attachEvent)
             {
-                // Enable SizeReporter for the whole LayoutManager
+                // Enable SizeReporter for the whole DisplayManagerRenderer
                 sizeReporter = new SizeReporter (layout);
                 sizeReporter.addResizeListener (self);
 
@@ -84,7 +81,7 @@ public class LayoutManager implements Renderer, DisplayManager.ObjectEventListen
             }
         });
 
-        log.info ("new LayoutManager () base_layout={}", layout);
+        log.info ("new DisplayManagerRenderer () base_layout={}", layout);
     }
 
     private String get_object_hash (Object obj)

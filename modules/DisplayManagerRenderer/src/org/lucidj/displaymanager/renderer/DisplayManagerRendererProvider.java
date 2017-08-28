@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.layoutmanager;
+package org.lucidj.displaymanager.renderer;
 
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererFactory;
@@ -32,7 +32,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class LayoutManagerProvider implements RendererProvider
+public class DisplayManagerRendererProvider implements RendererProvider
 {
     @Context
     private BundleContext bundleContext;
@@ -46,9 +46,9 @@ public class LayoutManagerProvider implements RendererProvider
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
-        if (LayoutManager.isCompatible (object))
+        if (DisplayManagerRenderer.isCompatible (object))
         {
-            return (serviceContext.newServiceObject (LayoutManager.class));
+            return (serviceContext.newServiceObject (DisplayManagerRenderer.class));
         }
         return (null);
     }
@@ -57,7 +57,7 @@ public class LayoutManagerProvider implements RendererProvider
     private void validate ()
     {
         serviceContext.putService (bundleContext, RendererFactory.class, rendererFactory);
-        serviceContext.register (LayoutManager.class);
+        serviceContext.register (DisplayManagerRenderer.class);
     }
 }
 

@@ -14,35 +14,36 @@
  * the License.
  */
 
-package org.lucidj.objectmanager;
+package org.lucidj.displaymanager;
 
 import org.lucidj.api.DisplayManager;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
+import org.lucidj.api.ServiceContext;
+import org.lucidj.api.ServiceObject;
 
+import java.util.Map;
+
+import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@org.apache.felix.ipojo.annotations.Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class DefaultObjectManagerProvider implements ManagedObjectProvider
+public class DefaultDisplayManagerProvider implements ServiceObject.Provider
 {
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     @Validate
     private void validate ()
     {
-        objectFactory.register (DisplayManager.class, this, null);
+        serviceContext.register (DisplayManager.class, this);
     }
 
     @Override
-    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
+    public Object newObject (String objectClassName, Map<String, Object> properties)
     {
         return (new DefaultDisplayManager ());
     }

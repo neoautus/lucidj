@@ -14,11 +14,9 @@
  * the License.
  */
 
-package org.lucidj.objectmanager;
+package org.lucidj.displaymanager;
 
 import org.lucidj.api.DisplayManager;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DefaultDisplayManager implements DisplayManager, ManagedObject
+public class DefaultDisplayManager implements DisplayManager
 {
-    private final transient static Logger log = LoggerFactory.getLogger (DefaultDisplayManager.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultDisplayManager.class);
 
     private List<DisplayManager.ObjectEventListener> objectevent_listeners = new ArrayList<> ();
 
@@ -240,18 +238,6 @@ public class DefaultDisplayManager implements DisplayManager, ManagedObject
             log.info ("setObjectEventListener: adding {} {}", i, object_list.get (i));
             listener.addingObject (object_list.get (i), i);
         }
-    }
-
-    @Override
-    public void validate (ManagedObjectInstance instance)
-    {
-
-    }
-
-    @Override
-    public void invalidate (ManagedObjectInstance instance)
-    {
-
     }
 }
 

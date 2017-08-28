@@ -27,7 +27,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/test_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/test_component/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/smartbox_renderer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/objectmanager/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/DisplayManager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/html_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/markdown_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/plotly/src" isTestSource="false" />

@@ -17,7 +17,6 @@
 package org.lucidj.smartbox;
 
 import org.lucidj.api.CodeEngineManager;
-import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
@@ -46,9 +45,6 @@ public class SmartBoxSerializer implements Serializer
     private BundleContext context;
 
     @Requires
-    private ManagedObjectFactory objectFactory;
-
-    @Requires
     private ServiceContext serviceContext;
 
     @Requires
@@ -62,7 +58,6 @@ public class SmartBoxSerializer implements Serializer
     {
         // TODO: PROMOTE SmartBox TO A SYSTEM COMPONENT (REFER QuercusProcessorProvider EXAMPLE)
         serviceContext.register (SmartBox.class);
-        serviceContext.putService (context, ManagedObjectFactory.class, objectFactory);
         serializer.register (SmartBox.class, this);
     }
 

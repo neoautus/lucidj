@@ -21,8 +21,6 @@ import org.lucidj.api.CodeEngine;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.DisplayManager;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.ServiceContext;
 import org.lucidj.api.ServiceObject;
 import org.lucidj.api.Stdio;
@@ -32,8 +30,6 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.ui.AbstractComponent;
 
 import java.util.HashMap;
-
-import org.osgi.framework.BundleContext;
 
 public class SmartBox implements ComponentInterface, ComponentState
 {
@@ -51,19 +47,15 @@ public class SmartBox implements ComponentInterface, ComponentState
     private Stdio console;
 
     private ServiceContext serviceContext;
-    private ManagedObjectFactory objectFactory;
     private CodeEngine code_engine;
     private CodeContext code_context;
 
-    public SmartBox (ServiceContext serviceContext, BundleContext bundleContext)
+    public SmartBox (ServiceContext serviceContext)
     {
         this.serviceContext = serviceContext;
-        objectFactory = serviceContext.getService (bundleContext, ManagedObjectFactory.class);
-        log.info ("objectFactory = {}", objectFactory);
 
         // Create our own DisplayManager
-        ManagedObjectInstance om_instance = objectFactory.newInstance (DisplayManager.class, null);
-        displayManager = om_instance.adapt (DisplayManager.class);
+        displayManager = serviceContext.newServiceObject (DisplayManager.class);
     }
 
     // TODO: DECOUPLE THESE OBJECTS INTO PLUGGABLE STRUCTURES
@@ -304,13 +296,13 @@ public class SmartBox implements ComponentInterface, ComponentState
         state_listener = listener;
     }
 
-    @ServiceObject.Validate // ManagedObject
+    @ServiceObject.Validate
     public void validate ()
     {
         // Nothing for now
     }
 
-    @ServiceObject.Invalidate // ManagedObject
+    @ServiceObject.Invalidate
     public void invalidate ()
     {
         // Nothing for now

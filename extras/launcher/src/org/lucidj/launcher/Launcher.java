@@ -70,7 +70,7 @@ public class Launcher implements ExecuteResultHandler
     }
 
 
-    public static void configure (String app_home_path, String jdk_home_path)
+    public static void configure (String app_home_path, String jdk_home_path, String user_config)
     {
         system_home = app_home_path;
         jdk_home = jdk_home_path;
@@ -86,6 +86,7 @@ public class Launcher implements ExecuteResultHandler
 
         System.setProperty ("system.home", system_home);
         System.setProperty ("system.conf", system_home + "/conf");
+        System.setProperty ("user.conf", user_config);
         System.setProperty ("system.bootstrap", system_home + "/runtime/bootstrap");
         System.setProperty ("system.deploy", system_home + "/runtime/application-dev");
         System.setProperty ("java.endorsed.dirs",
@@ -231,6 +232,7 @@ public class Launcher implements ExecuteResultHandler
         // Container args
         addArgument (cmdline, "system.home", System.getProperty ("system.home"));
         addArgument (cmdline, "system.conf", System.getProperty ("system.conf"));
+        addArgument (cmdline, "user.conf", System.getProperty ("user.conf"));
         addArgument (cmdline, "system.bootstrap", System.getProperty ("system.bootstrap"));
         addArgument (cmdline, "system.deploy", System.getProperty ("system.deploy"));
         addArgument (cmdline, "java.endorsed.dirs", System.getProperty ("java.endorsed.dirs"));

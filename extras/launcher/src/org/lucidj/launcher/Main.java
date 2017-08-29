@@ -18,6 +18,7 @@ package org.lucidj.launcher;
 
 import java.awt.GraphicsEnvironment;
 import java.io.File;
+import java.nio.file.Path;
 
 public class Main
 {
@@ -169,7 +170,18 @@ public class Main
             System.out.println ("JDK Home: '" + jdk_home + "'");
         }
 
-        Launcher.configure (rq_home, jdk_home);
+        Path config_path = Configuration.getConfigPath ();
+
+        if (config_path == null)
+        {
+            System.err.println ("Error: Unable to access any configuration directory");
+            System.err.println ("Is the configuration dir owned by the user?");
+            System.exit (1);
+        }
+
+        System.out.println ("Config: '" + config_path.toString () + "'");
+
+        Launcher.configure (rq_home, jdk_home, config_path.toString ());
 
         // TODO: ADD -v --verbose etc
         if (args.length > 0)
@@ -209,7 +221,7 @@ public class Main
             if ((bundled_jdk = find_embedded_jdk ()) != null)
             {
                 System.out.println ("Warning: Headless mode detected, trying to use bundled JDK");
-                Launcher.configure (rq_home, bundled_jdk);
+                Launcher.configure (rq_home, bundled_jdk, config_path.toString ());
                 Launcher.newLauncher ().launch_gui ();
             }
             else

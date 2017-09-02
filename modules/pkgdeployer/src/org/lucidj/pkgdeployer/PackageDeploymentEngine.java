@@ -466,7 +466,9 @@ public class PackageDeploymentEngine implements DeploymentEngine
             try
             {
                 // Here the native OSGi bundle install
-                return (bundle_manager.installBundle ("reference:file:" + extracted_package_dir, properties));
+                // Notice we install the exploded bundle stored on cache, NOT the jar
+                String runtime_location_ref = "reference:" + runtime_location.toURI ().toString ();
+                return (bundle_manager.installBundle (runtime_location_ref, properties));
             }
             catch (Exception e)
             {

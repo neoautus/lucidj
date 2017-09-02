@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
-#    Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+#    Copyright 2017 NEOautus Ltd. (http://neoautus.com)
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may not
 #    use this file except in compliance with the License. You may obtain a copy of
@@ -14,143 +14,41 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 #
-#    Check: https://karaf.apache.org/manual/latest-2.3.x/users-guide/wrapper.html
-#
 
-### BEGIN INIT INFO
-# Provides: lucidj
-# Required-Start: $network $syslog
-# Required-Stop: $network $syslog
-# X-Start-Before:
-# X-Stop-After:
-# Default-Start: 2 3 4
-# Default-Stop: 0 6
-# Short-Description: This service starts and stops RationalQ services
-### END INIT INFO
+THIS_FILE=`which "$0" 2>/dev/null`
+[ $? -gt 0 -a -f "$0" ] && THIS_FILE="$0"
+CP=$THIS_FILE
+DIR=$(cd "$(dirname "$THIS_FILE")"; pwd)
+echo $DIR
 
-APP_PRODUCT_NAME=lucidj
-APP_SCRIPT_NAME="$(basename "$0")"
-APP_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# Try to get APP_HOME from environment file
-APP_ENV_SETTINGS="$APP_SCRIPT_DIR/../conf/runtime.env"
-if [ -r "$APP_ENV_SETTINGS" ]; then
-    . "$APP_ENV_SETTINGS"
-fi
-
-# If not defined, try to guess from the directory structure
-if [ "x$APP_HOME" = "x" ]; then
-    if [ -d "$APP_SCRIPT_DIR/../runtime" ]; then
-        APP_ENV_SETTINGS="${BASH_SOURCE[0]}"
-        APP_HOME="$(dirname "$APP_SCRIPT_DIR")"
-    else
-        # No guess, try to read system-wide configuration
-        APP_ENV_SETTINGS=/etc/lucidj/runtime.env
-        if [ -r $APP_ENV_SETTINGS ]; then
-            . $APP_ENV_SETTINGS
-        else
-            echo "Missing $APP_ENV_SETTINGS configuration"
-            exit 1
-        fi
-    fi
-fi
-
-# We have something, check if looks valid
-if [ ! -d "$APP_HOME/runtime" ]; then
-    echo "Error from $APP_ENV_SETTINGS: Invalid APP_HOME: $APP_HOME"
-    exit 1
-fi
-
-# We have valid APP_HOME
-export APP_HOME
-
-APP_RUNTIME="$APP_HOME"/runtime
-export APP_RUNTIME
-
-#---------- Helper functions ----------
-
-warn() {
-    echo "${APP_PRODUCT_NAME}: $*"
-}
-
-die() {
-    warn "$*"
-    exit 1
-}
-
-pathCanonical() {
-    local dst="${1}"
-    while [ -h "${dst}" ] ; do
-        ls=`ls -ld "${dst}"`
-        link=`expr "$ls" : '.*-> \(.*\)$'`
-        if expr "$link" : '/.*' > /dev/null; then
-            dst="$link"
-        else
-            dst="`dirname "${dst}"`/$link"
-        fi
-    done
-    local bas=`basename "${dst}"`
-    local dir=`dirname "${dst}"`
-    if [ "$bas" != "$dir" ]; then
-      dst="`pathCanonical "$dir"`/$bas"
-    fi
-    echo "${dst}" | sed -e 's#//#/#g' -e 's#/./#/#g' -e 's#/[^/]*/../#/#g'
-}
-
-locateInstalledJava() {
-    # Setup the Java Virtual Machine
-    if [ "x$cygwin" != "x" ]; then
-        [ -n "$JAVA" ] && JAVA=`cygpath --unix "$JAVA"`
-        [ -n "$JAVA_HOME" ] && JAVA_HOME=`cygpath --unix "$JAVA_HOME"`
-    fi
-
-	if [ "x$JAVA_HOME" = "x" ] && [ "$darwin" = "true" ]; then
-		JAVA_HOME="$(/usr/libexec/java_home -v 1.8)"
+# Cleanup paths for Cygwin
+case "$platform" in
+CYGWIN*)
+	CP=`cygpath --windows --mixed --path "$CP"`
+	;;
+Darwin)
+	if [ -e /System/Library/Frameworks/JavaVM.framework ]
+	then
+		java_args='
+			-Dcom.apple.mrj.application.apple.menu.about.name=LucidJ
+			-Dcom.apple.mrj.application.growbox.intrudes=false
+			-Dapple.laf.useScreenMenuBar=true
+			-Xdock:name=LucidJ
+			-Xdock:icon="$DIR/lucidj.png"
+			-Dfile.encoding=UTF-8
+		'
 	fi
-    if [ "x$JAVA" = "x" ] && [ -r /etc/gentoo-release ] ; then
-        JAVA_HOME=`java-config --jre-home`
-    fi
-    if [ "x$JAVA" = "x" ]; then
-        if [ "x$JAVA_HOME" != "x" ]; then
-            if [ ! -d "$JAVA_HOME" ]; then
-                die "JAVA_HOME is not valid: $JAVA_HOME"
-            fi
-            JAVA="$JAVA_HOME/bin/java"
-        else
-            warn "JAVA_HOME not set; results may vary"
-            JAVA=$(type java 2>/dev/null)
+	;;
+esac
 
-            if [ "x$JAVA" = "x" ]; then
-                # Let's use our embedded JDK
-                JAVA_HOME="$APP_RUNTIME/$(ls -1 "$APP_RUNTIME" | grep '^zulu' | tail -n 1)"
-                JAVA="$JAVA_HOME/bin/java"
-            else
-                JAVA=`expr "$JAVA" : '.* \(/.*\)$'`
-            fi
-        fi
-    fi
+CLASSPATH="$CP"
+export CLASSPATH
 
-    if [ "x$JAVA_HOME" = "x" ]; then
-        JAVA_HOME="$(dirname $(dirname $(pathCanonical "$JAVA")))"
-    fi
-}
-
-#--------------------
-# Spawn the launcher
-#--------------------
-
-locateInstalledJava
-
-if [ ! -d "$JAVA_HOME" ]; then
-    die "Invalid JAVA_HOME: $JAVA_HOME"
+java=java
+if [ -n "$JAVA_HOME" ]
+then
+	java="$JAVA_HOME/bin/java"
 fi
 
-if [ "x$1" != "x" ]; then
-    OPTION="$1"
-else
-    OPTION="$RQ_SCRIPT_NAME"
-fi
-
-$JAVA_HOME/bin/java -jar $APP_HOME/bin/launcher.jar $OPTION
-
-#EOF
+exec "$java" $java_args @MAINCLASS@ "$@"
+exit 1

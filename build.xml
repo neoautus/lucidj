@@ -372,6 +372,8 @@
 
     <target name="build.launcher" depends="launch4j">
 
+        <property name="main-class" value="org.lucidj.launcher.Main"/>
+
         <delete dir="${launcher.dir}"/>
         <mkdir dir="${launcher.dir}"/>
 
@@ -399,7 +401,7 @@
         <!-- Package it to run with 'java -jar' !!!!!!!!!!!!!!!!!!!!! weird place /bin -->
         <jar destfile="${launcher.bin}/launcher.jar" filesonly="true">
             <manifest>
-                <attribute name="Main-Class" value="org.lucidj.launcher.Main"/>
+                <attribute name="Main-Class" value="${main-class}"/>
             </manifest>
             <fileset dir="${launcher.classes.dir}" includes="**/*"/>
             <fileset dir="${launcher.src.dir}" excludes="**/*.java"/>
@@ -430,11 +432,27 @@
             <fileset dir="${launcher.bin}" includes="*.exe"/>
         </chmod>
 
+        <!-- Create a fancy launcher which embeds the Jar within the script and "Works on Mac"(TM) :) -->
+        <property name="fancy-launcher" value="${launcher.bin}/lucidj"/>
+        <echo message="Creating ${fancy-launcher}"/>
+        <copy file="${product.dir}/bin/lucidj" overwrite="true"
+              tofile="${fancy-launcher}" >
+            <filterchain>
+                <replacetokens >
+                    <token key="MAINCLASS" value="${main-class}"/>
+                </replacetokens>
+                <fixcrlf eol="lf" eof="remove" fixlast="true"/>
+            </filterchain>
+        </copy>
+        <concat destfile="${fancy-launcher}" append="yes" binary="true" force="yes">
+            <file name="${launcher.bin}/launcher.jar"/>
+        </concat>
+        <chmod file="${fancy-launcher}" perm="a+x"/>
+
         <!-- Add +x to sh -->
         <chmod perm="uog+rx">
             <fileset dir="${launcher.bin}">
                 <include name="*"/>
-                <!--<include name="*.sh"/>-->
                 <exclude name="*.exe"/>
                 <exclude name="*.bat"/>
                 <exclude name="*.jar"/>

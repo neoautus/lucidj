@@ -127,7 +127,7 @@ public class Launcher implements ExecuteResultHandler
 
     private void addArgument (CommandLine cmdline, String name, String value)
     {
-        cmdline.addArgument ("-D" + name + "=" + value);
+        cmdline.addArgument ("-D" + name + "=" + value, false);
     }
 
     public static String string_join (String delim, String[] elements)
@@ -226,7 +226,7 @@ public class Launcher implements ExecuteResultHandler
             }
 
             cmdline.addArgument ("-classpath");
-            cmdline.addArgument (string_join (path_separator, path_elements), true);
+            cmdline.addArgument (string_join (path_separator, path_elements), false);
         }
 
         // Container args

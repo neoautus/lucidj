@@ -19,7 +19,6 @@ THIS_FILE=`which "$0" 2>/dev/null`
 [ $? -gt 0 -a -f "$0" ] && THIS_FILE="$0"
 CP=$THIS_FILE
 DIR=$(cd "$(dirname "$THIS_FILE")"; pwd)
-echo $DIR
 
 # Cleanup paths for Cygwin
 case "$platform" in

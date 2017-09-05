@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -76,10 +77,34 @@ public class GluonUtil
         }
     }
 
+    public static Path get_data_dir ()
+    {
+        Path data_dir = Paths.get (System.getProperty ("system.home"), "cache", GluonUtil.class.getName ());
+
+        if (!Files.exists (data_dir))
+        {
+            try
+            {
+                Files.createDirectory (data_dir);
+            }
+            catch (IOException e)
+            {
+                return (null);
+            }
+        }
+        return (data_dir);
+    }
+
     public static void dumpRepresentation (GluonInstance root, String filename)
     {
         // TODO: THIS SHOULD BE RECONFIGURABLE
-        Path userdir = FileSystems.getDefault ().getPath (System.getProperty ("system.home"), "local");
+        Path userdir = get_data_dir ();
+
+        if (userdir == null)
+        {
+            return;
+        }
+
         Path destination_path = userdir.resolve (filename);
         Charset cs = Charset.forName ("UTF-8");
         Writer writer = null;

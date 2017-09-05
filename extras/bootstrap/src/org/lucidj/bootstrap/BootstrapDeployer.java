@@ -56,7 +56,7 @@ public class BootstrapDeployer extends Thread implements BundleListener
         setName (this.context.getBundle ().getSymbolicName ());
 
         // TODO: (IN)SANITY CHECKS
-        watched_directory = System.getProperty ("system.home") + "/runtime/system";
+        watched_directory = System.getProperty ("system.home") + "/runtime/kernel";
     }
 
     private String get_state_string (int state)

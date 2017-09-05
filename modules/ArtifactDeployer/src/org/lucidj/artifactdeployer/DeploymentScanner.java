@@ -95,14 +95,14 @@ public class DeploymentScanner implements Runnable
     {
         // Configuration
         // TODO: THIS SHOULD BE RECONFIGURABLE!!!
-        watched_directory = System.getProperty ("system.home") + "/local/Applications";
+        watched_directory = System.getProperty ("system.home") + "/apps";
 
         // Start things
         poll_thread = new Thread (this);
         poll_thread.setName (this.getClass ().getSimpleName ());
         poll_thread.start ();
 
-        log.info ("PkgDeployer started: applications dir = {}", watched_directory);
+        log.info ("DeploymentScanner started: applications dir = {}", watched_directory);
     }
 
     @Invalidate
@@ -116,7 +116,7 @@ public class DeploymentScanner implements Runnable
         }
         catch (InterruptedException ignore) {};
 
-        log.info ("PkgDeployer stopped");
+        log.info ("DeploymentScanner stopped");
     }
 
     @Override // Runnable

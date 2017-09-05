@@ -1427,7 +1427,7 @@
             <local name="bundle.name"/>
             <basename property="bundle.name" file="@{bundleFile}"/>
             <local name="deploy.dir"/>
-            <property name="deploy.dir" value="${stage.dir}/@{bundleTarget}"/>
+            <property name="deploy.dir" value="@{bundleTarget}"/>
             <if><available file="${deploy.dir}" type="dir"/>
                 <then>
                     <copy file="@{bundleFile}" todir="${deploy.dir}" overwrite="true" taskname="autodeploy"/>
@@ -1656,7 +1656,7 @@
                 </then>
             </if>
 
-            <autodeploy bundleFile="${bnd.dist.jar}" bundleTarget="local/Applications"/>
+            <autodeploy bundleFile="${bnd.dist.jar}" bundleTarget="${applications.dir}"/>
 
         </sequential>
     </macrodef>

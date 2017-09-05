@@ -28,8 +28,8 @@ public class Main
     static String bin_dir = file_separator + "bin" + file_separator;
     static String cache_launcher_dir = file_separator + "cache" + file_separator + "launcher" + file_separator;
 
-    static String rq_home;
-    static String jdk_home;
+    static String sys_home = null;
+    static String jdk_home = null;
 
     private static boolean check_path (String path)
     {
@@ -47,7 +47,7 @@ public class Main
                     runtime_dir.exists () && runtime_dir.isDirectory ())
             {
                 // It looks pretty much like home :)
-                rq_home = probable_home;
+                sys_home = probable_home;
                 return (true);
             }
         }
@@ -57,6 +57,16 @@ public class Main
 
     private static boolean get_system_home ()
     {
+        if (sys_home != null)
+        {
+            if (!check_path (sys_home))
+            {
+                System.err.println ("Error: Invalid system home '" + sys_home + "'");
+                System.exit (1);
+            }
+            return (true);
+        }
+
         String[] java_class_path = System.getProperty ("java.class.path").split (path_separator);
         String user_dir = System.getProperty ("user.dir") + file_separator;
 
@@ -99,8 +109,9 @@ public class Main
     private static String find_embedded_jdk ()
     {
         // Not yet. Lets search inside runtime dir
-        File[] file_list = new File (rq_home + "/runtime").listFiles();
+        File[] file_list = new File (sys_home + "/runtime").listFiles();
 
+        // TODO: USE NATURAL ORDER
         for (File file: file_list)
         {
             if (file.isDirectory() && javac_exists (file.getAbsolutePath ()))
@@ -115,6 +126,16 @@ public class Main
 
     private static boolean get_jdk_home ()
     {
+        if (jdk_home != null)
+        {
+            if (!javac_exists (jdk_home))
+            {
+                System.err.println ("Error: Invalid JDK home '" + jdk_home + "'");
+                System.exit (1);
+            }
+            return (true);
+        }
+
         // We ignore a possible JAVA_HOME env, since we'll launch Karaf from
         // within this very java process.
         String java_home = System.getProperty ("java.home");
@@ -142,105 +163,254 @@ public class Main
             }
         }
 
-        // Not yet. Lets search inside runtime dir
-        File[] file_list = new File (rq_home + "/runtime").listFiles();
-
-        for (File file: file_list)
-        {
-            if (file.isDirectory() && javac_exists (file.getAbsolutePath ()))
-            {
-                // Embedded jdk_home
-                jdk_home = file.getAbsolutePath ();
-                return (true);
-            }
-        }
-
-        return (false);
+        // Try to find an embedded JDK
+        return ((jdk_home = find_embedded_jdk ()) != null);
     }
+
+    private enum Operations
+    {
+        START_GUI, START_SINGLE, START_SERVER, STOP, STATUS
+    };
+
+    private static Operations arg_operation = Operations.START_GUI;
+    private static boolean arg_verbose = false;
+    private static boolean arg_dry_run = false;
 
     public static void main (String[] args)
     {
-        if (get_system_home ())
+        for (int pos = 0; pos < args.length; pos++)
         {
-            System.out.println ("System Home: '" + rq_home + "'");
-        }
+            String arg = args [pos];
+            String param = null;
 
-        if (get_jdk_home ())
-        {
-            System.out.println ("JDK Home: '" + jdk_home + "'");
-        }
-
-        Path config_path = Configuration.getConfigPath ();
-
-        if (config_path == null)
-        {
-            System.err.println ("Error: Unable to access any configuration directory");
-            System.err.println ("Is the configuration dir owned by the user?");
-            System.exit (1);
-        }
-
-        System.out.println ("Config: '" + config_path.toString () + "'");
-
-        Launcher.configure (rq_home, jdk_home, config_path.toString ());
-
-        // TODO: ADD -v --verbose etc
-        if (args.length > 0)
-        {
-            String option = args [0];
-
-            // Shift args
-            String[] new_args = new String [args.length - 1];
-            System.arraycopy (args, 1, new_args, 0, new_args.length);
-            args = new_args;
-
-            switch (option)
+            if (arg.contains ("="))
             {
-                case "start":
+                // the option is inline with the argument
+                int eq_pos = arg.indexOf ("=");
+                param = arg.substring (eq_pos + 1);
+                arg = arg.substring (0, eq_pos);
+            }
+
+            //------------------------------
+            // Arguments WITHOUT parameters
+            //------------------------------
+            switch (arg)
+            {
+                case "single":
                 {
-                    Launcher.newLauncher ().start (args);
+                    arg_operation = Operations.START_SINGLE;
+                    arg = null;
+                    break;
+                }
+                case "start":
+                case "server":
+                {
+                    arg_operation = Operations.START_SERVER;
+                    arg = null;
                     break;
                 }
                 case "stop":
                 {
-                    Launcher.newLauncher ().stop (args);
+                    arg_operation = Operations.STOP;
+                    arg = null;
                     break;
                 }
                 case "status":
                 {
-                    Launcher.newLauncher ().status (args);
+                    arg_operation = Operations.STOP;
+                    arg = null;
+                    break;
+                }
+                case "--dry":
+                {
+                    arg_dry_run = true;
+                    arg = null;
+                    break;
+                }
+                case "--verbose":
+                case "-v":
+                {
+                    arg_verbose = true;
+                    arg = null;
                     break;
                 }
             }
-        }
-        else if (GraphicsEnvironment.isHeadless())
-        {
-            String bundled_jdk;
 
-            // Ok, we got a headless java install. Let's try to remedy this by
-            // using our own bundled java, if it's available
-            if ((bundled_jdk = find_embedded_jdk ()) != null)
+            if (arg == null)
             {
-                System.out.println ("Warning: Headless mode detected, trying to use bundled JDK");
-                Launcher.configure (rq_home, bundled_jdk, config_path.toString ());
-                Launcher.newLauncher ().launch_gui ();
+                if (param != null)
+                {
+                    System.err.println ("Error: Argument doesn't requires parameter in '" + args [pos] + "'");
+                    System.exit (1);
+                }
+                // The argument was parsed, proceed to next
+                continue;
             }
-            else
+
+            if (param == null)
             {
-                // TODO: ALSO WRITE A LOG SOMEWHERE
-                System.err.println ("Error: Headless mode detected");
-                System.err.println ("Please run Launcher GUI using a compatible JDK");
+                if (pos + 1 == args.length)
+                {
+                    System.err.println ("Error: Argument needs parameter in '" + arg + "'");
+                    System.exit (1);
+                }
+                // We'll need a parameter for the next arguments
+                pos++;
+                param = args [pos];
             }
+
+            //---------------------------
+            // Arguments WITH parameters
+            //---------------------------
+            switch (arg)
+            {
+                case "--jdk":
+                {
+                    jdk_home = param;
+                    arg = null;
+                    break;
+                }
+                case "--home":
+                {
+                    sys_home = param;
+                    arg = null;
+                    break;
+                }
+            }
+
+            // If arg is not null, it was NOT recognized as single option nor option with parameters
+            if (arg != null)
+            {
+                System.err.println ("Error: Unknown argument '" + arg + "'");
+                System.exit (1);
+            }
+        }
+
+        if (!get_system_home ())
+        {
+            System.err.println ("Error: Missing system home");
+            System.exit (1);
+        }
+
+        if (!get_jdk_home ())
+        {
+            System.err.println ("Error: Missing system home");
+            System.exit (1);
+        }
+
+        // No config path means Server Mode
+        Path config_path = null;
+
+        if (arg_operation == Operations.START_SINGLE || arg_operation == Operations.START_GUI)
+        {
+            // On Single-User Mode, the configuration dir belongs to the $USER (like $HOME/.config/LucidJ)
+            config_path = Configuration.getConfigPath ();
+
+            if (config_path == null)
+            {
+                System.err.println ("Error: Unable to access any configuration directory");
+                System.err.println ("Is the configuration dir owned by the user?");
+                System.exit (1);
+            }
+        }
+
+        System.out.println ("System Home: " + sys_home);
+        System.out.println ("JDK Home: " + jdk_home);
+
+        if (config_path != null)
+        {
+            System.out.println ("Config: Single-User Mode (" + config_path.toString () + ")");
         }
         else
         {
-            // No args, launch the UI
-            java.awt.EventQueue.invokeLater(new Runnable()
+            System.out.println ("Config: Server Mode");
+        }
+
+        Launcher.configure (sys_home, jdk_home, config_path);
+
+        switch (arg_operation)
+        {
+            case START_SINGLE:
+            case START_SERVER:
             {
-                public void run()
+                if (arg_dry_run)
                 {
-                    new LauncherUI ().setVisible (true);
+                    String mode = (arg_operation == Operations.START_SINGLE)? "single mode": "server mode";
+                    System.out.println ("dry-run: Start system (" + mode + ")");
                 }
-            });
+                else
+                {
+                    Launcher.newLauncher ().start (args);
+                }
+                break;
+            }
+            case STOP:
+            {
+                if (arg_dry_run)
+                {
+                    System.out.println ("dry-run: Stop system");
+                }
+                else
+                {
+                    Launcher.newLauncher ().stop (args);
+                }
+                break;
+            }
+            case STATUS:
+            {
+                if (arg_dry_run)
+                {
+                    System.out.println ("dry-run: Show system status");
+                }
+                else
+                {
+                    Launcher.newLauncher ().status (args);
+                }
+                break;
+            }
+            case START_GUI:
+            {
+                if (arg_dry_run)
+                {
+                    System.out.println ("dry-run: Launch GUI");
+                }
+                else if (GraphicsEnvironment.isHeadless ())
+                {
+                    String bundled_jdk;
+
+                    // Ok, we got a headless java install. Let's try to remedy this by
+                    // using our own bundled java, if it's available
+                    if ((bundled_jdk = find_embedded_jdk ()) != null)
+                    {
+                        System.out.println ("Warning: Headless mode detected, trying to use bundled JDK");
+                        Launcher.configure (sys_home, bundled_jdk, config_path);
+                        Launcher.newLauncher ().launch_gui ();
+                    }
+                    else
+                    {
+                        // TODO: ALSO WRITE A LOG SOMEWHERE
+                        System.err.println ("Error: Headless mode detected");
+                        System.err.println ("Please run Launcher GUI using a compatible JDK");
+                    }
+                }
+                else // Graphics Environment available
+                {
+                    // Launch the UI
+                    java.awt.EventQueue.invokeLater (new Runnable()
+                    {
+                        public void run()
+                        {
+                            new LauncherUI ().setVisible (true);
+                        }
+                    });
+                }
+                break;
+            }
+            default:
+            {
+                System.err.println ("Warning: Unknown internal operation");
+                break;
+            }
         }
     }
 }

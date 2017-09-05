@@ -277,6 +277,13 @@
         <ant target="run"/>
     </target>
 
+    <target name="single">
+        <!-- TODO: BUILD STAGE IF NOT AVAILABLE -->
+        <java jar="${launcher.bin}/launcher.jar" fork="true" failonerror="true">
+            <arg value="single"/>
+        </java>
+    </target>
+
     <target name="stop">
         <java jar="${launcher.bin}/launcher.jar" fork="true" failonerror="true">
             <arg value="stop"/>

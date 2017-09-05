@@ -450,7 +450,7 @@ public class LauncherUI extends JFrame
                 if (jButton1.getText ().equalsIgnoreCase ("start"))
                 {
                     print ("Starting Karaf... ");
-                    Launcher.newLauncher ().start (null);
+                    Launcher.newLauncher ().start (new String[] { "single" });
                     show_status (current_status = STATUS_STARTING);
                 }
                 else

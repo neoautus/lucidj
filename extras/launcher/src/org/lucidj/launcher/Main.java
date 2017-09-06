@@ -231,6 +231,7 @@ public class Main
                 case "-v":
                 {
                     arg_verbose = true;
+                    Launcher.setVerbose (true);
                     arg = null;
                     break;
                 }

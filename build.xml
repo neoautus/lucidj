@@ -967,7 +967,13 @@
         <mkdir dir="${applications.dir}"/>
 
 	    <!-- Apache Karaf is unziped first so it can be overwritten if needed -->
-        <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${runtime.dir}"/>
+        <property name="karaf.rt.dir" value="${runtime.dir}/Apache-Karaf/${karaf.release}"/>
+        <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${karaf.rt.dir}"/>
+        <copy todir="${karaf.rt.dir}" overwrite="true">
+            <fileset dir="${basedir}/extras/Apache-Karaf/${karaf.release}"
+                 includes="**/*"/>
+        </copy>
+
 
         <copy todir="${stage.dir}" overwrite="true">
             <fileset dir="${product.dir}" includes="**/*"/>

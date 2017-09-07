@@ -112,7 +112,7 @@ public class SmartPush
             }
             else if (now - prepare_push > (PUSH_INTERVAL - CHECK_INTERVAL - 1))
             {
-                VaadinSession session = VaadinSession.getCurrent ();
+                VaadinSession session = ui.getSession ();
                 Lock lock = session.getLockInstance ();
 
                 try

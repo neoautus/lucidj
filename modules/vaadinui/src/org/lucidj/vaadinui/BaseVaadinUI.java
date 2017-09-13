@@ -16,6 +16,7 @@
 
 package org.lucidj.vaadinui;
 
+import com.vaadin.annotations.JavaScript;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.StyleSheet;
@@ -44,26 +45,19 @@ import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.ServiceContext;
+import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.handlers.event.Publishes;
-import org.apache.felix.ipojo.handlers.event.publisher.Publisher;
-
 @Theme ("valo")
 @Title ("LucidJ Console")
 @Widgetset ("xyz.kuori.CustomWidgetSet")
+@JavaScript ("vaadin://~/vaadinui_libraries/lucidj-vaadin-helper.js")
 @StyleSheet ("vaadin://~/vaadinui_libraries/styles.css")
-@Component (immediate = true)
-@Instantiate
-@Provides (specifications = UI.class)
 @Push (PushMode.MANUAL)
 @PreserveOnRefresh
 public class BaseVaadinUI extends UI
@@ -80,14 +74,20 @@ public class BaseVaadinUI extends UI
     // TODO: DEFINE A WAY TO SHARE GLOBAL DEFINES/CONFIGS
     private int default_sidebar_width_pixels = 240;
 
-    @Requires
     private SecurityEngine security;
-
-    @Requires
     private ManagedObjectFactory object_factory;
 
-    @Publishes (name = "searchbox", topics = "search", dataKey = "args")
-    private Publisher search;
+//    @Publishes (name = "searchbox", topics = "search", dataKey = "args")
+//    private Publisher search;
+
+    @ServiceObject.Context
+    private ServiceContext serviceContext;
+
+    public BaseVaadinUI (SecurityEngine security, ManagedObjectFactory object_factory)
+    {
+        this.security = security;
+        this.object_factory = object_factory;
+    }
 
     //=========================================================================================
     // LAYOUTS
@@ -157,12 +157,26 @@ public class BaseVaadinUI extends UI
                             if (search_args != null)
                             {
                                 log.info ("SEARCH: {}", search_args);
-                                search.sendData (search_text.getValue ());
+//                                search.sendData (search_text.getValue ());
                             }
                         }
                     });
                 }
                 header_components.addComponent (search_component);
+
+            //+++
+                Button test_reload = new Button ("R");
+                header_components.addComponent (test_reload);
+                test_reload.addClickListener (new Button.ClickListener ()
+                {
+                    @Override
+                    public void buttonClick (Button.ClickEvent clickEvent)
+                    {
+                        BaseVaadinUI.this.getPage ().getJavaScript()
+                            .execute("window.lucidj_vaadin_helper.reloadStyleSheet ('/VAADIN/themes/valo/styles.css')");
+                    }
+                });
+            //---
 
                 // User component
                 user_component = new HorizontalLayout ();
@@ -173,8 +187,8 @@ public class BaseVaadinUI extends UI
                 header_components.addComponent (user_component);
 
                 // I swear someday I'll learn CSS, AFTER implementing my own distributed
-                // operating system with virtual reality interface and a machine learning kernel,
-                // as a preparation for the task.
+                // operating system with augmented reality interface and a machine learning kernel,
+                // all written in Z80 assembly, as a preparation for the task.
                 Label spacer = new Label ();
                 spacer.setWidthUndefined ();
                 header_components.addComponent (spacer);
@@ -200,6 +214,7 @@ public class BaseVaadinUI extends UI
     {
         initSystemToolbar ();
 
+        // TODO: ServiceObjects
         ManagedObjectInstance[] desktops = object_factory.getManagedObjects (DesktopInterface.class, null);
 
         if (desktops.length > 0)
@@ -233,7 +248,7 @@ public class BaseVaadinUI extends UI
             VaadinServletRequest vsr = (VaadinServletRequest)vaadinRequest;
             InetAddress remote_addr = null;
 
-            // TODO: STILL CRAPPY, FIND A BETTER WAY
+            // TODO: USE AUTOMATIC KEY AUTHENTICATION FOR SINGLE MODE
             try
             {
                 remote_addr = InetAddress.getByName (vsr.getRemoteAddr ());
@@ -293,7 +308,7 @@ public class BaseVaadinUI extends UI
 
         if (desktop != null)
         {
-            desktop.detach ();
+            desktop.attach ();
         }
     }
 

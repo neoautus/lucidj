@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 
+import com.vaadin.server.ClientConnector;
 import com.vaadin.server.UIClassSelectionEvent;
 import com.vaadin.server.UICreateEvent;
 import com.vaadin.server.VaadinSession;
@@ -35,9 +36,11 @@ import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpContext;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.vaadin.annotations.VaadinServletConfiguration;
 import com.vaadin.server.DeploymentConfiguration;
@@ -48,18 +51,27 @@ import com.vaadin.server.UIProvider;
 import com.vaadin.server.VaadinServlet;
 import com.vaadin.server.VaadinServletService;
 
+import java.net.URL;
 import java.util.Dictionary;
+import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @WebServlet (asyncSupported = true)
 @VaadinServletConfiguration (ui = UI.class, productionMode = false, heartbeatInterval = 180)
-public class BaseVaadinServlet extends VaadinServlet implements SessionInitListener
+public class BaseVaadinServlet extends VaadinServlet
+    implements SessionInitListener, ClientConnector.AttachListener, ClientConnector.DetachListener
 {
-    private final transient static Logger log = LoggerFactory.getLogger (BaseVaadinServlet.class);
+    private final static Logger log = LoggerFactory.getLogger (BaseVaadinServlet.class);
 
     private DefaultUIProvider default_provider = new DefaultUIProvider ();
+    private URLServiceTracker url_tracker;
+    private Set<UI> attached_uis = new HashSet<> ();
+    private ExecutorService background = Executors.newSingleThreadExecutor ();
 
     @Context
     private BundleContext bundleContext;
@@ -85,6 +97,10 @@ public class BaseVaadinServlet extends VaadinServlet implements SessionInitListe
         init_params.put ("org.atmosphere.websocket.maxIdleTime", "86400000"); // 24h
 
         httpService.registerServlet ("/*", this, init_params, ctx);
+
+        // Enable URL tracking
+        url_tracker = new URLServiceTracker ();
+        url_tracker.open ();
     }
 
     @Override
@@ -109,6 +125,52 @@ public class BaseVaadinServlet extends VaadinServlet implements SessionInitListe
         }
     }
 
+    @Override // ClientConnector.AttachListener
+    public void attach (ClientConnector.AttachEvent attachEvent)
+    {
+        synchronized (attached_uis)
+        {
+            attached_uis.add (attachEvent.getConnector ().getUI ());
+        }
+    }
+
+    @Override // ClientConnector.DetachListener
+    public void detach (ClientConnector.DetachEvent detachEvent)
+    {
+        synchronized (attached_uis)
+        {
+            attached_uis.remove (detachEvent.getConnector ().getUI ());
+        }
+    }
+
+    private void refresh_attached_uis ()
+    {
+        UI[] attached_ui_array;
+
+        synchronized (attached_uis)
+        {
+            attached_ui_array = attached_uis.toArray (new UI [0]);
+        }
+
+        log.info ("Refreshing CSS on UIs: {} attached", attached_ui_array.length);
+
+        for (UI ui: attached_ui_array)
+        {
+            try
+            {
+                log.info ("Refreshing CSS on: {}", ui);
+                ui.getPage ().getJavaScript()
+                    .execute("window.lucidj_vaadin_helper.reloadStyleSheet ('"
+                             + VaadinMapper.VAADIN_DYNAMIC_STYLES_CSS
+                             + "')");
+            }
+            catch (Throwable quirk)
+            {
+                log.error ("Quirk ocurred refreshing attached UI: {}", ui, quirk);
+            }
+        }
+    }
+
     public class DefaultUIProvider extends UIProvider
     {
         @Override
@@ -120,7 +182,38 @@ public class BaseVaadinServlet extends VaadinServlet implements SessionInitListe
         @Override
         public UI createInstance (UICreateEvent event)
         {
-            return (serviceContext.wrapObject (UI.class, new BaseVaadinUI (securityEngine, managedObjectFactory)));
+            UI new_ui = new BaseVaadinUI (securityEngine, managedObjectFactory);
+            new_ui.addAttachListener (BaseVaadinServlet.this);
+            new_ui.addDetachListener (BaseVaadinServlet.this);
+            return (serviceContext.wrapObject (UI.class, new_ui));
+        }
+    }
+
+    class URLServiceTracker extends ServiceTracker<URL, URL>
+    {
+        public URLServiceTracker ()
+        {
+            super (bundleContext, URL.class, null);
+        }
+
+        @Override
+        public URL addingService (ServiceReference<URL> serviceReference)
+        {
+            String extension = (String)serviceReference.getProperty ("extension");
+
+            if (extension != null && extension.equals ("css"))
+            {
+                background.submit (new Runnable ()
+                {
+                    @Override
+                    public void run ()
+                    {
+                        refresh_attached_uis ();
+                    }
+                });
+                return (bundleContext.getService (serviceReference));
+            }
+            return (null);
         }
     }
 }

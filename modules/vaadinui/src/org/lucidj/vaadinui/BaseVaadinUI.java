@@ -62,7 +62,7 @@ import java.net.UnknownHostException;
 @PreserveOnRefresh
 public class BaseVaadinUI extends UI
 {
-    private final static transient Logger log = LoggerFactory.getLogger (BaseVaadinUI.class);
+    private final static Logger log = LoggerFactory.getLogger (BaseVaadinUI.class);
 
     private DesktopInterface desktop;
     private SmartPush smart_push;
@@ -163,20 +163,6 @@ public class BaseVaadinUI extends UI
                     });
                 }
                 header_components.addComponent (search_component);
-
-            //+++
-                Button test_reload = new Button ("R");
-                header_components.addComponent (test_reload);
-                test_reload.addClickListener (new Button.ClickListener ()
-                {
-                    @Override
-                    public void buttonClick (Button.ClickEvent clickEvent)
-                    {
-                        BaseVaadinUI.this.getPage ().getJavaScript()
-                            .execute("window.lucidj_vaadin_helper.reloadStyleSheet ('/VAADIN/themes/valo/styles.css')");
-                    }
-                });
-            //---
 
                 // User component
                 user_component = new HorizontalLayout ();

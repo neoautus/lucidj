@@ -45,12 +45,12 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Instantiate
 class VaadinMapper extends HttpServlet implements HttpContext
 {
-    private final static transient Logger log = LoggerFactory.getLogger (VaadinMapper.class);
+    private final static Logger log = LoggerFactory.getLogger (VaadinMapper.class);
     private final static String VAADIN_RESOURCE_ALIAS = "/VAADIN";
     private final static String VAADIN_RESOURCE_NAME = "/VAADIN";
 
     // CSS content automagically generated from published styles.css
-    private final static String VAADIN_DYNAMIC_STYLES_CSS = "/VAADIN/~/dynamic.css";
+    public final static String VAADIN_DYNAMIC_STYLES_CSS = "/VAADIN/~/dynamic.css";
 
     @Requires (optional = true, filter = "(extension=css)")
     private URL[] published_css_files;
@@ -90,7 +90,7 @@ class VaadinMapper extends HttpServlet implements HttpContext
         {
             Bundle[] bundle_list = context.getBundles ();
 
-            for (Bundle bundle : bundle_list)
+            for (Bundle bundle: bundle_list)
             {
                 found_resource = look_for_resource (bundle, name);
 
@@ -135,7 +135,7 @@ class VaadinMapper extends HttpServlet implements HttpContext
                 out.write (timestamp.getBytes ());
 
                 // Copy every published CSS
-                for (URL url : published_css_files)
+                for (URL url: published_css_files)
                 {
                     // Simple header
                     String source = "/* [[" + url.toString () + "]] */\n";

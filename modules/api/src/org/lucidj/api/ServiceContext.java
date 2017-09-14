@@ -16,9 +16,11 @@
 
 package org.lucidj.api;
 
+import java.net.URL;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 public interface ServiceContext
 {
@@ -35,6 +37,9 @@ public interface ServiceContext
 
     <T> T    getService (BundleContext context, Class<T> type);
     <T> void putService (BundleContext context, Class<T> type, T service);
+
+    ServiceRegistration publishUrl (BundleContext context, String localUrl);
+    ServiceRegistration publishUrl (BundleContext context, URL url);
 }
 
 // EOF

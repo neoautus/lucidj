@@ -57,7 +57,7 @@ import java.net.UnknownHostException;
 @Title ("LucidJ Console")
 @Widgetset ("xyz.kuori.CustomWidgetSet")
 @JavaScript ("vaadin://~/vaadinui_libraries/lucidj-vaadin-helper.js")
-@StyleSheet ("vaadin://~/vaadinui_libraries/styles.css")
+@StyleSheet ({ "vaadin://~/vaadinui_libraries/styles.css", "vaadin://~/dynamic.css" })
 @Push (PushMode.MANUAL)
 @PreserveOnRefresh
 public class BaseVaadinUI extends UI

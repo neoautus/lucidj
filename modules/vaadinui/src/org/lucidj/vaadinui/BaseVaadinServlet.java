@@ -92,7 +92,6 @@ public class BaseVaadinServlet extends VaadinServlet implements SessionInitListe
         throws ServiceException
     {
         VaadinServletService servletService = super.createServletService (deploymentConfiguration);
-        log.info ("servletService = {}", servletService);
         servletService.addSessionInitListener (this);
         return (servletService);
     }
@@ -108,18 +107,6 @@ public class BaseVaadinServlet extends VaadinServlet implements SessionInitListe
         {
             log.error ("Error setting OSGi resource handler; you may find problems retrieving class resources.");
         }
-    }
-
-    public static class CustomVaadinServletService extends VaadinServletService
-    {
-
-        public CustomVaadinServletService (VaadinServlet servlet, DeploymentConfiguration deploymentConfiguration)
-            throws ServiceException
-        {
-            super (servlet, deploymentConfiguration);
-        }
-
-        // TODO: TRACK IP -- SLF4J MDC
     }
 
     public class DefaultUIProvider extends UIProvider

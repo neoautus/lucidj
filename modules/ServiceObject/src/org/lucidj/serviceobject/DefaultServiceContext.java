@@ -27,9 +27,13 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -39,6 +43,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.BundleTracker;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
@@ -409,6 +414,42 @@ public class DefaultServiceContext implements ServiceContext
         Map<String, Object> properties = get_properties (context.getBundle ().getBundleId ());
         properties.put (type.getName (), service);
         log.info ("(***) putService: bundle={} type={} service={}", context.getBundle (), type, service);
+    }
+
+    @Override
+    public ServiceRegistration publishUrl (BundleContext context, String bundleUrl)
+    {
+        try
+        {
+            if (bundleUrl.contains ("://"))
+            {
+                return (publishUrl (context, new URL (bundleUrl)));
+            }
+            else
+            {
+                return (publishUrl (context, context.getBundle ().getResource (bundleUrl)));
+            }
+        }
+        catch (MalformedURLException e)
+        {
+            log.error ("Malformed URL: {} in {}", e.getMessage (), bundleUrl);
+            return (null);
+        }
+    }
+
+    @Override
+    public ServiceRegistration publishUrl (BundleContext context, URL url)
+    {
+        Dictionary<String, Object> props = new Hashtable<> ();
+        props.put ("value", url.toString ());
+        String path = (url.getPath () != null)? url.getPath (): "";
+        String filename = path.contains ("/")? path.substring (path.lastIndexOf ("/")): path;
+        String extension = filename.contains (".")? filename.substring (filename.lastIndexOf (".") + 1): "";
+        props.put ("extension", extension);
+
+        // Because we register on bundle's context, the service is
+        // automatically unregistered when the bundle becomes invalid.
+        return (context.registerService (URL.class, url, props));
     }
 
     private void bundle_cleanup (Bundle departing_bundle)

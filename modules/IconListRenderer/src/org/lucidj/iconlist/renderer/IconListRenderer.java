@@ -18,35 +18,85 @@ package org.lucidj.iconlist.renderer;
 
 import org.lucidj.api.Renderer;
 import org.lucidj.api.ServiceObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.vaadin.event.LayoutEvents;
-import com.vaadin.shared.ui.label.ContentMode;
+import com.vaadin.server.ClassResource;
+import com.vaadin.server.Resource;
+import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.DragAndDropWrapper;
-import com.vaadin.ui.Label;
+import com.vaadin.ui.themes.ValoTheme;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
-import org.osgi.framework.BundleContext;
-
-public class IconListRenderer extends CssLayout implements Renderer, LayoutEvents.LayoutClickListener
+public class IconListRenderer extends CssLayout implements
+    Renderer, LayoutEvents.LayoutClickListener, Button.ClickListener
 {
+    private final static Logger log = LoggerFactory.getLogger (IconListRenderer.class);
+
     private List<Map<String, Object>> source;
 
     private LayoutEvents.LayoutClickListener layout_click_listener;
+    private volatile Button.ClickEvent click_event;
+    private Timer debouncer_timer = new Timer ();
 
     private Map<Object, AbstractComponent> component_to_vaadin = new HashMap<> ();
 
-    private BundleContext bundleContext;
+    private Resource default_icon;
 
-    public IconListRenderer (BundleContext bundleContext)
+    public IconListRenderer ()
     {
-        this.bundleContext = bundleContext;
+        default_icon = new ClassResource (this.getClass (), "/public/tangram-icon-512x512.png");
+        setWidth (100, Unit.PERCENTAGE);
         addLayoutClickListener (this);
+    }
+
+    private void button_caption_wrap (Button b)
+    {
+        String caption = b.getCaption ();
+        int wrap_len = 12;
+
+        if (caption.length () > wrap_len)
+        {
+            String[] words = caption.split ("\\s");
+            String twoliner = "";
+            int space_left = 0;
+            int lines = 0;
+            caption = "";
+
+            // Simple greedy wrapping
+            for (String word: words)
+            {
+                int len = word.length ();
+
+                if (len + 1 > space_left)
+                {
+                    if (lines++ == 2)
+                    {
+                        twoliner = caption + "\u2026"; // Unicode ellipsis
+                    }
+                    caption += caption.isEmpty ()? word: "<br/>" + word;
+                    space_left = wrap_len - len;
+                }
+                else
+                {
+                    caption += " " + word;
+                    space_left -= len + 1;
+                }
+            }
+            b.setCaptionAsHtml (true);
+            b.setCaption (twoliner.isEmpty ()? caption: twoliner);
+        }
+        b.setDescription (caption);
     }
 
     private AbstractComponent create_icon (Map<String, Object> component)
@@ -65,35 +115,28 @@ public class IconListRenderer extends CssLayout implements Renderer, LayoutEvent
             icon_title = "No title";
         }
 
+        Resource icon_resource = default_icon;
+
         String icon_url = (String)component.get ("iconUrl");
 
-        if (icon_url == null)
+        if (icon_url != null)
         {
-            icon_url = "/VAADIN/~/" + bundleContext.getBundle ().getSymbolicName () + "/tangram-icon-512x512.png";
+            icon_resource = new ThemeResource (icon_url);
         }
 
-        int base_width = 6;
-        int margin_h_size_px = base_width / 2;
-        int margin_v_size_px = base_width;
-        int icon_size_px = base_width * 6;
-        int font_size_px = 2 * base_width + 2;
-        int icon_box_width_px = base_width * 12;
-
-        String icon_html =
-            "<div style='text-align: center; height:auto; display:inline-block; " +
-            "margin:" + margin_v_size_px + "px " + margin_h_size_px + "px;" +
-            "width:" + icon_box_width_px + "px; line-height:1.1em;'>" +
-            "<img src='" + icon_url + "' " +
-            "width='" + icon_size_px + "px' height='" + icon_size_px + "px' />" +
-            "<div style='white-space:normal; word-wrap:break-word; font-weight: 400;" +
-            "font-size:" + font_size_px + "px;'>" + icon_title + "</div>" +
-            "</div>";
-
-        Label icon_label = new Label (icon_html, ContentMode.HTML);
-        icon_label.setWidthUndefined ();
+        Button button_icon = new Button (icon_title);
+        button_icon.setIcon (icon_resource);
+        button_icon.addStyleName (ValoTheme.BUTTON_BORDERLESS);
+        button_icon.addStyleName (ValoTheme.BUTTON_SMALL);
+        button_icon.addStyleName (ValoTheme.BUTTON_ICON_ALIGN_TOP);
+        button_icon.addStyleName ("x-icon-button");
+        button_icon.addStyleName ("icon-size-32");
+        button_icon.addClickListener (this);
+        button_icon.setWidthUndefined ();
+        button_caption_wrap (button_icon);
 
         // Put the component in a D&D wrapper and allow dragging it
-        final DragAndDropWrapper icon_dd_wrap = new DragAndDropWrapper (icon_label);
+        final DragAndDropWrapper icon_dd_wrap = new DragAndDropWrapper (button_icon);
         icon_dd_wrap.setDragStartMode (DragAndDropWrapper.DragStartMode.COMPONENT);
 
         // Set the wrapper to wrap tightly around the component
@@ -102,7 +145,7 @@ public class IconListRenderer extends CssLayout implements Renderer, LayoutEvent
 
         // Set canonical_name for drag-drop AND on the Label for double-click
         icon_dd_wrap.setId (canonical_name);
-        icon_label.setId (canonical_name);
+        button_icon.setId (canonical_name);
 
         // Remember this association
         component_to_vaadin.put (component, icon_dd_wrap);
@@ -134,12 +177,41 @@ public class IconListRenderer extends CssLayout implements Renderer, LayoutEvent
         }
     }
 
-    @Override
+    @Override // Button.ClickListener
+    public void buttonClick (Button.ClickEvent clickEvent)
+    {
+        if (click_event == null)
+        {
+            // Click arrived, fire it in 5ms if it's alone
+            click_event = clickEvent;
+            debouncer_timer.schedule (new TimerTask ()
+            {
+                @Override
+                public void run ()
+                {
+                    // Debounce click-click to double-click
+                    if (click_event != null)
+                    {
+                        log.info ("**--CLICK--** CLICK! component = {}", click_event.getButton ());
+                        click_event = null;
+                    }
+                }
+            }, 200/*ms*/);
+        }
+        else
+        {
+            // Click-click cancel each other, double-click is comming
+            click_event = null;
+        }
+    }
+
+    @Override // LayoutEvents.LayoutClickListener
     public void layoutClick (LayoutEvents.LayoutClickEvent layoutClickEvent)
     {
-        if (layout_click_listener != null)
+        if (layoutClickEvent.isDoubleClick ())
         {
-            layout_click_listener.layoutClick (layoutClickEvent);
+            log.info ("**--DOUBLE-CLICK--** component => {}", layoutClickEvent.getClickedComponent ());
+            click_event = null;
         }
     }
 

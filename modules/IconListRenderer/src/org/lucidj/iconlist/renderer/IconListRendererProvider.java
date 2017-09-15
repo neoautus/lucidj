@@ -20,7 +20,9 @@ import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererProvider;
 import org.lucidj.api.ServiceContext;
 
+import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -33,6 +35,9 @@ public class IconListRendererProvider implements RendererProvider
 {
     @Requires
     private ServiceContext serviceContext;
+
+    @Context
+    private BundleContext bundleContext;
 
     @Override
     public Renderer getCompatibleRenderer (Object object)
@@ -47,6 +52,7 @@ public class IconListRendererProvider implements RendererProvider
     @Validate
     private void validate ()
     {
+        serviceContext.publishUrl (bundleContext, "/public/styles.css");
         serviceContext.register (IconListRenderer.class);
     }
 }

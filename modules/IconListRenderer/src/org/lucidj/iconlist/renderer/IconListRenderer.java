@@ -192,7 +192,8 @@ public class IconListRenderer extends CssLayout implements
                     // Debounce click-click to double-click
                     if (click_event != null)
                     {
-                        log.info ("**--CLICK--** CLICK! component = {}", click_event.getButton ());
+                        // Bubble-up the click event
+                        fireEvent (clickEvent);
                         click_event = null;
                     }
                 }
@@ -208,17 +209,16 @@ public class IconListRenderer extends CssLayout implements
     @Override // LayoutEvents.LayoutClickListener
     public void layoutClick (LayoutEvents.LayoutClickEvent layoutClickEvent)
     {
+        // There's no need to bubble-up the event since the foreign
+        // listeners are already attached directly to this component
+        // via bypass. We only need to do local housekeeping.
+
         if (layoutClickEvent.isDoubleClick ())
         {
-            log.info ("**--DOUBLE-CLICK--** component => {}", layoutClickEvent.getClickedComponent ());
+            // Back to default state
             click_event = null;
         }
     }
-
-//    public void setPaletteClickListener (LayoutEvents.LayoutClickListener listener)
-//    {
-//        layout_click_listener = listener;
-//    }
 
     public static boolean isCompatible (Object object)
     {

@@ -28,6 +28,7 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Label;
 
+// TODO: ADD RENDERING CONTEXT, LIKE: PREVIEW, READONLY, EDIT, VIEW, ETC
 public class DefaultObjectRenderer extends CustomComponent implements ObjectRenderer, EventHelper.Subscriber
 {
     private final static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
@@ -159,24 +160,38 @@ public class DefaultObjectRenderer extends CustomComponent implements ObjectRend
     @Override // CustomComponent
     protected void setCompositionRoot (Component compositionRoot)
     {
-        // Avoid the greedy CustomComponent problem
-        if (compositionRoot != null)
+        if (compositionRoot == null) // Sanity please
         {
-            HasComponents old_parent = compositionRoot.getParent();
+            return;
+        }
 
-            if (old_parent instanceof DefaultObjectRenderer)
+        // Avoid the greedy CustomComponent problem
+        HasComponents old_parent = compositionRoot.getParent();
+
+        if (old_parent instanceof DefaultObjectRenderer)
+        {
+            DefaultObjectRenderer greedy_parent = (DefaultObjectRenderer)old_parent;
+
+            if (greedy_parent.getCompositionRoot () == compositionRoot)
             {
-                DefaultObjectRenderer greedy_parent = (DefaultObjectRenderer)old_parent;
-
-                if (greedy_parent.getCompositionRoot () == compositionRoot)
-                {
-                    // Makes the greedy CustomComponent drop the compositionRoot we need to
-                    // assign to another CustomComponent, otherwise we get
-                    // IllegalArgumentException: Content is already attached to another parent
-                    greedy_parent.setCompositionRoot (null);
-                }
+                // Makes the greedy CustomComponent drop the compositionRoot we need to
+                // assign to another CustomComponent, otherwise we get
+                // IllegalArgumentException: Content is already attached to another parent
+                greedy_parent.setCompositionRoot (null);
             }
         }
+
+        // We'll catch events sent by the renderer
+        compositionRoot.addListener (new Listener ()
+        {
+            @Override
+            public void componentEvent (Event event)
+            {
+                // Bypass all events, so the listeners can be hooked here on the
+                // renderer proxy, while the renderer can be plugged in and out
+                fireEvent (event);
+            }
+        });
 
         // Proceed as intended
         super.setCompositionRoot (compositionRoot);

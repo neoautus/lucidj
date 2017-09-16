@@ -25,6 +25,8 @@ import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.ui.UI;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,6 +80,12 @@ public class DefaultRendererFactory implements RendererFactory
     public Renderer locateAndBindRenderer (DefaultObjectRenderer mapper, Object object)
     {
         log.info ("getCompatibleRenderer ({})", object);
+
+        if (object instanceof UI)
+        {
+            // Never render Vaadin UI. Replace with something interesting.
+            return (null);
+        }
 
         for (RendererProvider provider: renderer_providers)
         {

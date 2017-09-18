@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -36,7 +36,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Instantiate
 public class Quercus
 {
-    private final static transient Logger log = LoggerFactory.getLogger (Quercus.class);
+    private final static Logger log = LoggerFactory.getLogger (Quercus.class);
 
     @Requires
     private CodeEngineManager engineManager;

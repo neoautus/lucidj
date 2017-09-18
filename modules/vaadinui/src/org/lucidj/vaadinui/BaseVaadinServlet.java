@@ -70,7 +70,7 @@ public class BaseVaadinServlet extends VaadinServlet
 
     private DefaultUIProvider default_provider = new DefaultUIProvider ();
     private URLServiceTracker url_tracker;
-    private Set<UI> attached_uis = new HashSet<> ();
+    private final Set<UI> attached_uis = new HashSet<> ();
     private ExecutorService background = Executors.newSingleThreadExecutor ();
 
     @Context
@@ -149,7 +149,7 @@ public class BaseVaadinServlet extends VaadinServlet
 
         synchronized (attached_uis)
         {
-            attached_ui_array = attached_uis.toArray (new UI [0]);
+            attached_ui_array = attached_uis.toArray (new UI [attached_uis.size ()]);
         }
 
         log.info ("Refreshing CSS on UIs: {} attached", attached_ui_array.length);

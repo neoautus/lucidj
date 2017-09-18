@@ -37,11 +37,11 @@ import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 class ResourceMapper implements HttpContext
 {
-    private final static transient Logger log = LoggerFactory.getLogger (ResourceMapper.class);
+    private final static Logger log = LoggerFactory.getLogger (ResourceMapper.class);
     private final static String PUBLIC_RESOURCE_ALIAS = "/VAADIN/~";
     private final static String PUBLIC_RESOURCE_NAME = "/VAADIN/~";
 

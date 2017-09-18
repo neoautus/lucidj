@@ -42,12 +42,12 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides (specifications = ArtifactDeployer.class)
 public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultArtifactDeployer.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultArtifactDeployer.class);
 
     @Context
     private BundleContext context;

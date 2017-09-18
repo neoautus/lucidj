@@ -1190,6 +1190,50 @@
 
 <!-- ***** COMMON FOR ALL BUNDLES ***************************************** -->
 
+    <!-- Source: https://stackoverflow.com/a/5340557/1078068 -->
+    <scriptdef name="loadmf" language="javascript" loaderRef="sharedbuild-loaderRef">
+        <attribute name="jar" />
+        <attribute name="file" />
+        <attribute name="prefix" />
+        <attribute name="section" />
+        <![CDATA[
+            var jarname = attributes.get("jar");
+            var filename = attributes.get("file");
+            if (jarname != null && filename != null) {
+                self.fail("Only one of jar or file is required");
+            }
+            var prefix = attributes.get("prefix");
+            if (prefix == null) {
+                prefix = "";
+            }
+            var section = attributes.get("section");
+
+            var manifest;
+            if (jarname != null) {
+                var jarfile = new java.util.jar.JarFile(new java.io.File(jarname));
+                manifest = jarfile.getManifest();
+                jarfile.close (); // +++ fix locked jar problem
+            } else if (filename != null) {
+                manifest = new java.util.jar.Manifest(new java.io.FileInputStream(new java.io.File(filename)));
+            } else {
+                self.fail("One of jar or file is required");
+            }
+
+            if (manifest == null) {
+                self.log("No manifest in " + jar);
+            } else {
+                var attributes = (section == null) ? manifest.getMainAttributes() : manifest.getAttributes(section);
+                if (attributes != null) {
+                    var iter = attributes.entrySet().iterator();
+                    while (iter.hasNext()) {
+                        var entry = iter.next();
+                        project.setProperty(prefix + entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+        ]]>
+    </scriptdef>
+
     <target name="build.bundle">
 
         <!-- Parameters: type, bundle, classpath -->
@@ -1366,7 +1410,7 @@
         <if>
             <and>
                 <isset property="src.exists"/>
-                <not><contains string="${bnd.file.contents}" substring="x-no-ipojo"/></not>
+                <not><contains string="${bnd.file.contents}" substring="X-No-iPOJO"/></not>
             </and>
             <then>
                 <ipojo input="${bnd.jar}">
@@ -1375,6 +1419,11 @@
                         <path refid="ipojo.cp"/>
                     </classpath>
                 </ipojo>
+
+                <!-- dump manifest.mf -->
+                <!--loadmf jar="${bnd.jar}" prefix="IPOJO."/>
+                <echoproperties prefix="IPOJO."/-->
+
             </then>
         </if>
 

@@ -24,6 +24,8 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.data.Property;
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Responsive;
 import com.vaadin.server.Sizeable;
@@ -34,6 +36,7 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -41,7 +44,9 @@ import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
+import org.lucidj.api.ClassManager;
 import org.lucidj.api.DesktopInterface;
+import org.lucidj.api.DesktopUI;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.SecurityEngine;
@@ -52,6 +57,11 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 @Theme ("valo")
 @Title ("LucidJ Console")
@@ -60,12 +70,13 @@ import java.net.UnknownHostException;
 @StyleSheet ({ "vaadin://~/vaadinui_libraries/styles.css", "vaadin://~/dynamic.css" })
 @Push (PushMode.MANUAL)
 @PreserveOnRefresh
-public class BaseVaadinUI extends UI
+public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
 {
     private final static Logger log = LoggerFactory.getLogger (BaseVaadinUI.class);
 
     private DesktopInterface desktop;
     private SmartPush smart_push;
+    private Map<String, Set<DesktopUI.Listener>> topic_map = new HashMap<> ();
 
     private VerticalLayout desktop_canvas = new VerticalLayout ();
     private HorizontalLayout ui_header;
@@ -76,9 +87,6 @@ public class BaseVaadinUI extends UI
 
     private SecurityEngine security;
     private ManagedObjectFactory object_factory;
-
-//    @Publishes (name = "searchbox", topics = "search", dataKey = "args")
-//    private Publisher search;
 
     @ServiceObject.Context
     private ServiceContext serviceContext;
@@ -138,29 +146,46 @@ public class BaseVaadinUI extends UI
 
                         // TODO: SOMEDAY DISCOVER HOW TO EXPAND THIS GROUPED COMPONENT, AND THE CURE FOR CANCER
                         search_text.setWidth("480px");
+                        search_text.addStyleName ("invisible-focus");
+                        search_text.addValueChangeListener (new Property.ValueChangeListener ()
+                        {
+                            @Override
+                            public void valueChange (Property.ValueChangeEvent valueChangeEvent)
+                            {
+                                String search_args = (String)search_text.getValue ();
+
+                                if (search_args != null)
+                                {
+                                    fireEvent ("search", search_text.getValue ());
+                                }
+                            }
+                        });
+                        search_text.addShortcutListener (new ShortcutListener ("Enter",
+                            ShortcutAction.KeyCode.ENTER, null)
+                        {
+                            @Override
+                            public void handleAction (Object o, Object o1)
+                            {
+                                fireEvent ("search", search_text.getValue ());
+                            }
+                        });
                     }
                     search_component.addComponent (search_text);
 
                     Button search_button = new Button ();
                     {
                         search_button.setIcon (FontAwesome.SEARCH);
+                        search_button.addClickListener (new Button.ClickListener ()
+                        {
+                            @Override
+                            public void buttonClick (Button.ClickEvent clickEvent)
+                            {
+                                fireEvent ("search", search_text.getValue ());
+                            }
+                        });
+                        search_button.addStyleName ("invisible-focus");
                     }
                     search_component.addComponent (search_button);
-
-                    search_text.addValueChangeListener (new Property.ValueChangeListener ()
-                    {
-                        @Override
-                        public void valueChange (Property.ValueChangeEvent valueChangeEvent)
-                        {
-                            String search_args = (String)search_text.getValue ();
-
-                            if (search_args != null)
-                            {
-                                log.info ("SEARCH: {}", search_args);
-//                                search.sendData (search_text.getValue ());
-                            }
-                        }
-                    });
                 }
                 header_components.addComponent (search_component);
 
@@ -206,7 +231,7 @@ public class BaseVaadinUI extends UI
         if (desktops.length > 0)
         {
             ManagedObjectInstance desktop_instance = object_factory.newInstance (desktops [0]);
-            DesktopInterface desktop = desktop_instance.adapt (DesktopInterface.class);
+            desktop = desktop_instance.adapt (DesktopInterface.class);
 
             log.info ("----------> desktop = {}", desktop);
 
@@ -271,6 +296,9 @@ public class BaseVaadinUI extends UI
     {
         init_desktop (vaadinRequest);
         smart_push = new SmartPush (this);
+
+        // Add custom UI event forwarding
+        addListener (this);
     }
 
     @Override
@@ -283,6 +311,83 @@ public class BaseVaadinUI extends UI
     //=========================================================================================
     // UI EVENTS
     //=========================================================================================
+
+    class DesktopEvent extends Component.Event
+    {
+        private String topic;
+        private Object eventObject;
+
+        public DesktopEvent (String topic, Object eventObject)
+        {
+            super (BaseVaadinUI.this);
+            this.topic = topic;
+            this.eventObject = eventObject;
+        }
+
+        public String getTopic ()
+        {
+            return (topic);
+        }
+
+        public Object getEventObject ()
+        {
+            return (eventObject);
+        }
+    }
+
+    @Override // DesktopUI
+    public void addListener (String topic, DesktopUI.Listener listener)
+    {
+        Set<DesktopUI.Listener> listener_set = topic_map.get (topic);
+
+        if (listener_set == null)
+        {
+            listener_set = new HashSet<> ();
+            topic_map.put (topic, listener_set);
+        }
+        listener_set.add (listener);
+    }
+
+    @Override // DesktopUI
+    public void fireEvent (String topic, Object eventObject)
+    {
+        fireEvent (new DesktopEvent (topic, eventObject));
+    }
+
+    @Override // Component.Listener
+    public void componentEvent (Event event)
+    {
+        if (event instanceof DesktopEvent)
+        {
+            DesktopEvent desktop_event = (DesktopEvent)event;
+            String topic = desktop_event.getTopic ();
+            Set<DesktopUI.Listener> listener_set = topic_map.get (topic);
+
+            if (listener_set == null)
+            {
+                return;
+            }
+
+            Object event_object = desktop_event.getEventObject ();
+            Iterator<DesktopUI.Listener> itl = listener_set.iterator ();
+
+            while (itl.hasNext ())
+            {
+                DesktopUI.Listener listener = itl.next ();
+
+                if (!ClassManager.isZoombie (listener))
+                {
+                    listener.event (topic, event_object);
+                }
+                else
+                {
+                    // Auto-clean topic sets
+                    log.info ("Removing zoombie listener: {}", listener);
+                    itl.remove ();
+                }
+            }
+        }
+    }
 
     @Override
     public void attach ()
@@ -310,6 +415,12 @@ public class BaseVaadinUI extends UI
 
         // Normal detach for everybody
         super.detach();
+    }
+
+    @ServiceObject.Invalidate
+    private void invalidate ()
+    {
+        getPushConnection ().disconnect ();
     }
 }
 

@@ -80,6 +80,7 @@ public class DefaultServiceContext implements ServiceContext
     }
 
     private void call_annotated (Class annotation, Object obj, Object... args)
+        throws Exception
     {
         for (Method m: obj.getClass ().getDeclaredMethods ())
         {
@@ -90,7 +91,15 @@ public class DefaultServiceContext implements ServiceContext
                     m.setAccessible (true);
                     m.invoke (obj, args);
                 }
-                catch (InvocationTargetException | IllegalAccessException e)
+                catch (InvocationTargetException e)
+                {
+                    if (e.getCause() instanceof Exception)
+                    {
+                        // Rethrow the actual exception received from the method
+                        throw ((Exception)e.getCause());
+                    }
+                }
+                catch (IllegalAccessException e)
                 {
                     log.error ("Exception injecting ServiceContext on {}", obj, e);
                 }
@@ -182,7 +191,14 @@ public class DefaultServiceContext implements ServiceContext
         //---------------------------------------------------------------
         // CALL ANNOTATED OBJECT METHODS, THEN NOTIFY UPSTREAM LISTENERS
         //---------------------------------------------------------------
-        call_annotated (ServiceObject.Validate.class, serviceObject);
+        try
+        {
+            call_annotated (ServiceObject.Validate.class, serviceObject);
+        }
+        catch (Exception e)
+        {
+            log.error ("Exception while invoking @ServiceObject.Validate method", e);
+        }
         broadcast_event (ServiceObject.VALIDATE, serviceObject);
 
         // We return the same object, however it could have changed
@@ -494,7 +510,14 @@ public class DefaultServiceContext implements ServiceContext
                 {
                     log.info ("Cleaning {}", obj);
                     broadcast_event (ServiceObject.INVALIDATE, obj);
-                    call_annotated (ServiceObject.Invalidate.class, obj);
+                    try
+                    {
+                        call_annotated (ServiceObject.Invalidate.class, obj);
+                    }
+                    catch (Exception e)
+                    {
+                        log.error ("Exception while invoking @ServiceObject.Invalidate method", e);
+                    }
                 }
             }
         }
@@ -503,7 +526,6 @@ public class DefaultServiceContext implements ServiceContext
     @Validate
     private void validate ()
     {
-        log.info ("----->> DefaultServiceContext started ({})", this);
         bundle_cleaner = new BundleCleanup (context);
         bundle_cleaner.open ();
     }
@@ -513,7 +535,6 @@ public class DefaultServiceContext implements ServiceContext
     {
         bundle_cleaner.close ();
         bundle_cleaner = null;
-        log.info ("----->> DefaultServiceContext terminated ({})", this);
     }
 
     class BundleCleanup extends BundleTracker
@@ -521,7 +542,6 @@ public class DefaultServiceContext implements ServiceContext
         BundleCleanup (BundleContext context)
         {
             super (context, Bundle.ACTIVE, null);
-            log.info ("NEW BundleTracker instance = {}", this);
         }
 
         @Override

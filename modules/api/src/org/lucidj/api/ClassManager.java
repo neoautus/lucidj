@@ -19,6 +19,8 @@ package org.lucidj.api;
 import java.util.Map;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.wiring.BundleWiring;
 
 public interface ClassManager
 {
@@ -27,6 +29,34 @@ public interface ClassManager
     Class loadClassUsingObject (Object obj, String name);
     Map<String, Bundle> getPackageMap ();
     ClassLoader getClassLoader ();
+
+    static String objectHash (Object obj)
+    {
+        return (obj.getClass().getName() + "#" + Integer.toHexString (obj.hashCode()));
+    }
+
+    static boolean isZoombie (Class clazz)
+    {
+        Bundle declared_owner_bundle = FrameworkUtil.getBundle (clazz);
+
+        if (declared_owner_bundle == null)
+        {
+            // No bundles, no zoombies
+            return (false);
+        }
+
+        ClassLoader bundle_classloader = declared_owner_bundle.adapt (BundleWiring.class).getClassLoader ();
+
+        // We compare the classloader from the class with the classloader from the bundle.
+        // Of course we assume that the classloader from the class was not changed by the program.
+        // If they differ, it means the class belongs to an invalid classloader.
+        return (bundle_classloader != clazz.getClassLoader ());
+    }
+
+    static boolean isZoombie (Object object)
+    {
+        return (isZoombie (object.getClass ()));
+    }
 }
 
 // EOF

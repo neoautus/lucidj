@@ -43,7 +43,7 @@ public interface Aggregate
         return (new Object[] { this });
     }
 
-    static Object[] get (Object object)
+    static Object[] elements (Object object)
     {
         if (object instanceof Aggregate)
         {

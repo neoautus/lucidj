@@ -89,7 +89,7 @@ public class DefaultRendererFactory implements RendererFactory
 
         for (RendererProvider provider: renderer_providers)
         {
-            for (Object element: Aggregate.get (object))
+            for (Object element: Aggregate.elements (object))
             {
                 Renderer renderer = provider.getCompatibleRenderer (element);
 

@@ -136,7 +136,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         String icon_url = "/VAADIN/~/formulas/impossible.png";
         String icon_title = "The Unknown";
 
-        ComponentInterface component_interface = Aggregate.adapt (source_object, ComponentInterface.class);
+        ComponentInterface component_interface = Aggregate.adapt (ComponentInterface.class, source_object);
         if (component_interface != null)
         {
             // If it is a valid component, displays its icon on the top left corner of the cell
@@ -190,7 +190,7 @@ public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutCl
         running.setVisible (false);
         right_panel.addComponent (running);
 
-        ComponentState source_state = Aggregate.adapt (source_object, ComponentState.class);
+        ComponentState source_state = Aggregate.adapt (ComponentState.class, source_object);
         if (source_state != null)
         {
             source_state.addStateListener (this);

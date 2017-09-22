@@ -181,7 +181,7 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
         {
             ComponentState cs;
 
-            if ((cs = Aggregate.adapt (getSourceObject (), ComponentState.class)) != null)
+            if ((cs = Aggregate.adapt (ComponentState.class, getSourceObject ())) != null)
             {
                 if (task_state == ComponentState.RUNNING)
                 {
@@ -704,35 +704,35 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
                     title.setWidth (100, Unit.PERCENTAGE);
                     title.setValue ("Default");
 
-                    final ShortcutListener handle_enter = new ShortcutListener
-                        ("EnterShortcut", ShortcutAction.KeyCode.ENTER, null)
-                    {
-                        @Override
-                        public void handleAction (Object o, Object o1)
-                        {
-                            Notification.show ("New title: " + title.getValue());
-                            unfocus (title);
-
-                        }
-                    };
-
-                    title.addFocusListener (new FieldEvents.FocusListener ()
-                    {
-                        @Override
-                        public void focus (FieldEvents.FocusEvent focusEvent)
-                        {
-                            title.addShortcutListener (handle_enter);
-                        }
-                    });
-
-                    title.addBlurListener (new FieldEvents.BlurListener ()
-                    {
-                        @Override
-                        public void blur (FieldEvents.BlurEvent blurEvent)
-                        {
-                            title.removeShortcutListener (handle_enter);
-                        }
-                    });
+//                    final ShortcutListener handle_enter = new ShortcutListener
+//                        ("EnterShortcut", ShortcutAction.KeyCode.ENTER, null)
+//                    {
+//                        @Override
+//                        public void handleAction (Object o, Object o1)
+//                        {
+//                            Notification.show ("New title: " + title.getValue());
+//                            unfocus (title);
+//
+//                        }
+//                    };
+//
+//                    title.addFocusListener (new FieldEvents.FocusListener ()
+//                    {
+//                        @Override
+//                        public void focus (FieldEvents.FocusEvent focusEvent)
+//                        {
+//                            title.addShortcutListener (handle_enter);
+//                        }
+//                    });
+//
+//                    title.addBlurListener (new FieldEvents.BlurListener ()
+//                    {
+//                        @Override
+//                        public void blur (FieldEvents.BlurEvent blurEvent)
+//                        {
+//                            title.removeShortcutListener (handle_enter);
+//                        }
+//                    });
                     title_area.addComponent (title);
                 }
 
@@ -839,7 +839,7 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
         }
 
         // We have a valid embedding!
-        object_list = Aggregate.adapt (root_object, List.class);
+        object_list = Aggregate.adapt (List.class, root_object);
         log.info ("object_list: {}", object_list);
         return (true);
     }

@@ -48,7 +48,7 @@ public class CompositeTaskSerializer implements Serializer, ManagedObjectProvide
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
         instance.setObjectClass (object.getClass ());
-        for (Object item: Aggregate.adapt (object, List.class))
+        for (Object item: Aggregate.adapt (List.class, object))
         {
             instance.addObject (item);
         }
@@ -61,7 +61,7 @@ public class CompositeTaskSerializer implements Serializer, ManagedObjectProvide
         ManagedObjectInstance object_instance = objectFactory.newInstance (CompositeTask.class, null);
         CompositeTask composite_task = object_instance.adapt (CompositeTask.class);
 
-        List obj_list = Aggregate.adapt (composite_task, List.class);
+        List obj_list = Aggregate.adapt (List.class, composite_task);
         for (Object object: instance.getObjects ())
         {
             obj_list.add (object);

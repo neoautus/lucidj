@@ -167,7 +167,7 @@ public class TopView extends VerticalLayout implements View
 
         addComponent (new Label (result == null? "null": result.toString ()));
 
-        DesktopUI dui = Aggregate.adapt (getUI (), DesktopUI.class);
+        DesktopUI dui = Aggregate.adapt (DesktopUI.class, getUI ());
 
         dui.addListener ("search", new DesktopUI.Listener ()
         {

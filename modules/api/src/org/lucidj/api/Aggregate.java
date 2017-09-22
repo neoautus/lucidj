@@ -34,10 +34,10 @@ public interface Aggregate
         return (object);
     }
 
-    // Aspects are all the parts that comprise the Car.
+    // Elements are all the parts that comprise the Car.
     // Wheels, motor, windshield etc
-    // aspects[0] is the identity
-    // todo: asd weak aspects
+    // elements[0] is the identity
+    // TODO: ADD WEAK ELEMENTS
     default Object[] elements ()
     {
         return (new Object[] { this });
@@ -61,24 +61,24 @@ public interface Aggregate
         }
         else if (type.isAssignableFrom (this.getClass ()))
         {
-            return ((T)this);
+            return (type.cast (this));
         }
         else
         {
             Object object;
 
-            for (Object aspect: elements ())
+            for (Object element: elements ())
             {
-                if (aspect != this && (object = Aggregate.adapt (aspect, type)) != null)
+                if (element != this && (object = Aggregate.adapt (type, element)) != null)
                 {
-                    return ((T)object);
+                    return (type.cast (object));
                 }
             }
         }
         return (null);
     }
 
-    static <T> T adapt (Object object, Class<T> type)
+    static <T> T adapt (Class<T> type, Object object)
     {
         if (object == null || type == null)
         {
@@ -90,7 +90,7 @@ public interface Aggregate
         }
         else if (type.isAssignableFrom (object.getClass ()))
         {
-            return ((T)object);
+            return (type.cast (object));
         }
         return (null);
     }

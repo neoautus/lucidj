@@ -76,7 +76,7 @@ public class DefaultEmbeddingManager implements EmbeddingManager
         embedding_handlers.add (handler);
 
         // Notify the listeners of the new handler
-        for (EmbeddingListener listener: listener_list)
+        for (EmbeddingListener listener: listener_list.toArray (new EmbeddingListener [listener_list.size ()]))
         {
             listener.addingHandler (handler);
         }

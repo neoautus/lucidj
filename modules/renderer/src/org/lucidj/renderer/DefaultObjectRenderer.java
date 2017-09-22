@@ -16,6 +16,7 @@
 
 package org.lucidj.renderer;
 
+import org.lucidj.api.Aggregate;
 import org.lucidj.api.EventHelper;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.Renderer;
@@ -29,7 +30,7 @@ import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Label;
 
 // TODO: ADD RENDERING CONTEXT, LIKE: PREVIEW, READONLY, EDIT, VIEW, ETC
-public class DefaultObjectRenderer extends CustomComponent implements ObjectRenderer, EventHelper.Subscriber
+public class DefaultObjectRenderer extends CustomComponent implements Aggregate, ObjectRenderer, EventHelper.Subscriber
 {
     private final static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
 
@@ -49,6 +50,20 @@ public class DefaultObjectRenderer extends CustomComponent implements ObjectRend
         default_component.setSizeUndefined ();
     }
 
+    @Override // Aggregate
+    public <A> A adapt (Class<A> type)
+    {
+        if (isRendered ())
+        {
+            return (Aggregate.adapt (type, current_renderer));
+        }
+        else if (type.isAssignableFrom (this.getClass ()))
+        {
+            return (type.cast (this));
+        }
+        return (null);
+    }
+
     @Override // ObjectRenderer
     public boolean isRendered ()
     {
@@ -56,17 +71,6 @@ public class DefaultObjectRenderer extends CustomComponent implements ObjectRend
     }
 
     // TODO: ADD LINK/UNLINK NOTIFICATIONS
-    @Override // ObjectRenderer
-    public <A> A adapt (Class<A> type)
-    {
-        if (isRendered () &&
-            current_renderer.getClass ().isAssignableFrom (type))
-        {
-            return ((A)current_renderer);
-        }
-        return (null);
-    }
-
     private void apply_renderer (Object obj)
     {
         Component new_component = null;
@@ -177,7 +181,7 @@ public class DefaultObjectRenderer extends CustomComponent implements ObjectRend
                 // Makes the greedy CustomComponent drop the compositionRoot we need to
                 // assign to another CustomComponent, otherwise we get
                 // IllegalArgumentException: Content is already attached to another parent
-                greedy_parent.setCompositionRoot (null);
+                compositionRoot.setParent (null);
             }
         }
 

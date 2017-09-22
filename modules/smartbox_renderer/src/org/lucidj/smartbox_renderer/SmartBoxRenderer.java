@@ -19,10 +19,10 @@ package org.lucidj.smartbox_renderer;
 import com.vaadin.event.FieldEvents;
 import com.vaadin.event.LayoutEvents;
 import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractComponent;
-import com.vaadin.ui.AbstractField;
 import com.vaadin.ui.AbstractLayout;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -188,13 +188,19 @@ public class SmartBoxRenderer extends VerticalLayout implements Renderer, Editor
             }
         });
 
-        run.addShortcutListener (new AbstractField.FocusShortcut (run,
-            ShortcutAction.KeyCode.ENTER, ShortcutAction.ModifierKey.CTRL)
+        run.addShortcutListener (new ShortcutListener ("Run",
+            ShortcutAction.KeyCode.ENTER, new int [] { ShortcutAction.ModifierKey.CTRL })
         {
             @Override
             public void handleAction (Object sender, Object target)
             {
-                source.fireEvent (this, "run");
+                // The shortcuts (while active on toolbar) are global, however for
+                // Ctrl+Enter this becomes counter-intuitive. This way, we filter
+                // it to avoid running things from outside the edition field.
+                if (target == commands)
+                {
+                    source.fireEvent (this, "run");
+                }
             }
         });
 
@@ -276,7 +282,6 @@ public class SmartBoxRenderer extends VerticalLayout implements Renderer, Editor
     {
         commands.setValue ((String)source.getValue ());
     }
-
 }
 
 // EOF

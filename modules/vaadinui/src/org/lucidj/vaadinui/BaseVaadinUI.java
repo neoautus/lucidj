@@ -24,6 +24,7 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.data.Property;
+import com.vaadin.event.FieldEvents;
 import com.vaadin.event.ShortcutAction;
 import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
@@ -84,6 +85,10 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
     private Layout user_component;
     // TODO: DEFINE A WAY TO SHARE GLOBAL DEFINES/CONFIGS
     private int default_sidebar_width_pixels = 240;
+
+    // For some reason, Enter inside the combobox generates four events
+    // focus/blur/focus/blur and this messes with proper Enter key handling
+    private int nested_focus_blur_bug_count;
 
     private SecurityEngine security;
     private ManagedObjectFactory object_factory;
@@ -160,7 +165,9 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
                                 }
                             }
                         });
-                        search_text.addShortcutListener (new ShortcutListener ("Enter",
+
+                        // Handles the Enter key by activating on focus and deactivating on blur
+                        final ShortcutListener handle_enter = new ShortcutListener ("Enter",
                             ShortcutAction.KeyCode.ENTER, null)
                         {
                             @Override
@@ -168,7 +175,32 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
                             {
                                 fireEvent ("search", search_text.getValue ());
                             }
+                        };
+
+                        search_text.addFocusListener (new FieldEvents.FocusListener ()
+                        {
+                            @Override
+                            public void focus (FieldEvents.FocusEvent focusEvent)
+                            {
+                                if (nested_focus_blur_bug_count++ == 0)
+                                {
+                                    search_text.addShortcutListener (handle_enter);
+                                }
+                            }
                         });
+
+                        search_text.addBlurListener (new FieldEvents.BlurListener ()
+                        {
+                            @Override
+                            public void blur (FieldEvents.BlurEvent blurEvent)
+                            {
+                                if (--nested_focus_blur_bug_count == 0)
+                                {
+                                    search_text.removeShortcutListener (handle_enter);
+                                }
+                            }
+                        });
+
                     }
                     search_component.addComponent (search_text);
 

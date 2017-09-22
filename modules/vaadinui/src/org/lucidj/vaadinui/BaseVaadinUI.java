@@ -90,6 +90,13 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
     // focus/blur/focus/blur and this messes with proper Enter key handling
     private int nested_focus_blur_bug_count;
 
+    // When the combobox have new text, clicking the search button (magnifier
+    // glass) generates both changeEvent and clickEvent, but NOT Enter action.
+    // So we can't just throw in the handleAction, we must use changeEvent too.
+    // The flag below handles when to discard the click event in case we get
+    // changeEvent+clickEvent in sequence.
+    private boolean value_change_button_quirk;
+
     private SecurityEngine security;
     private ManagedObjectFactory object_factory;
 
@@ -162,6 +169,7 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
                                 if (search_args != null)
                                 {
                                     fireEvent ("search", search_text.getValue ());
+                                    value_change_button_quirk = true;
                                 }
                             }
                         });
@@ -173,6 +181,7 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
                             @Override
                             public void handleAction (Object o, Object o1)
                             {
+                                value_change_button_quirk = false;
                                 fireEvent ("search", search_text.getValue ());
                             }
                         };
@@ -212,7 +221,11 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
                             @Override
                             public void buttonClick (Button.ClickEvent clickEvent)
                             {
-                                fireEvent ("search", search_text.getValue ());
+                                if (!value_change_button_quirk)
+                                {
+                                    fireEvent ("search", search_text.getValue ());
+                                }
+                                value_change_button_quirk = false;
                             }
                         });
                         search_button.addStyleName ("invisible-focus");

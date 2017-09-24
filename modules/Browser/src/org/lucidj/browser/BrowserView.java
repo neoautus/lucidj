@@ -853,8 +853,8 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
         {
             if (init_component (event))
             {
-                build_view ();
                 build_toolbar ();
+                build_view ();
             }
         }
     }

@@ -1,0 +1,1 @@
+All user profiles, except system (aka root) are stored here; one directory for each user.

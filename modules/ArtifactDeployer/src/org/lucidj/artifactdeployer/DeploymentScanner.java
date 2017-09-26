@@ -95,7 +95,7 @@ public class DeploymentScanner implements Runnable
     {
         // Configuration
         // TODO: THIS SHOULD BE RECONFIGURABLE!!!
-        watched_directory = System.getProperty ("system.home") + "/apps";
+        watched_directory = System.getProperty ("system.home") + "/system/apps";
 
         // Start things
         poll_thread = new Thread (this);

@@ -97,7 +97,7 @@
             <ivy:dependency org="org.apache.tinkerpop" name="tinkergraph-gremlin" rev="3.0.2-incubating"/>
         </pathdep>
 
-        <property name="vaadin.rev" value="7.7.7"/>
+        <property name="vaadin.rev" value="7.7.10"/>
         <pathdep group="vaadin">
             <ivy:dependency org="com.vaadin"       name="vaadin-server"          rev="${vaadin.rev}"/>
             <ivy:dependency org="com.vaadin"       name="vaadin-client"          rev="${vaadin.rev}"/>
@@ -248,7 +248,7 @@
         </macrodef>
 
         <!-- And action! -->
-        <wrapjar src="${libcache.dir}/vaadin/jar/gwt-user-2.7.0.vaadin4.jar"
+        <wrapjar src="${libcache.dir}/vaadin/jar/gwt-user-2.7.0.vaadin5.jar"
             dest="${wrapped-jars.dir}"/>
 
 	<echo>

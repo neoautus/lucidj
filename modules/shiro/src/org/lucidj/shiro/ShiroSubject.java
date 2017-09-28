@@ -20,7 +20,12 @@ import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.lucidj.api.SecuritySubject;
 
-public class ShiroSubject implements SecuritySubject // Serializable?
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+
+// TODO: ServiceObject
+public class ShiroSubject implements SecuritySubject
 {
     private Subject shiro_subject;
 
@@ -59,6 +64,34 @@ public class ShiroSubject implements SecuritySubject // Serializable?
     public void touchSession ()
     {
         shiro_subject.getSession ().touch ();
+    }
+
+    @Override // SecurityEngine
+    public FileSystem getDefaultUserFS ()
+    {
+        // Return an FileSystem so we can take advantage of JSR203
+        return (FileSystems.getDefault ());
+    }
+
+    @Override // SecurityEngine
+    public Path getDefaultUserDir ()
+    {
+        String user = getPrincipal ();
+
+        if (user == null)
+        {
+            return (null);
+        }
+        else if (user.equals ("system"))
+        {
+            // System have a special location $LUCIDJ_HOME/system
+            return (getDefaultUserFS ().getPath (System.getProperty ("system.home"), "system"));
+        }
+        else
+        {
+            // The profiles are located at $LUCIDJ_HOME/profiles/$LUCIDJ_USER
+            return (getDefaultUserFS ().getPath (System.getProperty ("system.home"), "profiles", user));
+        }
     }
 }
 

@@ -16,12 +16,17 @@
 
 package org.lucidj.api;
 
+import java.nio.file.FileSystem;
+import java.nio.file.Path;
+
 public interface SecuritySubject
 {
     boolean isAuthenticated ();
     boolean login           (String username, String password);
     String  getPrincipal    ();
     void    touchSession    ();
+    FileSystem getDefaultUserFS  ();
+    Path       getDefaultUserDir ();
 }
 
 // EOF

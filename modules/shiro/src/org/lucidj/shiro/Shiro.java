@@ -28,10 +28,6 @@ import org.lucidj.api.SecuritySubject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -41,12 +37,10 @@ import org.apache.felix.ipojo.annotations.Provides;
 @Provides
 public class Shiro implements SecurityEngine
 {
-    private final static transient Logger log = LoggerFactory.getLogger (Shiro.class);
+    private final static Logger log = LoggerFactory.getLogger (Shiro.class);
 
     private SecurityManager ini_security_manager;
 
-    // http://shiro.apache.org/10-minute-tutorial.html
-    // http://shiro.apache.org/configuration.html
     public Shiro ()
     {
         String shiro_ini = "file:" + System.getProperty ("system.conf") + "/shiro.ini";
@@ -57,16 +51,17 @@ public class Shiro implements SecurityEngine
     }
 
     @Override // SecurityEngine
-    public SecuritySubject getStoredSubject (boolean as_system)
+    public SecuritySubject getStoredSubject (boolean create_as_system)
     {
         SecuritySubject current_subject =
             VaadinSession.getCurrent().getAttribute (SecuritySubject.class);
 
-        if (current_subject == null)
+        if (current_subject == null || create_as_system)
         {
             Subject shiro_subject;
 
-            if (as_system)
+            // The subject is always rebuilt when configured as system
+            if (create_as_system)
             {
                 shiro_subject = new Subject.Builder (ini_security_manager)
                     .authenticated (true)
@@ -81,10 +76,12 @@ public class Shiro implements SecurityEngine
                 shiro_subject = SecurityUtils.getSecurityManager().createSubject (null);
             }
 
+            // TODO: CONFIGURABLE
             shiro_subject.getSession ().setTimeout (24L * 60 * 60 * 1000); // 24h
 
             current_subject = new ShiroSubject (shiro_subject);
 
+            // TODO: MAKE SECURITY IDENPENDENT FROM VAADIN/SESSIONS FROM WEB
             try
             {
                 // Store current user into VaadinSession
@@ -114,36 +111,6 @@ public class Shiro implements SecurityEngine
     public SecuritySubject createSystemSubject ()
     {
         return (getStoredSubject (true));
-    }
-
-    @Override // SecurityEngine
-    public String getSystemHome ()
-    {
-        return (System.getProperty("system.home"));
-    }
-
-    @Override // SecurityEngine
-    public FileSystem getDefaultUserFS ()
-    {
-        // Return an FileSystem so we can take advantage of JSR203
-        return (FileSystems.getDefault ());
-    }
-
-    @Override // SecurityEngine
-    public Path getDefaultUserDir ()
-    {
-        SecuritySubject subject = getStoredSubject (false);
-
-        if (subject == null)
-        {
-            return (null);
-        }
-
-        // TODO: THIS WILL CHANGE. THE LOCAL ACCOUNT MAPS DIRECTLY TO local/[Workspaces,Applications,etc]
-
-        String username = subject.getPrincipal ();
-        // TODO: CHANGE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        return (getDefaultUserFS ().getPath (getSystemHome (), "local", "Workspaces"));
     }
 }
 

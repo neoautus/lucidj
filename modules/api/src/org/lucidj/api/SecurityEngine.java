@@ -16,17 +16,11 @@
 
 package org.lucidj.api;
 
-import java.nio.file.FileSystem;
-import java.nio.file.Path;
-
 public interface SecurityEngine
 {
     SecuritySubject getStoredSubject    (boolean is_system);
     SecuritySubject getSubject          ();
     SecuritySubject createSystemSubject ();
-    String          getSystemHome       ();
-    FileSystem      getDefaultUserFS    ();
-    Path            getDefaultUserDir   ();
 }
 
 // EOF

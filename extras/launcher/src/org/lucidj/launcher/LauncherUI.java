@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -44,8 +44,8 @@ public class LauncherUI extends JFrame
     private String logger_text;
     private boolean prepend_timestamp;
 
-    private final String app_title = "LucidJ Launcher";
-    private final String app_version = "version 1.0.1";
+    private final String app_title = "LucidJ Launcher"; // It will become LucidJ Monitor :)
+    private final String app_version = "version 1.1.0";
     private Image app_icon = Toolkit.getDefaultToolkit ().getImage (getClass().getResource("tangram-32.png"));
 
     private final int STATUS_UNKNOWN = 0;
@@ -517,17 +517,17 @@ public class LauncherUI extends JFrame
         {
             final BrowserLauncher launcher = new BrowserLauncher (null, err_handler);
 
-            //System.out.println ("Browser List: " + launcher.getBrowserList ());
-
             Thread thread = new Thread()
             {
                 public void run()
                 {
+                    String login_token = new Launcher ().getLoginToken ();
+                    String launch_url = (login_token == null)? url: url + "?token=" + login_token;
+
                     println ("Launching browser: <a href='" + url + "'>" + url + "</a>");
-                    launcher.openURLinBrowser (url);
+                    launcher.openURLinBrowser (launch_url);
                 }
             };
-
             thread.start();
         }
         catch (Exception e)
@@ -592,6 +592,7 @@ public class LauncherUI extends JFrame
 
     public boolean isBootstrapFinished ()
     {
+        // TODO: MAKE PORT/HOST/ETC RECONFIGURABLE
         String status = http_request ("http://localhost:8181/bootstrap");
         return (status.contains ("bootstrap_finished=true"));
     }

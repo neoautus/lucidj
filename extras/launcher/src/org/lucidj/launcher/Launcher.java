@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -24,7 +24,10 @@ import org.apache.commons.exec.ExecuteResultHandler;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -125,6 +128,23 @@ public class Launcher implements ExecuteResultHandler
     public static Launcher newLauncher ()
     {
         return (new Launcher ());
+    }
+
+    //=================================================================================================================
+    // LOGIN TOKEN
+    //=================================================================================================================
+
+    public String getLoginToken ()
+    {
+        try
+        {
+            Path token_file = Paths.get (system_home, "cache/login-token.txt");
+            return (new String (Files.readAllBytes (token_file), StandardCharsets.UTF_8));
+        }
+        catch (IOException e)
+        {
+            return (null);
+        }
     }
 
     //=================================================================================================================

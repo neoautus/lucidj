@@ -101,6 +101,9 @@ public class BaseVaadinServlet extends VaadinServlet
         // Enable URL tracking
         url_tracker = new URLServiceTracker ();
         url_tracker.open ();
+
+        // Init token file if needed
+        Login.configureLoginToken ();
     }
 
     @Override

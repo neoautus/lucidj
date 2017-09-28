@@ -311,11 +311,16 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
             }
             catch (UnknownHostException ignore) {};
 
-            // TODO: CAVEATS??
-            if (remote_addr != null && remote_addr.isLoopbackAddress ())
+            // Login tokens may be used only when browsing from the same machine
+            if (remote_addr != null && remote_addr.isLoopbackAddress ()
+                && Login.isValidLoginToken (vsr.getParameter ("token")))
             {
                 // Autologin into System when browsing from localhost
+                log.warn ("Automatic login from localhost using login token");
                 security.createSystemSubject ();
+
+                // Erase the token from URL
+                getPage ().getJavaScript().execute("window.lucidj_vaadin_helper.clearUrl ()");
             }
         }
 

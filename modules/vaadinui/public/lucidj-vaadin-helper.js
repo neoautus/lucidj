@@ -41,10 +41,22 @@ lucidj_vaadin_helper.reloadStyleSheet = function (url)
                     full_href = full_href.replace(/last_reload=\d+/, last_reload);
                 }
                 document.styleSheets [i].ownerNode.href = full_href;
+                //vaadin.forceLayout ();  needed?
                 break;
             }
         }
     }
 };
+
+lucidj_vaadin_helper.clearUrl = function ()
+{
+    var url = window.location.href
+        .replace(/\btoken=[^\s&#]*/, '')
+        .replace(/\?#/, '#')
+        .replace(/\?&/, '?')
+        .replace(/&&/, '&')
+        .replace(/&$/, '');
+    window.history.replaceState(window.history.state, document.title, url);
+}
 
 // EOF

@@ -23,8 +23,12 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -75,7 +79,7 @@ class ResourceMapper implements HttpContext
         {
             int resource_path_pos = resource_spec.indexOf ('/');
             String resource_component = resource_spec.substring (0, resource_path_pos);
-            String resource_path = resource_spec.substring (resource_path_pos);
+            String resource_path = resource_spec.substring (resource_path_pos + 1);
 
             // Component is a bundle symbolic name
             Bundle resource_bundle = artifactDeployer.getArtifactByDescription (resource_component, null);
@@ -93,10 +97,26 @@ class ResourceMapper implements HttpContext
                     return (resource);
                 }
 
-                return (resource_bundle.getResource ("/public" + resource_path));
+                return (resource_bundle.getResource ("/public/" + resource_path));
+            }
+            else // This may be a reference to system/public (if it exists) like /VAADIN/~/system/file.ext
+            {
+                Path system_public = Paths.get (System.getProperty ("system.home"), "system", "public");
+
+                if (Files.exists (system_public))
+                {
+                    // Try to resolve the resource as a file under $LUCIDJ_HOME/system/public
+                    try
+                    {
+                        return (system_public.resolve (resource_path).toUri ().toURL ());
+                    }
+                    catch (MalformedURLException e)
+                    {
+                        log.warn ("Exception resolving: {}", name, e);
+                    }
+                }
             }
         }
-
         // Resource not found
         return (null);
     }

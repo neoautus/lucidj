@@ -16,15 +16,15 @@
 
 package org.lucidj.iconlist.renderer;
 
+import org.lucidj.api.IconHelper;
 import org.lucidj.api.Renderer;
+import org.lucidj.api.ServiceContext;
 import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.event.LayoutEvents;
-import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
-import com.vaadin.server.ThemeResource;
 import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import org.osgi.framework.BundleContext;
 
 public class IconListRenderer extends CssLayout implements
     Renderer, LayoutEvents.LayoutClickListener, Button.ClickListener
@@ -51,11 +53,11 @@ public class IconListRenderer extends CssLayout implements
 
     private Map<Object, AbstractComponent> component_to_vaadin = new HashMap<> ();
 
-    private Resource default_icon;
+    private IconHelper iconHelper;
 
-    public IconListRenderer ()
+    public IconListRenderer (ServiceContext serviceContext, BundleContext bundleContext)
     {
-        default_icon = new ClassResource (this.getClass (), "/public/tangram-icon-512x512.png");
+        iconHelper = serviceContext.getService (bundleContext, IconHelper.class);
         setWidth (100, Unit.PERCENTAGE);
         addLayoutClickListener (this);
     }
@@ -115,14 +117,7 @@ public class IconListRenderer extends CssLayout implements
             icon_title = "No title";
         }
 
-        Resource icon_resource = default_icon;
-
-        String icon_url = (String)component.get ("iconUrl");
-
-        if (icon_url != null)
-        {
-            icon_resource = new ThemeResource (icon_url);
-        }
+        Resource icon_resource = iconHelper.getIcon ((String)component.get ("iconUrl"), 32);
 
         Button button_icon = new Button (icon_title);
         button_icon.setIcon (icon_resource);

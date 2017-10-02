@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="585" height="585" stroke="#FFF">
+<path fill="#AAFF99" d="m28,28 264,264 264-264z"/>
+<path fill="#66CCFF" d="m28,28 264,264-264,264z"/>
+<path fill="#FF9999" d="m424,160v264l132-132V28z"/>
+<path fill="#FFFF77" d="m292,292 132,132V160z"/>
+<path fill="#9999CC" d="m292,292 132,132-132,132-132-132z"/>
+<path fill="#FF99FF" d="m28,556h264l-132-132z"/>
+<path fill="#FFCC33" d="m292,556 264-264v264z"/>
+</svg> 

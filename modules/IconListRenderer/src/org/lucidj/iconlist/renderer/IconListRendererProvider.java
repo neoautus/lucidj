@@ -16,6 +16,7 @@
 
 package org.lucidj.iconlist.renderer;
 
+import org.lucidj.api.IconHelper;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.RendererProvider;
 import org.lucidj.api.ServiceContext;
@@ -36,6 +37,9 @@ public class IconListRendererProvider implements RendererProvider
     @Requires
     private ServiceContext serviceContext;
 
+    @Requires
+    private IconHelper iconHelper;
+
     @Context
     private BundleContext bundleContext;
 
@@ -53,6 +57,7 @@ public class IconListRendererProvider implements RendererProvider
     private void validate ()
     {
         serviceContext.publishUrl (bundleContext, "/public/styles.css");
+        serviceContext.putService (bundleContext, IconHelper.class, iconHelper);
         serviceContext.register (IconListRenderer.class);
     }
 }

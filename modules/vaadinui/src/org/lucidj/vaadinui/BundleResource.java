@@ -48,8 +48,8 @@ import com.vaadin.util.FileTypeResolver;
  * @author Lunifera GmbH (based on Vaadin)
  */
 @SuppressWarnings("serial")
-public class BundleResource implements ConnectorResource, Serializable {
-
+public class BundleResource implements ConnectorResource, Serializable
+{
 	/**
 	 * Default buffer size for this stream resource.
 	 */
@@ -61,14 +61,10 @@ public class BundleResource implements ConnectorResource, Serializable {
 	private long cacheTime = DownloadStream.DEFAULT_CACHETIME;
 
 	/**
-	 * The bundle where the resource should be loaded from.
-	 */
-	private Bundle bundle;
-
-	/**
 	 * Name of the resource is relative to the associated class.
 	 */
 	private final String resourceName;
+	private URL resourceUrl;
 
 	/**
 	 * Creates a new bundle resource instance.
@@ -78,12 +74,27 @@ public class BundleResource implements ConnectorResource, Serializable {
 	 * @param resourceName
 	 *            the Unique identifier of the resource within the application.
 	 */
-	public BundleResource(Bundle bundle, String resourceName) {
-		this.bundle = bundle;
+	public BundleResource (Bundle bundle, String resourceName)
+	{
 		this.resourceName = resourceName;
-		if (bundle == null || resourceName == null) {
-			throw new NullPointerException();
+
+		if (bundle == null || resourceName == null)
+		{
+			throw (new NullPointerException ());
 		}
+
+		resourceUrl = bundle.getEntry (resourceName);
+
+		if (resourceUrl == null)
+		{
+			throw (new IllegalArgumentException ("Resource not found on bundle " + bundle.getBundleId () + ": " + resourceName));
+		}
+	}
+
+	public BundleResource (URL resourceUrl)
+	{
+		this.resourceUrl = resourceUrl;
+		resourceName = resourceUrl.getFile ();
 	}
 
 	/**
@@ -92,31 +103,32 @@ public class BundleResource implements ConnectorResource, Serializable {
 	 * @see com.vaadin.server.Resource#getMIMEType()
 	 */
 	@Override
-	public String getMIMEType() {
-		return FileTypeResolver.getMIMEType(resourceName);
+	public String getMIMEType()
+	{
+		return (FileTypeResolver.getMIMEType(resourceName));
 	}
 
 	@Override
-	public String getFilename() {
-		String[] parts = resourceName.split("/");
-		return parts[parts.length - 1];
+	public String getFilename()
+	{
+		String[] parts = resourceName.split ("/");
+		return (parts [parts.length - 1]);
 	}
 
 	@Override
-	public DownloadStream getStream() {
-		URL entry = bundle.getEntry(resourceName);
-		if (entry == null) {
-			return null;
-		}
-
-		try {
-			DownloadStream ds = new DownloadStream(entry.openStream(),
+	public DownloadStream getStream()
+	{
+		try
+		{
+			DownloadStream ds = new DownloadStream (resourceUrl.openStream(),
 					getMIMEType(), getFilename());
 			ds.setBufferSize(getBufferSize());
 			ds.setCacheTime(getCacheTime());
-			return ds;
-		} catch (IOException e) {
-			throw new IllegalArgumentException(e);
+			return (ds);
+		}
+		catch (IOException e)
+		{
+			throw new IllegalArgumentException (e);
 		}
 	}
 
@@ -130,8 +142,9 @@ public class BundleResource implements ConnectorResource, Serializable {
 	 * 
 	 * @return the size of the buffer in bytes.
 	 */
-	public int getBufferSize() {
-		return bufferSize;
+	public int getBufferSize()
+	{
+		return (bufferSize);
 	}
 
 	/**
@@ -142,7 +155,8 @@ public class BundleResource implements ConnectorResource, Serializable {
 	 * 
 	 * @see #getBufferSize()
 	 */
-	public void setBufferSize(int bufferSize) {
+	public void setBufferSize (int bufferSize)
+	{
 		this.bufferSize = bufferSize;
 	}
 
@@ -157,8 +171,9 @@ public class BundleResource implements ConnectorResource, Serializable {
 	 * 
 	 * @return Cache time in milliseconds
 	 */
-	public long getCacheTime() {
-		return cacheTime;
+	public long getCacheTime ()
+	{
+		return (cacheTime);
 	}
 
 	/**
@@ -175,7 +190,8 @@ public class BundleResource implements ConnectorResource, Serializable {
 	 *            the cache time in milliseconds.
 	 * 
 	 */
-	public void setCacheTime(long cacheTime) {
+	public void setCacheTime (long cacheTime)
+	{
 		this.cacheTime = cacheTime;
 	}
 }

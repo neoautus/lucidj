@@ -103,13 +103,6 @@ public class IconListRenderer extends CssLayout implements
 
     private AbstractComponent create_icon (Map<String, Object> component)
     {
-        String canonical_name = (String)component.get ("class");
-
-        if (canonical_name == null)
-        {
-            canonical_name = "missing_canonical_name";
-        }
-
         String icon_title = (String)component.get ("iconTitle");
 
         if (icon_title == null)
@@ -138,9 +131,16 @@ public class IconListRenderer extends CssLayout implements
         icon_dd_wrap.setSizeUndefined ();
         icon_dd_wrap.setData (component);
 
-        // Set canonical_name for drag-drop AND on the Label for double-click
-        icon_dd_wrap.setId (canonical_name);
-        button_icon.setId (canonical_name);
+        // Set ID for drag-drop AND on the Label for double-click
+        if (component.containsKey ("entryId"))
+        {
+            String entryId = (String)component.get ("entryId");
+            icon_dd_wrap.setId (entryId);
+            button_icon.setId (entryId);
+        }
+
+        // Component data is the map itself
+        button_icon.setData (component);
 
         // Remember this association
         component_to_vaadin.put (component, icon_dd_wrap);

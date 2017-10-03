@@ -16,7 +16,6 @@
 
 package org.lucidj.vaadinui;
 
-import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
@@ -81,9 +80,6 @@ public class BaseVaadinServlet extends VaadinServlet
 
     @Requires
     private SecurityEngine securityEngine;
-
-    @Requires
-    private ManagedObjectFactory managedObjectFactory;
 
     public BaseVaadinServlet (@Requires HttpService httpService)
         throws ServletException, NamespaceException
@@ -185,7 +181,7 @@ public class BaseVaadinServlet extends VaadinServlet
         @Override
         public UI createInstance (UICreateEvent event)
         {
-            UI new_ui = new BaseVaadinUI (securityEngine, managedObjectFactory);
+            UI new_ui = new BaseVaadinUI (securityEngine);
             new_ui.addAttachListener (BaseVaadinServlet.this);
             new_ui.addDetachListener (BaseVaadinServlet.this);
             return (serviceContext.wrapObject (UI.class, new_ui));

@@ -102,20 +102,3 @@
     -o-background-size: cover;
     background-size: cover;
 }
-
-/* >>> this should go to GaussUI >>> */
-
-.valo .ui-treemenu .v-tree-node-focused:after {
-    opacity: 1;
-    border: none;
-    background-color: #e8e8e8;
-    border-radius: 0;
-    /* todo: some spell to vcenter the damn icon */
-}
-
-.valo .ui-toggle-button.v-button:focus:after {
-    -webkit-box-shadow: none;
-    box-shadow: none;
-}
-
-/* <<< <<< */

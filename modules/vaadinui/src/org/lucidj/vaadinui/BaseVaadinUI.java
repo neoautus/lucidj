@@ -48,8 +48,6 @@ import com.vaadin.ui.VerticalLayout;
 import org.lucidj.api.ClassManager;
 import org.lucidj.api.DesktopInterface;
 import org.lucidj.api.DesktopUI;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.ServiceContext;
 import org.lucidj.api.ServiceObject;
@@ -98,15 +96,13 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
     private boolean value_change_button_quirk;
 
     private SecurityEngine security;
-    private ManagedObjectFactory object_factory;
 
     @ServiceObject.Context
     private ServiceContext serviceContext;
 
-    public BaseVaadinUI (SecurityEngine security, ManagedObjectFactory object_factory)
+    public BaseVaadinUI (SecurityEngine security)
     {
         this.security = security;
-        this.object_factory = object_factory;
     }
 
     //=========================================================================================
@@ -270,27 +266,21 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
     {
         initSystemToolbar ();
 
-        // TODO: ServiceObjects
-        ManagedObjectInstance[] desktops = object_factory.getManagedObjects (DesktopInterface.class, null);
+        desktop = serviceContext.newServiceObject (DesktopInterface.class);
 
-        if (desktops.length > 0)
+        log.info ("----------> desktop = {}", desktop);
+
+        // TODO: HANDLE MISSING DESKTOPS
+        if (desktop != null)
         {
-            ManagedObjectInstance desktop_instance = object_factory.newInstance (desktops [0]);
-            desktop = desktop_instance.adapt (DesktopInterface.class);
+            desktop.init (this);
 
-            log.info ("----------> desktop = {}", desktop);
+            // Set the main desktop area
+            desktop_canvas.replaceComponent (empty_desktop, desktop.getMainLayout ());
 
-            if (desktop != null)
-            {
-                desktop.init (this);
-
-                // Set the main desktop area
-                desktop_canvas.replaceComponent (empty_desktop, desktop.getMainLayout ());
-
-                // Clear old security layout and set/add the newer one
-                user_component.removeAllComponents ();
-                user_component.addComponent (desktop.getSecurityLayout ());
-            }
+            // Clear old security layout and set/add the newer one
+            user_component.removeAllComponents ();
+            user_component.addComponent (desktop.getSecurityLayout ());
         }
     }
 

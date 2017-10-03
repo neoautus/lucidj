@@ -18,14 +18,14 @@ package org.lucidj.ui.gauss;
 
 import org.lucidj.api.ApplicationInterface;
 import org.lucidj.api.DesktopInterface;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.NavigatorManager;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.RendererFactory;
+import org.lucidj.api.ServiceContext;
+import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +56,11 @@ import com.vaadin.ui.VerticalLayout;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class GaussUI implements DesktopInterface, MenuInstance.EventListener, ManagedObject
+import org.osgi.framework.BundleContext;
+
+public class GaussUI implements DesktopInterface, MenuInstance.EventListener
 {
-    private final static transient Logger log = LoggerFactory.getLogger (GaussUI.class);
+    private final static Logger log = LoggerFactory.getLogger (GaussUI.class);
 
     //  Layout structure:
     //  +----------------------------------------------------------+
@@ -108,6 +110,13 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
     private MenuInstance main_menu;
     private RendererFactory rendererFactory;
     private ObjectRenderer main_menu_renderer;
+
+    public GaussUI (ServiceContext serviceContext, BundleContext bundleContext)
+    {
+        menu_manager = serviceContext.getService (bundleContext, MenuManager.class);
+        nav_manager = serviceContext.getService (bundleContext, NavigatorManager.class);
+        rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
+    }
 
     //=========================================================================================
     // DEFAULTS
@@ -541,22 +550,14 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener, Ma
         log.info ("detach() " + this);
     }
 
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
-    {
-        menu_manager = instance.getObject (MenuManager.class);
-        nav_manager = instance.getObject (NavigatorManager.class);
-        rendererFactory = instance.getObject (RendererFactory.class);
-    }
-
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
+    @ServiceObject.Invalidate
+    public void invalidate ()
     {
         if (navigator != null && navigator.getUI ().isAttached ())
         {
             // TODO: INVALIDATE THE DESTKTOP, _NOT_ THE WHOLE SESSION AND UI
             UI attached_ui = navigator.getUI();
-            attached_ui.getSession ().getSession ().invalidate ();
+            attached_ui.getSession ().getSession ().invalidate (); // Actually this gets the ui reload pretty fast
             attached_ui.getPage ().reload ();
         }
     }

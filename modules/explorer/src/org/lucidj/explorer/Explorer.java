@@ -18,15 +18,16 @@ package org.lucidj.explorer;
 
 import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.IconHelper;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
+import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.ServiceContext;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Resource;
 
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -37,13 +38,14 @@ import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
-@Component
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class Explorer implements MenuProvider, ViewProvider
 {
-    public final static String NAVID = "home";
+    public final static String NAVID = "explorer";
     public final static String OPEN = "open";
 
     @Context
@@ -53,13 +55,19 @@ public class Explorer implements MenuProvider, ViewProvider
     private SecurityEngine security;
 
     @Requires
-    private ManagedObjectFactory object_factory;
+    private ServiceContext serviceContext;
 
     @Requires
     private ArtifactDeployer artifactDeployer;
 
     @Requires
     private BundleManager bundleManager;
+
+    @Requires
+    private RendererFactory rendererFactory;
+
+    @Requires
+    private IconHelper iconHelper;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -70,7 +78,8 @@ public class Explorer implements MenuProvider, ViewProvider
     @Override // MenuProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
-        menu.addMenuEntry (menu.newMenuEntry ("Explorer", FontAwesome.FOLDER_OPEN_O, 100, NAVID));
+        Resource icon = iconHelper.getIcon ("places/folder", 32);
+        menu.addMenuEntry (menu.newMenuEntry ("Explorer", icon, 100, NAVID));
     }
 
     @Override // ViewProvider
@@ -98,21 +107,31 @@ public class Explorer implements MenuProvider, ViewProvider
     {
         if (NAVID.equals (viewName))
         {
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new ExplorerView (security));
-            return (view_instance.adapt (View.class));
+            return (serviceContext.newServiceObject (ExplorerView.class));
         }
         else if (OPEN.equals (viewName))
         {
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new OpenView (artifactDeployer));
-            return (view_instance.adapt (View.class));
+            return (serviceContext.newServiceObject (OpenView.class));
         }
         else if (BundleView.NAV_PATTERN.matcher (viewName).matches ())
         {
-            ManagedObjectInstance view_instance =
-                object_factory.wrapObject (new BundleView (context, bundleManager, artifactDeployer));
-            return (view_instance.adapt (View.class));
+            return (serviceContext.newServiceObject (BundleView.class));
         }
         return (null);
+    }
+
+    @Validate
+    private void validate ()
+    {
+        serviceContext.publishUrl (context, "/public/styles.css");
+        serviceContext.putService (context, SecurityEngine.class, security);
+        serviceContext.putService (context, ArtifactDeployer.class, artifactDeployer);
+        serviceContext.putService (context, BundleManager.class, bundleManager);
+        serviceContext.putService (context, RendererFactory.class, rendererFactory);
+        serviceContext.putService (context, IconHelper.class, iconHelper);
+        serviceContext.register (ExplorerView.class);
+        serviceContext.register (OpenView.class);
+        serviceContext.register (BundleView.class);
     }
 }
 

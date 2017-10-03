@@ -18,8 +18,7 @@ package org.lucidj.explorer;
 
 import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,8 +29,9 @@ import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 
-public class OpenView extends VerticalLayout implements ManagedObject, View, Runnable, Thread.UncaughtExceptionHandler
+public class OpenView extends VerticalLayout implements View, Runnable, Thread.UncaughtExceptionHandler
 {
     private final transient Logger log = LoggerFactory.getLogger (ExplorerView.class);
 
@@ -43,9 +43,9 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
     private String artifact_url;
     private String parameters;
 
-    public OpenView (ArtifactDeployer artifactDeployer)
+    public OpenView (ServiceContext serviceContext, BundleContext bundleContext)
     {
-        this.artifactDeployer = artifactDeployer;
+        artifactDeployer = serviceContext.getService (bundleContext, ArtifactDeployer.class);
     }
 
     public void setArtifactURL (String artifact_url)
@@ -136,6 +136,7 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
         }
         catch (Exception e)
         {
+            log.error ("Exception installing artifact", e);
             String msg = "Exception installing artifact: " + e.toString ();
             String exception_msg = e.getMessage ();
             if (exception_msg != null)
@@ -160,18 +161,6 @@ public class OpenView extends VerticalLayout implements ManagedObject, View, Run
                 install_thread.start ();
             }
         }
-    }
-
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
-    {
-        // Nop
-    }
-
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        // Nop
     }
 
     @Override // View

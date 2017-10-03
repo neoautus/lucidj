@@ -16,6 +16,7 @@
 
 package org.lucidj.search;
 
+import org.lucidj.api.IconHelper;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;
@@ -46,6 +47,9 @@ public class Search implements MenuProvider, ViewProvider
     @Requires
     private ManagedObjectFactory object_factory;
 
+    @Requires
+    private IconHelper iconHelper;
+
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
     {
@@ -56,7 +60,8 @@ public class Search implements MenuProvider, ViewProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
         // The explicit class is used to bind the resource with its source bundle
-        Resource icon = new ClassResource (this.getClass (), "Resources/icons/zoom-seach-icon-16x16.png");
+        //Resource icon = new ClassResource (this.getClass (), "Resources/icons/zoom-seach-icon-16x16.png");
+        Resource icon = iconHelper.getIcon ("apps/plasma-search", 16);
         menu.addMenuEntry (menu.newMenuEntry ("Search", icon, 250, V_SEARCH));
     }
 

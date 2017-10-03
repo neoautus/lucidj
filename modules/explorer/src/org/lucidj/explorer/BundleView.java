@@ -16,13 +16,11 @@
 
 package org.lucidj.explorer;
 
-import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.Embedding;
 import org.lucidj.api.EmbeddingContext;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.Package;
+import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +40,7 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-public class BundleView extends VerticalLayout implements ManagedObject, View
+public class BundleView extends VerticalLayout implements View
 {
     private final static Logger log = LoggerFactory.getLogger (ExplorerView.class);
     private final static String view_name = "bundle";
@@ -50,7 +48,6 @@ public class BundleView extends VerticalLayout implements ManagedObject, View
     private final static String nav_rex = "^" + view_name + "\\/(" + long_rex + "|[\\-._a-zA-Z0-9]+)";
     public static Pattern NAV_PATTERN = Pattern.compile (nav_rex);
 
-    private ArtifactDeployer artifactDeployer;
     private BundleManager bundleManager;
     private String parameters;
     private BundleContext context;
@@ -59,11 +56,10 @@ public class BundleView extends VerticalLayout implements ManagedObject, View
 
     private Label parameters_label;
 
-    public BundleView (BundleContext context, BundleManager bundleManager, ArtifactDeployer artifactDeployer)
+    public BundleView (BundleContext context, ServiceContext serviceContext)
     {
         this.context = context;
-        this.bundleManager = bundleManager;
-        this.artifactDeployer = artifactDeployer;
+        bundleManager = serviceContext.getService (context, BundleManager.class);
     }
 
     private void build_toolbar ()
@@ -125,18 +121,6 @@ public class BundleView extends VerticalLayout implements ManagedObject, View
 
         // Implicit on build view
         update_view ();
-    }
-
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
-    {
-        // Nop
-    }
-
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        // Nop
     }
 
     public boolean init_component (ViewChangeListener.ViewChangeEvent event)

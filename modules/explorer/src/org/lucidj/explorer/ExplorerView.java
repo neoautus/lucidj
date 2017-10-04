@@ -514,10 +514,9 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
             if (PROPERTY_ICON.equals (propertyId))
             {
                 File itemFile = itemId instanceof File? (File)itemId: null;
-                log.info ("-- name = {}", itemFile.getName ());
-
-                log.info ("=== property set propertyId={}", propertyId);
-                return (new ObjectProperty<> (default_icon));
+                Resource icon = iconHelper.getIcon (iconHelper.getMimeIconDescriptor (itemFile), 32);
+                // TODO: CACHE ICON ObjectProperty
+                return (new ObjectProperty<> (icon));
             }
             return (super.getContainerProperty (itemId, propertyId));
         }

@@ -18,19 +18,22 @@ package org.lucidj.api;
 
 import com.vaadin.server.Resource;
 
+import java.io.File;
 import java.net.URL;
 
 public interface IconHelper
 {
-    URL getIconURL   (String theme, String familyAndName, int size, int scale);
-    URL getIconURL   (String theme, String familyAndName, int size);
-    URL getIconURL   (String familyAndName, int size, int scale);
-    URL getIconURL   (String familyAndName, int size);
-    Resource getIcon (URL url);
-    Resource getIcon (String theme, String familyAndName, int size, int scale);
-    Resource getIcon (String theme, String familyAndName, int size);
-    Resource getIcon (String familyAndName, int size, int scale);
-    Resource getIcon (String familyAndName, int size);
+    URL      getIconURL (String theme, String familyAndName, int size, int scale);
+    URL      getIconURL (String theme, String familyAndName, int size);
+    URL      getIconURL (String familyAndName, int size, int scale);
+    URL      getIconURL (String familyAndName, int size);
+    Resource getIcon    (URL url);
+    Resource getIcon    (String theme, String familyAndName, int size, int scale);
+    Resource getIcon    (String theme, String familyAndName, int size);
+    Resource getIcon    (String familyAndName, int size, int scale);
+    Resource getIcon    (String familyAndName, int size);
+    String   getMimeIconDescriptor (String filenameOrExtension);
+    String   getMimeIconDescriptor (File file);
 }
 
 // EOF

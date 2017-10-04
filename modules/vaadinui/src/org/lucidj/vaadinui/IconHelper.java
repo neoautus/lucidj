@@ -21,7 +21,13 @@ import org.slf4j.LoggerFactory;
 
 import com.vaadin.server.Resource;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -54,14 +60,8 @@ public class IconHelper implements org.lucidj.api.IconHelper
     private Bundle bundle;
     private String icon_theme_name;
     private URL default_icon_url;
-
-    @Validate
-    private void validate ()
-    {
-        bundle = bundleContext.getBundle ();
-        icon_theme_name = themeHelper.getIconThemeName ();
-        default_icon_url = bundle.getResource ("public/default-icon.svg");
-    }
+    private Map<String, String> mime_extensions = new HashMap<> ();
+    private Map<String, Resource> resource_icon_cache = new HashMap<> ();
 
     @Override
     public URL getIconURL (String theme, String familyAndName, int size, int scale)
@@ -123,16 +123,29 @@ public class IconHelper implements org.lucidj.api.IconHelper
         return (getIconURL (icon_theme_name, familyAndName, size));
     }
 
+    private Resource get_caching_resource (URL icon_url)
+    {
+        String icon_url_location = icon_url.toString ();
+
+        if (resource_icon_cache.containsKey (icon_url_location))
+        {
+            return (resource_icon_cache.get (icon_url_location));
+        }
+        Resource icon_resource = new BundleResource (icon_url);
+        resource_icon_cache.put (icon_url_location, icon_resource);
+        return (icon_resource);
+    }
+
     @Override
     public Resource getIcon (URL url)
     {
-        return (new BundleResource (url));
+        return (get_caching_resource (url));
     }
 
     @Override
     public Resource getIcon (String theme, String familyAndName, int size, int scale)
     {
-        return (new BundleResource (getIconURL (theme, familyAndName, size, scale)));
+        return (get_caching_resource (getIconURL (theme, familyAndName, size, scale)));
     }
 
     @Override
@@ -151,6 +164,88 @@ public class IconHelper implements org.lucidj.api.IconHelper
     public Resource getIcon (String familyAndName, int size)
     {
         return (getIcon (icon_theme_name, familyAndName, size));
+    }
+
+    public String get_icon_descriptor (String filenameOrExtension, boolean is_directory)
+    {
+        if (filenameOrExtension != null)
+        {
+            // Directory extensions are prefixed on mime.types with '/'
+            String extension = (is_directory? "/": "")
+                + filenameOrExtension.substring (filenameOrExtension.lastIndexOf (".") + 1);
+
+            if (mime_extensions.containsKey (extension))
+            {
+                return (mime_extensions.get (extension));
+            }
+        }
+        return (is_directory? "places/folder": "mimetypes/unknown");
+    }
+
+    @Override
+    public String getMimeIconDescriptor (String filenameOrExtension)
+    {
+        return (get_icon_descriptor (filenameOrExtension, false));
+    }
+
+    @Override
+    public String getMimeIconDescriptor (File file)
+    {
+        if (file == null)
+        {
+            return ("mimetypes/unknown");
+        }
+        return (get_icon_descriptor (file.getName (), file.isDirectory ()));
+    }
+
+    private void init_mime_types ()
+    {
+        String mime_types = System.getProperty ("system.conf") + "/mime.types";
+
+        try (BufferedReader br = new BufferedReader(new FileReader (mime_types)))
+        {
+            for (String line; (line = br.readLine()) != null;)
+            {
+                if (line.trim ().startsWith ("#") || line.trim ().isEmpty ())
+                {
+                    continue;
+                }
+
+                // Split a line like:
+                //     image/jpeg     jpeg jpg jpe
+                String[] tokens = line.split ("\\s+");
+
+                if (tokens.length < 2)
+                {
+                    continue;
+                }
+
+                String family_and_name = "mimetypes/" + tokens [0].replace ("/", "-");
+
+                for (int i = 1; i < tokens.length; i++)
+                {
+                    if (mime_extensions.containsKey (tokens [i]))
+                    {
+                        log.warn ("Overwriting mime mapping for '{}' from {} to {}",
+                            tokens [i], mime_extensions.get (tokens [i]), family_and_name);
+                    }
+                    mime_extensions.put (tokens [i], family_and_name);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            log.warn ("Unable to configure mime-types: {}", e.getMessage ());
+        }
+    }
+
+    @Validate
+    private void validate ()
+    {
+        bundle = bundleContext.getBundle ();
+        icon_theme_name = themeHelper.getIconThemeName ();
+        default_icon_url = bundle.getResource ("public/default-icon.svg");
+        init_mime_types ();
     }
 }
 

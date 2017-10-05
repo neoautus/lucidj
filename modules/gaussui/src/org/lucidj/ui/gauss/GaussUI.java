@@ -334,19 +334,19 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
             }
         });
 
-        final Button compose = new Button ("New");
-        compose.setIcon (FontAwesome.EDIT);
-        compose.addStyleName ("tiny");
-        compose.addStyleName ("primary");
-        compose.addStyleName ("ui-toggle-button");
-        compose.setId ("_new");
-        home_buttons.addComponent (compose);
-        compose.addClickListener (new Button.ClickListener ()
+        final Button new_button = new Button ("New");
+        new_button.setIcon (FontAwesome.EDIT);
+        new_button.addStyleName ("tiny");
+        new_button.addStyleName ("primary");
+        new_button.addStyleName ("ui-toggle-button");
+        new_button.setId ("_new");
+        home_buttons.addComponent (new_button);
+        new_button.addClickListener (new Button.ClickListener ()
         {
             @Override
             public void buttonClick (Button.ClickEvent clickEvent)
             {
-                navigator.navigateTo ("compose");
+                navigator.navigateTo ("new");
             }
         });
 
@@ -478,6 +478,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
                 AbstractComponent sidebar = null;
                 AbstractComponent toolbar = null;
 
+                // TODO: CHANGE TO Aggregates
                 if (new_view instanceof ApplicationInterface)
                 {
                     ApplicationInterface app_view = (ApplicationInterface)new_view;
@@ -486,8 +487,8 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
                     toolbar = app_view.getToolbar ();
                 }
 
-                log.info ("Sidebar navid:{} = {}", navid, sidebar);
-                log.info ("Toolbar navid:{} = {}", navid, toolbar);
+                log.debug ("Sidebar navid:{} = {}", navid, sidebar);
+                log.debug ("Toolbar navid:{} = {}", navid, toolbar);
 
                 //---------------
                 // Place sidebar

@@ -60,6 +60,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/ArtifactDeployer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/ServiceObject/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/IconListRenderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/NewView/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/stage" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />

@@ -68,9 +68,9 @@ application/index.vnd
 application/iotp
 application/ipp
 application/isup
-application/java-archive			jar
+application/x-jar			jar
 application/java-serialized-object		ser
-application/java-vm				class
+application/x-java				class
 application/javascript				js
 application/json				json
 application/m3g					m3g
@@ -473,7 +473,7 @@ application/x-ms-application			application
 application/x-ms-manifest			manifest
 application/x-ms-wmd				wmd
 application/x-ms-wmz				wmz
-application/x-msdos-program			com exe bat dll
+application/x-ms-dos-executable			com exe bat dll
 application/x-msi				msi
 application/x-netcdf				nc
 application/x-ns-proxy-autoconfig		pac

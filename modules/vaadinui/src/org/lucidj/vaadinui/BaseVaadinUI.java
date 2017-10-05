@@ -32,6 +32,8 @@ import com.vaadin.server.Responsive;
 import com.vaadin.server.Sizeable;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServletRequest;
+import com.vaadin.server.VaadinSession;
+import com.vaadin.server.WrappedSession;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
@@ -460,7 +462,8 @@ public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
     @ServiceObject.Invalidate
     private void invalidate ()
     {
-        getPushConnection ().disconnect ();
+        // Get 'Session Expired' faster invalidating wrapped session
+        getSession ().getSession ().invalidate ();
     }
 }
 

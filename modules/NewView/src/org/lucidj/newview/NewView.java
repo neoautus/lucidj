@@ -16,37 +16,136 @@
 
 package org.lucidj.newview;
 
+import org.lucidj.api.ObjectRenderer;
+import org.lucidj.api.RendererFactory;
+import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.ServiceContext;
+
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.ValoTheme;
+
+import java.nio.file.Path;
+
+import org.osgi.framework.BundleContext;
 
 public class NewView extends VerticalLayout implements View
 {
     public final static String NAVID = "new";
 
+    // TODO: INIT THESE VARIABLES WITH @ServiceContext.requires/depends
+    private RendererFactory rendererFactory;
+    private SecurityEngine securityEngine;
+
+    private ObjectRenderer directories;
+
+    public NewView (ServiceContext serviceContext, BundleContext bundleContext)
+    {
+        rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
+        securityEngine = serviceContext.getService (bundleContext, SecurityEngine.class);
+    }
+
     private void buildView ()
     {
         setMargin (true);
+        setSpacing (true);
 
         Label h1 = new Label ("New");
         h1.addStyleName ("h1");
         addComponent (h1);
 
-        addComponent (local_accounts ());
+        addComponent (location_panel ());
+        addComponent (select_type_panel ());
     }
 
-    private Panel local_accounts ()
+    private Panel location_panel ()
     {
-        Panel p = new Panel ("New");
+        Panel p = new Panel ("Location");
         VerticalLayout content = new VerticalLayout ();
         p.setContent (content);
         content.setSpacing (true);
         content.setMargin (true);
-        content.addComponent (new Label ("The quick brown fox jumped over the lazy fox."));
-        content.addComponent (new Button ("Hello world!"));
+        HorizontalLayout directory_and_browse = new HorizontalLayout ();
+        directory_and_browse.setWidth (100, Unit.PERCENTAGE);
+        Label directory_label = new Label ("/home/marcond/My Lab/lucidj-dev/stage/system/");
+        directory_and_browse.addComponent (directory_label);
+        Button change_directory = new Button ("Change location...");
+        change_directory.setStyleName (ValoTheme.BUTTON_SMALL);
+        directory_and_browse.addComponent (change_directory);
+        directory_and_browse.setExpandRatio (directory_label, 1.0f);
+        content.addComponent (directory_and_browse);
+
+        Path projects_home = securityEngine.getSubject ().getDefaultUserDir ();
+        directories = rendererFactory.newRenderer (projects_home);
+        directories.setVisible (false);
+        content.addComponent (directories);
+
+        change_directory.addClickListener (new Button.ClickListener ()
+        {
+            @Override
+            public void buttonClick (Button.ClickEvent clickEvent)
+            {
+                if (directories.isVisible ())
+                {
+                    change_directory.setCaption ("Change location...");
+                    directories.setVisible (false);
+                }
+                else
+                {
+                    change_directory.setCaption ("Cancel change");
+                    directories.setVisible (true);
+                }
+            }
+        });
+
+        return (p);
+    }
+
+    private Panel select_type_panel ()
+    {
+        Panel p = new Panel ("Artifact type");
+        VerticalLayout content = new VerticalLayout ();
+        p.setContent (content);
+        content.setSpacing (true);
+        content.setMargin (true);
+        HorizontalLayout directory_and_browse = new HorizontalLayout ();
+        directory_and_browse.setWidth (100, Unit.PERCENTAGE);
+        Label directory_label = new Label ("/home/marcond/My Lab/lucidj-dev/stage/system/");
+        directory_and_browse.addComponent (directory_label);
+        Button change_directory = new Button ("Change location...");
+        change_directory.setStyleName (ValoTheme.BUTTON_SMALL);
+        directory_and_browse.addComponent (change_directory);
+        directory_and_browse.setExpandRatio (directory_label, 1.0f);
+        content.addComponent (directory_and_browse);
+
+
+        final Label peekaboo = new Label ("Hello world!");
+        peekaboo.setVisible (false);
+        content.addComponent (peekaboo);
+
+        change_directory.addClickListener (new Button.ClickListener ()
+        {
+            @Override
+            public void buttonClick (Button.ClickEvent clickEvent)
+            {
+                if (peekaboo.isVisible ())
+                {
+                    change_directory.setCaption ("Change location...");
+                    peekaboo.setVisible (false);
+                }
+                else
+                {
+                    change_directory.setCaption ("Cancel change");
+                    peekaboo.setVisible (true);
+                }
+            }
+        });
+
         return (p);
     }
 

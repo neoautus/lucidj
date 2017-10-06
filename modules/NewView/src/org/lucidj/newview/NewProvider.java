@@ -16,12 +16,16 @@
 
 package org.lucidj.newview;
 
+import org.lucidj.api.RendererFactory;
+import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.ServiceContext;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
 
+import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -36,6 +40,15 @@ public class NewProvider implements ViewProvider
 
     @Requires
     private ServiceContext serviceContext;
+
+    @Requires
+    private SecurityEngine securityEngine;
+
+    @Requires
+    private RendererFactory rendererFactory;
+
+    @Context
+    private BundleContext bundleContext;
 
     @Override // ViewProvider
     public String getViewName (String s)
@@ -60,6 +73,8 @@ public class NewProvider implements ViewProvider
     @Validate
     private void validate ()
     {
+        serviceContext.putService (bundleContext, SecurityEngine.class, securityEngine);
+        serviceContext.putService (bundleContext, RendererFactory.class, rendererFactory);
         serviceContext.register (NewView.class);
     }
 }

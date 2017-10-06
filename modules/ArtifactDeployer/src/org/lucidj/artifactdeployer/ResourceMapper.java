@@ -90,7 +90,7 @@ class ResourceMapper implements HttpContext
             // Find the bundle specified on the URL
             if (resource_bundle != null)
             {
-                URL resource = resource_bundle.getResource ("/Public" + resource_path);
+                URL resource = resource_bundle.getResource ("/Public/" + resource_path);
 
                 if (resource != null)
                 {

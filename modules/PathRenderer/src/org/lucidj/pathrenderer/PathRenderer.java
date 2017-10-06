@@ -108,7 +108,9 @@ public class PathRenderer extends Tree implements Renderer, ItemClickEvent.ItemC
         // listeners are already attached directly to this component
         // via bypass. We only need to do local housekeeping.
 
-        if (itemClickEvent.getSource () instanceof Tree)
+
+        if (itemClickEvent.isDoubleClick ()
+            && itemClickEvent.getSource () instanceof Tree)
         {
             // Handles directory expand/contract automatically
             Tree tree = (Tree)itemClickEvent.getSource ();

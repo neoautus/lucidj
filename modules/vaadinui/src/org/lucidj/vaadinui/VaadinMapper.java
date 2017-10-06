@@ -115,6 +115,24 @@ class VaadinMapper extends HttpServlet implements HttpContext
         return (true);
     }
 
+    private Bundle get_bundle (URL url)
+    {
+        String bundle_and_revision = url.getHost ();
+
+        try
+        {
+            if (bundle_and_revision.contains ("."))
+            {
+                bundle_and_revision = bundle_and_revision.substring (0, bundle_and_revision.indexOf ('.'));
+            }
+            return (context.getBundle (Long.parseLong (bundle_and_revision)));
+        }
+        catch (NumberFormatException ex)
+        {
+            return (null);
+        }
+    }
+
     private void handle_request (HttpServletRequest request, HttpServletResponse response)
     {
         try
@@ -131,15 +149,26 @@ class VaadinMapper extends HttpServlet implements HttpContext
                 response.setContentType ("text/css");
                 OutputStream out = response.getOutputStream ();
 
-                String timestamp = "/* Generated on " + new Date () + " */\n\n";
+                String timestamp = "/* Generated on " + new Date () + " */\n";
                 out.write (timestamp.getBytes ());
 
                 // Copy every published CSS
                 for (URL url: published_css_files)
                 {
-                    // Simple header
-                    String source = "/* [[" + url.toString () + "]] */\n";
-                    out.write (source.getBytes ());
+                    Bundle bnd = get_bundle (url);
+
+                    if (bnd == null)
+                    {
+                        // Only URL, we may need to debug something
+                        String source = "\n/* [[" + url.toString () + "]] */\n";
+                        out.write (source.getBytes ());
+                    }
+                    else
+                    {
+                        // Source bundle and path
+                        String source = "\n/* [[bundle:" + bnd.getSymbolicName () + url.getPath () + "]] */\n";
+                        out.write (source.getBytes ());
+                    }
 
                     // Copy contents
                     try (InputStream is = url.openStream ())

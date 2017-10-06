@@ -20,7 +20,10 @@ import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.ServiceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.ui.Button;
@@ -30,12 +33,15 @@ import com.vaadin.ui.Panel;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
 
+import java.io.File;
 import java.nio.file.Path;
 
 import org.osgi.framework.BundleContext;
 
 public class NewView extends VerticalLayout implements View
 {
+    private final static Logger log = LoggerFactory.getLogger (NewView.class);
+
     public final static String NAVID = "new";
 
     // TODO: INIT THESE VARIABLES WITH @ServiceContext.requires/depends
@@ -71,11 +77,17 @@ public class NewView extends VerticalLayout implements View
         content.setSpacing (true);
         content.setMargin (true);
         HorizontalLayout directory_and_browse = new HorizontalLayout ();
+        directory_and_browse.setSpacing (true);
         directory_and_browse.setWidth (100, Unit.PERCENTAGE);
-        Label directory_label = new Label ("/home/marcond/My Lab/lucidj-dev/stage/system/");
+        final Label directory_label = new Label ("/home/marcond/My Lab/lucidj-dev/stage/system/");
         directory_and_browse.addComponent (directory_label);
+        Button confirm = new Button ("Save");
+        confirm.addStyleName (ValoTheme.BUTTON_SMALL);
+        confirm.addStyleName (ValoTheme.BUTTON_PRIMARY);
+        confirm.setVisible (false);
+        directory_and_browse.addComponent (confirm);
         Button change_directory = new Button ("Change location...");
-        change_directory.setStyleName (ValoTheme.BUTTON_SMALL);
+        change_directory.addStyleName (ValoTheme.BUTTON_SMALL);
         directory_and_browse.addComponent (change_directory);
         directory_and_browse.setExpandRatio (directory_label, 1.0f);
         content.addComponent (directory_and_browse);
@@ -94,11 +106,29 @@ public class NewView extends VerticalLayout implements View
                 {
                     change_directory.setCaption ("Change location...");
                     directories.setVisible (false);
+                    confirm.setVisible (false);
                 }
                 else
                 {
                     change_directory.setCaption ("Cancel change");
                     directories.setVisible (true);
+                    confirm.setVisible (true);
+                }
+            }
+        });
+
+        directories.addListener (new Listener ()
+        {
+            @Override
+            public void componentEvent (Event event)
+            {
+                if (event instanceof ItemClickEvent)
+                {
+                    ItemClickEvent itemClickEvent = (ItemClickEvent)event;
+                    File item_id = ((File)itemClickEvent.getItemId ());
+
+                    log.info ("CLICK item_path={}", item_id);
+                    directory_label.setValue (item_id.getPath ());
                 }
             }
         });

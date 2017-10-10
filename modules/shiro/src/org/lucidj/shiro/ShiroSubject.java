@@ -60,6 +60,25 @@ public class ShiroSubject implements SecuritySubject
         return ((String)shiro_subject.getPrincipal ());
     }
 
+// TODO: PROPAGATE SESSION EXPIRATION
+//    org.apache.shiro.session.UnknownSessionException: There is no session with id [58451c67-9c18-4985-ba7d-2cb4a14c38ab]
+//        at org.apache.shiro.session.mgt.eis.AbstractSessionDAO.readSession(AbstractSessionDAO.java:170)
+//        at org.apache.shiro.session.mgt.DefaultSessionManager.retrieveSessionFromDataSource(DefaultSessionManager.java:236)
+//        at org.apache.shiro.session.mgt.DefaultSessionManager.retrieveSession(DefaultSessionManager.java:222)
+//        at org.apache.shiro.session.mgt.AbstractValidatingSessionManager.doGetSession(AbstractValidatingSessionManager.java:118)
+//        at org.apache.shiro.session.mgt.AbstractNativeSessionManager.lookupSession(AbstractNativeSessionManager.java:108)
+//        at org.apache.shiro.session.mgt.AbstractNativeSessionManager.lookupRequiredSession(AbstractNativeSessionManager.java:112)
+//        at org.apache.shiro.session.mgt.AbstractNativeSessionManager.touch(AbstractNativeSessionManager.java:191)
+//        at org.apache.shiro.session.mgt.DelegatingSession.touch(DelegatingSession.java:120)
+//        at org.apache.shiro.session.ProxiedSession.touch(ProxiedSession.java:100)
+//        at org.apache.shiro.session.ProxiedSession.touch(ProxiedSession.java:100)
+//        at org.apache.shiro.session.ProxiedSession.touch(ProxiedSession.java:100)
+//        at org.lucidj.shiro.ShiroSubject.touchSession(ShiroSubject.java:66)
+//        at org.lucidj.shiro.Shiro.__M_getStoredSubject(Shiro.java:98)
+//        at org.lucidj.shiro.Shiro.getStoredSubject(Shiro.java)
+//        at org.lucidj.shiro.Shiro.__M_getSubject(Shiro.java:105)
+//        at org.lucidj.shiro.Shiro.getSubject(Shiro.java)
+
     @Override
     public void touchSession ()
     {

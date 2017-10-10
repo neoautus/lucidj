@@ -36,8 +36,6 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class NewProvider implements ViewProvider
 {
-    private final static String NAVID = "new";
-
     @Requires
     private ServiceContext serviceContext;
 
@@ -53,9 +51,9 @@ public class NewProvider implements ViewProvider
     @Override // ViewProvider
     public String getViewName (String s)
     {
-        if (NAVID.equals (s))
+        if (NewView.NAVID.equals (s))
         {
-            return (NAVID);
+            return (NewView.NAVID);
         }
         return null;
     }
@@ -63,7 +61,7 @@ public class NewProvider implements ViewProvider
     @Override // ViewProvider
     public View getView (String s)
     {
-        if (NAVID.equals (s))
+        if (NewView.NAVID.equals (s))
         {
             return (serviceContext.newServiceObject (NewView.class));
         }

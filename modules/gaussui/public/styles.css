@@ -15,3 +15,55 @@
     -webkit-box-shadow: none;
     box-shadow: none;
 }
+
+/*---------------------------*/
+/* THE ACCORDION REPLACEMENT */
+
+/* No box or focus shadow around the button */
+.valo .ui-panel-caption.v-button:focus:after {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border: 1px solid #c5c5c5;
+}
+
+/* Make the button get a "vaadin accordion" shape */
+.valo .ui-navigation-panel div.ui-panel-caption {
+    border-radius: unset;
+    border-left: none;
+    border-right: none;
+    text-align: inherit;
+}
+
+/* Some cosmetics */
+.valo .ui-navigation-panel .v-slot:first-child div.ui-panel-caption {
+    border-top: none;
+}
+
+/* Create a small caret pointing to left */
+.valo .ui-navigation-panel .v-button-wrap:after {
+    content: '\f0d9';
+    width: 0.5em;
+    text-align: center;
+    font-family: ThemeIcons;
+    font-style: normal;
+    font-weight: normal;
+    -webkit-font-smoothing: antialiased;
+    line-height: 2em;
+    float: right;
+    -webkit-transition: all 100ms;
+    -moz-transition: all 100ms;
+    transition: all 100ms;
+}
+
+/* Create an expanded state with the caret pointing downwards */
+.valo .ui-panel-caption-expanded .v-button-wrap:after {
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+    content: "\f0d9";
+    font-family: ThemeIcons;
+}
+
+/*---------------------------*/

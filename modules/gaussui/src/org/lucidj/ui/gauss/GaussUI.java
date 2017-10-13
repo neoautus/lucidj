@@ -40,7 +40,6 @@ import com.vaadin.server.Sizeable;
 import com.vaadin.server.Sizeable.Unit;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.AbstractComponent;
-import com.vaadin.ui.Accordion;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
@@ -50,8 +49,10 @@ import com.vaadin.ui.HorizontalSplitPanel;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Layout;
 import com.vaadin.ui.Notification;
+import com.vaadin.ui.Panel;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.themes.ValoTheme;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -97,7 +98,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
     private CssLayout emptySidebar = new CssLayout ();
     private HorizontalLayout hSecurityArea = new HorizontalLayout ();
     private Button toggle_sidebar;
-    private Accordion acMenu = new Accordion ();
+    private VerticalLayout acMenu = new VerticalLayout ();
 
     private String DAMN = "damage.report";
     private ErrorView damage_report_view = new ErrorView ();
@@ -218,6 +219,44 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
     // LAYOUTS
     //=========================================================================================
 
+    private void add_smart_tab (VerticalLayout container, String caption, Component contents)
+    {
+        String style_expanded = "ui-panel-caption-expanded";
+
+        /* Every panel is a glorified button disguised as accordion tab... */
+        final Button caption_button = new Button (caption);
+        caption_button.setWidth (100, Unit.PERCENTAGE);
+        container.addComponent (caption_button);
+        caption_button.addStyleName (ValoTheme.BUTTON_SMALL);
+        caption_button.addStyleName ("ui-panel-caption");
+        caption_button.addStyleName (style_expanded);
+
+        /* ... with a panel for the contents and selective hide/show */
+        final Panel content_panel = new Panel ();
+        content_panel.setWidth (100, Unit.PERCENTAGE);
+        content_panel.setContent (contents);
+        content_panel.addStyleName (ValoTheme.PANEL_BORDERLESS);
+        container.addComponent (content_panel);
+
+        caption_button.addClickListener (new Button.ClickListener ()
+        {
+            @Override
+            public void buttonClick (Button.ClickEvent clickEvent)
+            {
+                if (content_panel.isVisible ())
+                {
+                    content_panel.setVisible (false);
+                    caption_button.removeStyleName (style_expanded);
+                }
+                else
+                {
+                    content_panel.setVisible (true);
+                    caption_button.addStyleName (style_expanded);
+                }
+            }
+        });
+    }
+
     private void initAppLayout ()
     {
         vAppLayout.setSizeFull();
@@ -246,9 +285,9 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
             main_menu_renderer.setHeightUndefined ();
 
             // Add the rendered component into navigation panel
-            acMenu.addStyleName ("borderless");
-            acMenu.addTab (main_menu_renderer, "Navigation");
-            acMenu.setSizeFull ();
+            acMenu.addStyleName ("ui-navigation-panel");
+            add_smart_tab (acMenu, "Navigation", main_menu_renderer);
+            acMenu.setWidth (100, Unit.PERCENTAGE);
         }
 
         emptyContents = new CssLayout ();

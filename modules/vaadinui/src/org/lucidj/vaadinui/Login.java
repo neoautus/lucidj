@@ -54,6 +54,7 @@ public class Login extends LoginForm implements LoginForm.LoginListener
     private static String login_token;
 
     private TextField userNameField;
+    private boolean userNameField_filling;
     private PasswordField passwordField;
     private Button loginButton;
 
@@ -134,7 +135,9 @@ public class Login extends LoginForm implements LoginForm.LoginListener
                 int new_username_length = textChangeEvent.getText ().length ();
 
                 // Check for autofill
-                if (new_username_length > 1 && userNameField.isEmpty ())
+                if (userNameField.isEmpty ()
+                    && new_username_length > 1
+                    && !userNameField_filling)
                 {
                     // This is autofill
                     userNameField.removeShortcutListener (username_enter_listener);
@@ -143,6 +146,7 @@ public class Login extends LoginForm implements LoginForm.LoginListener
                 }
                 else
                 {
+                    userNameField_filling = true;
                     passwordField.setValue ("");
                     userNameField.addShortcutListener (username_enter_listener);
                 }

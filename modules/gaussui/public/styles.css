@@ -32,6 +32,14 @@
     border-left: none;
     border-right: none;
     text-align: inherit;
+
+    /* More Accordion-like looks */
+    background-color: #fafafa;
+    background-image: -webkit-linear-gradient(top, #fafafa 2%, #f6f6f6 98%);
+    background-image: linear-gradient(to bottom,#fafafa 2%, #f6f6f6 98%);
+    /*color: #464646;*/
+    font-weight: 400;
+    font-size: 14px;
 }
 
 /* Some cosmetics */
@@ -48,7 +56,7 @@
     font-style: normal;
     font-weight: normal;
     -webkit-font-smoothing: antialiased;
-    line-height: 2em;
+    line-height: 2.6em;
     float: right;
     -webkit-transition: all 100ms;
     -moz-transition: all 100ms;

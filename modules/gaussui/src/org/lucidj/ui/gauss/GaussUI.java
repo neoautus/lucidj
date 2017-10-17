@@ -227,7 +227,6 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
         final Button caption_button = new Button (caption);
         caption_button.setWidth (100, Unit.PERCENTAGE);
         container.addComponent (caption_button);
-        caption_button.addStyleName (ValoTheme.BUTTON_SMALL);
         caption_button.addStyleName ("ui-panel-caption");
         caption_button.addStyleName (style_expanded);
 

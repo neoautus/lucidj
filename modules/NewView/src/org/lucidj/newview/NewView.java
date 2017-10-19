@@ -16,6 +16,7 @@
 
 package org.lucidj.newview;
 
+import org.lucidj.api.NavigatorManager;
 import org.lucidj.api.ObjectRenderer;
 import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SecurityEngine;
@@ -67,6 +68,7 @@ public class NewView extends FormLayout implements View
     // TODO: INIT THESE VARIABLES WITH @ServiceContext.requires/depends
     private RendererFactory rendererFactory;
     private SecurityEngine securityEngine;
+    private NavigatorManager navigatorManager;
 
     private TextField frm_project_name;
     private TextField frm_directory;
@@ -77,10 +79,14 @@ public class NewView extends FormLayout implements View
     private Label frm_messages;
     private boolean test_debug_artifact_options;
 
+    private Path projects_dir;
+
     public NewView (ServiceContext serviceContext, BundleContext bundleContext)
     {
         rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
         securityEngine = serviceContext.getService (bundleContext, SecurityEngine.class);
+        navigatorManager = serviceContext.getService (bundleContext, NavigatorManager.class);
+        projects_dir = securityEngine.getSubject ().getDefaultUserDir ();
     }
 
     private void buildView ()
@@ -198,6 +204,17 @@ public class NewView extends FormLayout implements View
         frm_messages.setValue (messages);
     }
 
+    private void open_project (Path project_path)
+    {
+        String item_path = projects_dir.relativize (project_path).toString ();
+
+        // TODO: CREATE BASIC SYSTEM NAVIGATION "actions" AND PROPERTIES
+        Map<String, Object> properties = new HashMap<> ();
+        properties.put ("artifactUrl", project_path.toUri ().toString ());
+
+        navigatorManager.navigateTo ("open/" + item_path, properties);
+    }
+
     private void create_project ()
     {
         String project_name = frm_project_name.getValue ();
@@ -220,10 +237,12 @@ public class NewView extends FormLayout implements View
             }
         }
 
+        String artifact_name = project_name + ".leap";
+        Path full_project_path = project_path.resolve (artifact_name);
+
+        // Create project directory
         try
         {
-            String artifact_name = project_name + ".leap";
-            Path full_project_path = project_path.resolve (artifact_name);
             Files.createDirectory (full_project_path);
         }
         catch (IOException e) // java.nio.file.FileAlreadyExistsException
@@ -232,6 +251,20 @@ public class NewView extends FormLayout implements View
             frm_messages.setValue ("Exception creating project: " + e.toString ());
             return;
         }
+
+        // Create default main
+        try
+        {
+            Files.createFile (full_project_path.resolve ("main.gluon"));
+        }
+        catch (IOException e)
+        {
+            log.error ("Exception creating default main: {}", project_path, e);
+            frm_messages.setValue ("Exception creating default main: " + e.toString ());
+            return;
+        }
+
+        open_project (full_project_path);
     }
 
     private void fill_project_options (FormLayout form)
@@ -348,7 +381,7 @@ public class NewView extends FormLayout implements View
         directory_and_browse.setWidth (100, Unit.PERCENTAGE);
 
         frm_directory = new TextField ();
-        frm_directory.setValue ("/home/marcond/My Lab/lucidj-dev/stage/system/");
+        frm_directory.setValue (projects_dir.toString ());
         frm_directory.setWidth(100, Unit.PERCENTAGE);
         directory_and_browse.addComponent (frm_directory);
         Button confirm = new Button ("Save");

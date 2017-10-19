@@ -16,6 +16,7 @@
 
 package org.lucidj.newview;
 
+import org.lucidj.api.NavigatorManager;
 import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.ServiceContext;
@@ -45,6 +46,9 @@ public class NewProvider implements ViewProvider
     @Requires
     private RendererFactory rendererFactory;
 
+    @Requires
+    private NavigatorManager navigatorManager;
+
     @Context
     private BundleContext bundleContext;
 
@@ -73,6 +77,7 @@ public class NewProvider implements ViewProvider
     {
         serviceContext.putService (bundleContext, SecurityEngine.class, securityEngine);
         serviceContext.putService (bundleContext, RendererFactory.class, rendererFactory);
+        serviceContext.putService (bundleContext, NavigatorManager.class, navigatorManager);
         serviceContext.register (NewView.class);
     }
 }

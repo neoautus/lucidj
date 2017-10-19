@@ -21,6 +21,7 @@ import org.lucidj.api.BundleManager;
 import org.lucidj.api.IconHelper;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuProvider;
+import org.lucidj.api.NavigatorManager;
 import org.lucidj.api.RendererFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.ServiceContext;
@@ -45,9 +46,6 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class Explorer implements MenuProvider, ViewProvider
 {
-    public final static String NAVID = "explorer";
-    public final static String OPEN = "open";
-
     @Context
     private BundleContext context;
 
@@ -69,6 +67,9 @@ public class Explorer implements MenuProvider, ViewProvider
     @Requires
     private IconHelper iconHelper;
 
+    @Requires
+    private NavigatorManager navigatorManager;
+
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
     {
@@ -79,7 +80,7 @@ public class Explorer implements MenuProvider, ViewProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
         Resource icon = iconHelper.getIcon ("places/folder", 32);
-        menu.addMenuEntry (menu.newMenuEntry ("Explorer", icon, 100, NAVID));
+        menu.addMenuEntry (menu.newMenuEntry ("Explorer", icon, 100, ExplorerView.NAVID));
     }
 
     @Override // ViewProvider
@@ -87,13 +88,13 @@ public class Explorer implements MenuProvider, ViewProvider
     {
         Matcher m;
 
-        if (NAVID.equals (navigationState))
+        if (ExplorerView.NAVID.equals (navigationState))
         {
-            return (NAVID);
+            return (ExplorerView.NAVID);
         }
-        else if (navigationState.startsWith (OPEN + "/"))  // The '/' is used since 'open' requires args
+        else if (navigationState.startsWith (OpenView.NAVID + "/"))  // The '/' is used since 'open' requires args
         {
-            return (OPEN);
+            return (navigationState); // For now, every open is a separate View
         }
         else if ((m = BundleView.NAV_PATTERN.matcher (navigationState)).find ())
         {
@@ -105,11 +106,11 @@ public class Explorer implements MenuProvider, ViewProvider
     @Override // ViewProvider
     public View getView (String viewName)
     {
-        if (NAVID.equals (viewName))
+        if (ExplorerView.NAVID.equals (viewName))
         {
             return (serviceContext.newServiceObject (ExplorerView.class));
         }
-        else if (OPEN.equals (viewName))
+        else if (viewName.startsWith (OpenView.NAVID + "/"))
         {
             return (serviceContext.newServiceObject (OpenView.class));
         }
@@ -129,6 +130,7 @@ public class Explorer implements MenuProvider, ViewProvider
         serviceContext.putService (context, BundleManager.class, bundleManager);
         serviceContext.putService (context, RendererFactory.class, rendererFactory);
         serviceContext.putService (context, IconHelper.class, iconHelper);
+        serviceContext.putService (context, NavigatorManager.class, navigatorManager);
         serviceContext.register (ExplorerView.class);
         serviceContext.register (OpenView.class);
         serviceContext.register (BundleView.class);

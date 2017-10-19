@@ -28,12 +28,17 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
+import java.util.Map;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 public class OpenView extends VerticalLayout implements View, Runnable, Thread.UncaughtExceptionHandler
 {
-    private final transient Logger log = LoggerFactory.getLogger (ExplorerView.class);
+    private static final Logger log = LoggerFactory.getLogger (OpenView.class);
+
+    public static final String NAVID = "open";
+    public static final String ARTIFACT_URL = "artifactUrl";
 
     private ArtifactDeployer artifactDeployer;
     private VerticalLayout install_pane;
@@ -46,11 +51,6 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
     public OpenView (ServiceContext serviceContext, BundleContext bundleContext)
     {
         artifactDeployer = serviceContext.getService (bundleContext, ArtifactDeployer.class);
-    }
-
-    public void setArtifactURL (String artifact_url)
-    {
-        this.artifact_url = artifact_url;
     }
 
     private void build_toolbar ()
@@ -169,6 +169,12 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
         log.info ("Enter viewName=" + event.getViewName() + " parameters=" + event.getParameters());
 
         parameters = event.getParameters ();
+
+        if (getData () instanceof Map)
+        {
+            Map<String, Object> properties = (Map<String, Object>)getData ();
+            artifact_url = (String)properties.get (ARTIFACT_URL);
+        }
 
         if (getComponentCount() == 0)
         {

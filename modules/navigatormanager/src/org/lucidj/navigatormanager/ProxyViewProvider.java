@@ -116,7 +116,7 @@ public class ProxyViewProvider implements ViewProvider, ServiceObject.Listener
                     VaadinSession current = VaadinSession.getCurrent ();
                     VaadinSession.setCurrent (navigator.getUI ().getSession ());
 
-                    // TODO: ACTUALLY 'HOME' SHOULD BE TOPMOST MENU ENTRY
+                    // We always have a dedicated home view
                     navigator.navigateTo (NavigatorManager.HOME);
 
                     // Back to system land defaults

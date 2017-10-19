@@ -63,9 +63,12 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
 {
     private final static Logger log = LoggerFactory.getLogger (ExplorerView.class);
 
+    public final static String NAVID = "explorer";
+
     private SecurityEngine security;
     private RendererFactory rendererFactory;
     private IconHelper iconHelper;
+    private NavigatorManager navigatorManager;
 
     private Panel browse_files;
     private Resource default_icon;
@@ -80,6 +83,7 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
         security = serviceContext.getService (bundleContext, SecurityEngine.class);
         rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
         iconHelper = serviceContext.getService (bundleContext, IconHelper.class);
+        navigatorManager = serviceContext.getService (bundleContext, NavigatorManager.class);
         default_icon = iconHelper.getIcon ("default" /*"apps/plasma"*/, 32);
     }
 
@@ -422,14 +426,12 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
 
             try
             {
-                String view_name = Explorer.OPEN + '/' + item_path;
-                OpenView view = NavigatorManager.getOrCreateView (view_name, OpenView.class);
+                String view_name = OpenView.NAVID + '/' + item_path;
 
-                if (view != null)
-                {
-                    view.setArtifactURL (item_id.toURI ().toString ());
-                    UI.getCurrent().getNavigator().navigateTo (view_name);
-                }
+                Map<String, Object> properties = new HashMap<> ();
+                properties.put (OpenView.ARTIFACT_URL, item_id.toURI ().toString ());
+
+                navigatorManager.navigateTo (view_name, properties);
             }
             catch (Exception e)
             {

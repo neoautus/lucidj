@@ -22,8 +22,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.Navigator;
+import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
 import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.AbstractComponent;
 import com.vaadin.ui.UI;
 
 import java.util.Map;
@@ -43,7 +45,9 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides (specifications = NavigatorManager.class)
 class DefaultNavigatorManager implements NavigatorManager
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultNavigatorManager.class);
+    private static final Logger log = LoggerFactory.getLogger (DefaultNavigatorManager.class);
+
+    private static final String ATTR_VIEW_PROVIDER = NavigatorManager.class.getName () + ".view-provider";
 
     private Map<String, ViewProvider> view_providers;
 
@@ -106,6 +110,42 @@ class DefaultNavigatorManager implements NavigatorManager
             return (false);
         }
         navigator.addProvider (proxy_view_provider);
+        return (true);
+    }
+
+    @Override
+    public boolean navigateTo (String navigationState, Map<String, Object> dataProperties)
+    {
+        UI ui = UI.getCurrent ();
+
+        if (ui == null)
+        {
+            return (false);
+        }
+
+        Navigator navigator = ui.getNavigator ();
+
+        if (navigator == null)
+        {
+            return (false);
+        }
+
+        ViewProvider proxy_view_provider = get_or_create_proxy_view_provider (navigator);
+        String view_name = proxy_view_provider.getViewName (navigationState);
+
+        if (view_name == null)
+        {
+            return (false);
+        }
+
+        View view = proxy_view_provider.getView (view_name);
+
+        if (view instanceof AbstractComponent)
+        {
+            // Store properties as component data
+            ((AbstractComponent)view).setData (dataProperties);
+        }
+        navigator.navigateTo (navigationState);
         return (true);
     }
 

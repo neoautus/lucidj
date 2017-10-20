@@ -1,4 +1,8 @@
 
+.ui-main-splitpanel > div > .v-splitpanel-first-container {
+    background-color: white;
+}
+
 .valo .ui-treemenu .v-tree-node-focused:after {
     opacity: 1;
     border: none;

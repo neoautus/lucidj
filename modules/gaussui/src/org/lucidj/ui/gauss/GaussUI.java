@@ -268,6 +268,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
 
         {
             hsMenuContents.setSizeFull ();
+            hsMenuContents.addStyleName ("ui-main-splitpanel");
             vAppLayout.addComponent (hsMenuContents);
             vAppLayout.setExpandRatio (hsMenuContents, 1.0f);
         }

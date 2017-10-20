@@ -307,7 +307,6 @@ public class ExplorerView extends VerticalLayout implements View, ItemClickEvent
             tree.setContainerDataSource (fs);
             tree.setItemIconPropertyId (FilesystemContainer.PROPERTY_ICON);
             tree.setItemCaptionPropertyId (FilesystemContainer.PROPERTY_NAME);
-            tree.setWidth ("100%");
             tree.setSelectable (false);
             tree.setImmediate (true);
             tree.setHeightUndefined ();

@@ -1,4 +1,8 @@
 
+.x-explorerview {
+    min-width: 100%;
+}
+
 .valo .x-explorerview .v-tree-node-focused:after {
     opacity: 1;
     border: none;

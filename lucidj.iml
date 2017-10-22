@@ -62,6 +62,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/IconListRenderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/NewView/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/PathRenderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/ContainerTreeRenderer/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/stage" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />

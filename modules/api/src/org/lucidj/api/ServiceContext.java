@@ -20,7 +20,10 @@ import java.net.URL;
 import java.util.Map;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Filter;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
 public interface ServiceContext
 {
@@ -28,6 +31,9 @@ public interface ServiceContext
     void register (Class objectClass);
     void register (Class objectClass, ServiceObject.Provider provider);
     void addListener (ServiceObject.Listener listener, Class filterClass);
+    ServiceTracker addServiceTracker (Class objectClass, ServiceContext.TrackerListener listener);
+    ServiceTracker addServiceTracker (String filter, ServiceContext.TrackerListener listener);
+    ServiceTracker addServiceTracker (Filter filter, ServiceContext.TrackerListener listener);
 
     Object newServiceObject (String objectClassName, Map<String, Object> properties);
     Object newServiceObject (String objectClassName);
@@ -40,6 +46,13 @@ public interface ServiceContext
 
     ServiceRegistration publishUrl (BundleContext context, String localUrl);
     ServiceRegistration publishUrl (BundleContext context, URL url);
+
+    interface TrackerListener
+    {
+        void bind (Object service, ServiceReference ref);
+        void unbind (Object service, ServiceReference ref);
+        void modified (Object service, ServiceReference ref);
+    }
 }
 
 // EOF

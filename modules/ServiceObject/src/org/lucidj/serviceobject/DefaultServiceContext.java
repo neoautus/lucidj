@@ -42,9 +42,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
+import org.osgi.framework.Constants;
+import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.ServiceTracker;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -467,6 +472,74 @@ public class DefaultServiceContext implements ServiceContext
         // automatically unregistered when the bundle becomes invalid.
         return (context.registerService (URL.class, url, props));
     }
+
+    //-----------------------------------------------------------------------------------------------------------------
+    // IPOJO-STYLE SERVICE TRACKING
+    //-----------------------------------------------------------------------------------------------------------------
+
+    @Override
+    public ServiceTracker addServiceTracker (Class objectClass, ServiceContext.TrackerListener listener)
+    {
+        return (addServiceTracker ("(" + Constants.OBJECTCLASS + "=" + objectClass.getName () + ")", listener));
+    }
+
+    @Override
+    public ServiceTracker addServiceTracker (String filter, ServiceContext.TrackerListener listener)
+    {
+        try
+        {
+            return (addServiceTracker (context.createFilter (filter), listener));
+        }
+        catch (InvalidSyntaxException e)
+        {
+            return (null);
+        }
+    }
+
+    @Override
+    public ServiceTracker addServiceTracker (Filter filter, ServiceContext.TrackerListener listener)
+    {
+        BroadcastingServiceTracker tracker = new BroadcastingServiceTracker (context, listener, filter);
+        tracker.open ();
+        return (tracker);
+    }
+
+    // TODO: AUTOCLEANUP THESE OBJECTS
+    public class BroadcastingServiceTracker extends ServiceTracker
+    {
+        private ServiceContext.TrackerListener listener;
+
+        public BroadcastingServiceTracker (BundleContext context, ServiceContext.TrackerListener listener, Filter filter)
+        {
+            super (context, filter, null);
+            this.listener = listener;
+        }
+
+        @Override
+        public Object addingService (ServiceReference reference)
+        {
+            Object service = context.getService (reference);
+            listener.bind (service, reference);
+            return (service);
+        }
+
+        @Override
+        public void removedService (ServiceReference reference, Object service)
+        {
+            listener.unbind (service, reference);
+            super.removedService (reference, service);
+        }
+
+        @Override
+        public void modifiedService (ServiceReference reference, Object service)
+        {
+            listener.modified (service, reference);
+        }
+    }
+
+    //-----------------------------------------------------------------------------------------------------------------
+    // CLEANUP
+    //-----------------------------------------------------------------------------------------------------------------
 
     private void bundle_cleanup (Bundle departing_bundle)
     {

@@ -58,6 +58,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 public class GaussUI implements DesktopInterface, MenuInstance.EventListener
 {
@@ -98,7 +99,7 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
     private CssLayout emptySidebar = new CssLayout ();
     private HorizontalLayout hSecurityArea = new HorizontalLayout ();
     private Button toggle_sidebar;
-    private VerticalLayout acMenu = new VerticalLayout ();
+    private VerticalLayout acMenu;
 
     private String DAMN = "damage.report";
     private ErrorView damage_report_view = new ErrorView ();
@@ -111,9 +112,11 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
     private MenuInstance main_menu;
     private RendererFactory rendererFactory;
     private ObjectRenderer main_menu_renderer;
+    private ServiceContext serviceContext;
 
     public GaussUI (ServiceContext serviceContext, BundleContext bundleContext)
     {
+        this.serviceContext = serviceContext;
         menu_manager = serviceContext.getService (bundleContext, MenuManager.class);
         nav_manager = serviceContext.getService (bundleContext, NavigatorManager.class);
         rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
@@ -223,17 +226,18 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
     {
         String style_expanded = "ui-panel-caption-expanded";
 
-        /* Every panel is a glorified button disguised as accordion tab... */
+        // Every panel is a glorified button disguised as accordion tab...
         final Button caption_button = new Button (caption);
         caption_button.setWidth (100, Unit.PERCENTAGE);
         container.addComponent (caption_button);
         caption_button.addStyleName ("ui-panel-caption");
         caption_button.addStyleName (style_expanded);
 
-        /* ... with a panel for the contents and selective hide/show */
+        // ... with a panel for the contents and selective hide/show
         final Panel content_panel = new Panel ();
         content_panel.setWidth (100, Unit.PERCENTAGE);
         content_panel.setContent (contents);
+        content_panel.addStyleName ("ui-panel-contents");
         content_panel.addStyleName (ValoTheme.PANEL_BORDERLESS);
         container.addComponent (content_panel);
 
@@ -254,6 +258,41 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
                 }
             }
         });
+    }
+
+    private VerticalLayout create_multipanel ()
+    {
+        VerticalLayout layout = new VerticalLayout ();
+
+        add_smart_tab (layout, "Navigation", main_menu_renderer);
+
+        serviceContext.addServiceTracker ("(@section=Navigation)", new ServiceContext.TrackerListener ()
+        {
+            @Override
+            public void bind (Object service, ServiceReference ref)
+            {
+                log.info ("///// bind: service={} ref={}", service, ref);
+
+                ObjectRenderer r = rendererFactory.newRenderer (ref);
+                r.setWidthUndefined ();
+                r.setHeightUndefined ();
+
+                add_smart_tab (layout, (String)ref.getProperty ("@caption"), r);
+            }
+
+            @Override
+            public void unbind (Object service, ServiceReference ref)
+            {
+                log.info ("///// unbind: service={} ref={}", service, ref);
+            }
+
+            @Override
+            public void modified (Object service, ServiceReference ref)
+            {
+                log.info ("///// modified: service={} ref={}", service, ref);
+            }
+        });
+        return (layout);
     }
 
     private void initAppLayout ()
@@ -285,8 +324,8 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
             main_menu_renderer.setHeightUndefined ();
 
             // Add the rendered component into navigation panel
+            acMenu = create_multipanel ();
             acMenu.addStyleName ("ui-navigation-panel");
-            add_smart_tab (acMenu, "Navigation", main_menu_renderer);
             acMenu.setWidth (100, Unit.PERCENTAGE);
         }
 

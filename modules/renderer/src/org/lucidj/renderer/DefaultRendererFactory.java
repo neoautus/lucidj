@@ -89,17 +89,29 @@ public class DefaultRendererFactory implements RendererFactory
 
         for (RendererProvider provider: renderer_providers)
         {
-            for (Object element: Aggregate.elements (object))
-            {
-                Renderer renderer = provider.getCompatibleRenderer (element);
+            Renderer renderer = null;
+            Object source = object;
 
-                if (renderer != null)
+            // First check if the renderer support aggregated objects
+            if ((renderer = provider.getCompatibleRenderer (object)) == null)
+            {
+                // Or look for a suitable renderer for each aggregate object
+                for (Object element: Aggregate.elements (object))
                 {
-                    // Link the element to the renderer
-                    renderer_mapping.put (mapper, provider);
-                    renderer.objectLinked (element);
-                    return (renderer);
+                    if ((renderer = provider.getCompatibleRenderer (element)) != null)
+                    {
+                        source = element;
+                        break;
+                    }
                 }
+            }
+
+            if (renderer != null)
+            {
+                // Link the element to the renderer
+                renderer_mapping.put (mapper, provider);
+                renderer.objectLinked (source);
+                return (renderer);
             }
         }
         return (null);

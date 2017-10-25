@@ -78,10 +78,7 @@ public class DefaultServiceContext implements ServiceContext
     @Override // ServiceContext
     public ServiceLocator newServiceLocator ()
     {
-        log.info ("newServiceLocator context={}", context);
-        ServiceLocatorWrapper wrapper = new ServiceLocatorWrapper (context);
-        log.info ("newServiceLocator wrapper={}", wrapper);
-        return (wrapper);
+        return (new ServiceLocatorWrapper (context));
     }
 
     private void call_annotated (Class annotation, Object obj, Object... args)
@@ -213,7 +210,6 @@ public class DefaultServiceContext implements ServiceContext
     @Override // ServiceContext
     public <T> T wrapObject (Class<T> serviceClass, Object serviceObject)
     {
-        log.info ("wrapObject: obj={}", serviceObject);
         return (serviceClass.cast (internal_wrap_object (serviceObject)));
     }
 
@@ -425,7 +421,7 @@ public class DefaultServiceContext implements ServiceContext
     {
         Map<String, Object> properties = get_properties (context.getBundle ().getBundleId ());
         Object service = properties.get (type.getName ());
-        log.info ("(***) getService: bundle={} type={} service={}", context.getBundle (), type, service);
+        log.debug ("getService: bundle={} type={} service={}", context.getBundle (), type, service);
         return (type.cast (service));
     }
 
@@ -434,7 +430,7 @@ public class DefaultServiceContext implements ServiceContext
     {
         Map<String, Object> properties = get_properties (context.getBundle ().getBundleId ());
         properties.put (type.getName (), service);
-        log.info ("(***) putService: bundle={} type={} service={}", context.getBundle (), type, service);
+        log.debug ("putService: bundle={} type={} service={}", context.getBundle (), type, service);
     }
 
     @Override
@@ -507,6 +503,7 @@ public class DefaultServiceContext implements ServiceContext
     // TODO: AUTOCLEANUP THESE OBJECTS
     public class BroadcastingServiceTracker extends ServiceTracker
     {
+        private Map<ServiceReference, ServiceReferenceEx> reference_map = new HashMap<> ();
         private ServiceContext.TrackerListener listener;
 
         public BroadcastingServiceTracker (BundleContext context, ServiceContext.TrackerListener listener, Filter filter)
@@ -519,21 +516,24 @@ public class DefaultServiceContext implements ServiceContext
         public Object addingService (ServiceReference reference)
         {
             Object service = context.getService (reference);
-            listener.bind (service, reference);
+            ServiceReferenceEx extended_reference = new ServiceReferenceEx (service, reference);
+            reference_map.put (reference, extended_reference);
+            listener.bind (service, extended_reference);
             return (service);
         }
 
         @Override
         public void removedService (ServiceReference reference, Object service)
         {
-            listener.unbind (service, reference);
+            ServiceReferenceEx extended_reference = reference_map.remove (reference);
+            listener.unbind (service, extended_reference);
             super.removedService (reference, service);
         }
 
         @Override
         public void modifiedService (ServiceReference reference, Object service)
         {
-            listener.modified (service, reference);
+            listener.modified (service, reference_map.get (reference));
         }
     }
 

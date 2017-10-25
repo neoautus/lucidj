@@ -30,6 +30,10 @@
     border: 1px solid #c5c5c5;
 }
 
+.ui-panel-contents div.v-customcomponent {
+    min-width: 100%;
+}
+
 /* Make the button get a "vaadin accordion" shape */
 .valo .ui-navigation-panel div.ui-panel-caption {
     border-radius: unset;

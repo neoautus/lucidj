@@ -16,6 +16,7 @@
 
 package org.lucidj.containertree;
 
+import org.lucidj.api.Aggregate;
 import org.lucidj.api.Renderer;
 import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
@@ -24,9 +25,10 @@ import org.slf4j.LoggerFactory;
 import com.vaadin.data.Container;
 import com.vaadin.event.ItemClickEvent;
 import com.vaadin.server.Resource;
-import com.vaadin.server.Sizeable;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Tree;
+
+import java.util.Map;
 
 import org.osgi.framework.BundleContext;
 
@@ -34,12 +36,11 @@ public class ContainerTreeRenderer extends Tree implements Renderer, ItemClickEv
 {
     private final static Logger log = LoggerFactory.getLogger (ContainerTreeRenderer.class);
 
+    private Object object;
     private Container source;
 
     public ContainerTreeRenderer (ServiceContext serviceContext, BundleContext bundleContext)
     {
-        setWidth (100, Sizeable.Unit.PERCENTAGE); // <--- remove?
-        setHeightUndefined ();
         addStyleName ("x-container-tree-renderer");
         setSelectable (false);
         setImmediate (true);
@@ -53,37 +54,48 @@ public class ContainerTreeRenderer extends Tree implements Renderer, ItemClickEv
 
     public static boolean isCompatible (Object object)
     {
-        return (object instanceof Container);
+        return ((Aggregate.adapt (Container.class, object) != null));
     }
 
     @Override // Renderer
     public void objectLinked (Object obj)
     {
-        source = (Container)obj;
+        // Store the full object
+        object = obj;
+
+        // Set the Container element
+        source = Aggregate.adapt (Container.class, object);
         setContainerDataSource (source);
 
-        // Try the usual suspects
-        if (source.getType ("Name").isAssignableFrom (String.class))
-        {
-            setItemCaptionPropertyId ("Name");
-        }
-        if (source.getType ("Icon").isAssignableFrom (Resource.class))
-        {
-            setItemIconPropertyId ("Icon");
-        }
+        // Try to retrieve properties from the object
+        Map<String, Object> properties = Aggregate.adapt (Map.class, object);
 
-        // TODO: FIND A BETTER WAY TO SPECIFY PROPERTIES, USE THIS AS FALLBACK
-        for (Object pid: source.getContainerPropertyIds ())
+        if (properties != null)
         {
-            if (source.getType (pid).isAssignableFrom (String.class)
-                && getItemCaptionPropertyId () == null)
+            // They should indicate what to use as caption and icon properties
+            if (properties.containsKey ("@itemCaptionPropertyId"))
             {
-                setItemCaptionPropertyId (pid);
+                setItemCaptionPropertyId (properties.get ("@itemCaptionPropertyId"));
             }
-            else if (source.getType (pid).isAssignableFrom (Resource.class)
-                && getItemIconPropertyId () == null)
+            if (properties.containsKey ("@itemIconPropertyId"))
             {
-                setItemIconPropertyId (pid);
+                setItemIconPropertyId (properties.get ("@itemIconPropertyId"));
+            }
+        }
+        else // No properties, we'll try to guess something meaningful
+        {
+            for (Object pid: source.getContainerPropertyIds ())
+            {
+                if (source.getType (pid).isAssignableFrom (String.class)
+                        && getItemCaptionPropertyId () == null)
+                {
+                    setItemCaptionPropertyId (pid);
+                }
+                else if (source.getType (pid).isAssignableFrom (Resource.class)
+                        && getItemIconPropertyId () == null)
+                {
+                    setItemIconPropertyId (pid);
+                }
             }
         }
         update_components ();

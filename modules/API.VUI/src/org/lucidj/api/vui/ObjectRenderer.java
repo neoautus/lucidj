@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,18 +14,19 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.api.vui;
 
-import com.vaadin.ui.Layout;
-import com.vaadin.ui.UI;
+import org.lucidj.api.Aggregate;
 
-public interface DesktopInterface
+import com.vaadin.ui.Component;
+
+public interface ObjectRenderer extends Component, Aggregate
 {
-    void init (UI ui);
-    Layout getMainLayout ();
-    Layout getSecurityLayout ();
-    void attach ();
-    void detach ();
+    boolean   isRendered         ();
+    void      link               (Object source);
+    void      unlink             ();
+    void      updateComponent    ();
+
 }
 
 // EOF

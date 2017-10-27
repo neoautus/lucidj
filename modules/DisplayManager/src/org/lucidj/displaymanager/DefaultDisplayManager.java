@@ -71,6 +71,17 @@ public class DefaultDisplayManager implements DisplayManager
         object_list.add (index, obj);
     }
 
+    @Override
+    public boolean showAutoDisplay (Object obj)
+    {
+        if (obj instanceof AutoDisplay)
+        {
+            showObject (obj);
+            return (true);
+        }
+        return (false);
+    }
+
     public void setObjectTag (Object obj, String tag)
     {
         tagged_objects.put (tag, obj);

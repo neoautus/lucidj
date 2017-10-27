@@ -27,8 +27,6 @@ import org.lucidj.api.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.ui.AbstractComponent;
-
 import java.util.HashMap;
 
 public class SmartBox implements ComponentInterface, ComponentState
@@ -105,14 +103,9 @@ public class SmartBox implements ComponentInterface, ComponentState
 
                 // When the returned object is a visual component,
                 // it is added automatically on the object output
-                if (svcObject instanceof AbstractComponent)
+                if (displayManager.getObject (svcName) == null && displayManager.showAutoDisplay (svcObject))
                 {
-                    if (displayManager.getObject (svcName) == null)
-                    {
-                        log.info ("fetchService: will show");
-                        displayManager.showObject (svcObject);
-                        displayManager.setObjectTag (svcObject, svcName);
-                    }
+                    displayManager.setObjectTag (svcObject, svcName);
                 }
             }
 

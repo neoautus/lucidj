@@ -16,8 +16,8 @@
 
 package org.lucidj.markdown_renderer;
 
-import org.lucidj.api.EditorInterface;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.EditorInterface;
+import org.lucidj.api.vui.Renderer;
 import org.lucidj.markdown.Markdown;
 import org.lucidj.aceeditor.AceEditor;
 import org.slf4j.Logger;
@@ -45,6 +45,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 @org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides
+// TODO: REFACTOR
 public class MarkdownRenderer extends VerticalLayout implements Renderer, EditorInterface
 {
     private final transient static Logger log = LoggerFactory.getLogger (MarkdownRenderer.class);

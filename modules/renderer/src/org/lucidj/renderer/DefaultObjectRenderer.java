@@ -18,8 +18,8 @@ package org.lucidj.renderer;
 
 import org.lucidj.api.Aggregate;
 import org.lucidj.api.EventHelper;
-import org.lucidj.api.ObjectRenderer;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.ObjectRenderer;
+import org.lucidj.api.vui.Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

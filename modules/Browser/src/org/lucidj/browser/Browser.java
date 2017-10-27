@@ -19,7 +19,7 @@ package org.lucidj.browser;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.RendererFactory;
+import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.ServiceContext;

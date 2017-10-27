@@ -32,8 +32,6 @@ import com.vaadin.server.Responsive;
 import com.vaadin.server.Sizeable;
 import com.vaadin.server.VaadinRequest;
 import com.vaadin.server.VaadinServletRequest;
-import com.vaadin.server.VaadinSession;
-import com.vaadin.server.WrappedSession;
 import com.vaadin.shared.communication.PushMode;
 import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
@@ -48,7 +46,7 @@ import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import org.lucidj.api.ClassManager;
-import org.lucidj.api.DesktopInterface;
+import org.lucidj.api.vui.DesktopInterface;
 import org.lucidj.api.DesktopUI;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.ServiceContext;

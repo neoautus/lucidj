@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,30 +16,17 @@
 
 package org.lucidj.vaadin;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.DisplayManager;
 
 import com.vaadin.ui.VerticalLayout;
 
 // TODO: MAKE IT _AUTOSERVICE_-COMPATIBLE -- vaadin.etcEtc()
-public class Vaadin extends VerticalLayout implements ManagedObject
+public class Vaadin extends VerticalLayout implements DisplayManager.AutoDisplay
 {
     public Vaadin ()
     {
         setWidth (100, Unit.PERCENTAGE);
         setHeightUndefined ();
-    }
-
-    @Override
-    public void validate (ManagedObjectInstance instance)
-    {
-        // Nop
-    }
-
-    @Override
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        // Nop
     }
 }
 

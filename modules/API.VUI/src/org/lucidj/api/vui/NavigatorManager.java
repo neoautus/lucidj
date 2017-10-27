@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,16 +14,20 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.api.vui;
 
-import com.vaadin.ui.AbstractLayout;
-import com.vaadin.ui.Component;
+import com.vaadin.navigator.Navigator;
+import com.vaadin.navigator.ViewProvider;
 
-public interface EditorInterface
+import java.util.Map;
+
+public interface NavigatorManager
 {
-    boolean isModified ();
-    AbstractLayout toolbar ();
-    Component.Focusable getFocusComponent ();
+    String HOME = "home";
+
+    boolean configureNavigator (Navigator navigator, Map<String, Object> properties);
+    ViewProvider findViewProvider   (String navigationState);
+    boolean navigateTo (String navigationState, Map<String, Object> dataProperties);
 }
 
 // EOF

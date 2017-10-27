@@ -157,6 +157,7 @@
 
         <!-- The LucidJ API -->
         <pathelement path="${dist.dir}/libraries_api.jar"/>
+        <pathelement path="${dist.dir}/libraries_API.VUI.jar"/>
 
     </path>
 
@@ -1095,6 +1096,18 @@
             debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
             source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
             includeantruntime="false">
+            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <classpath>
+                <path refid="classpath.build"/>
+                <pathelement path="${libraries.class}"/>
+            </classpath>
+            <exclude name="*/public/**"/>
+        </javac>
+        <!-- Do the same for API.VUI. Ugly but effective :) -->
+        <javac srcdir="${libraries.src.dir}/API.VUI" destdir="${libraries.class}"
+               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+               includeantruntime="false">
             <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
             <classpath>
                 <path refid="classpath.build"/>

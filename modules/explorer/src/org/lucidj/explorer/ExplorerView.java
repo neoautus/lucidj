@@ -16,10 +16,10 @@
 
 package org.lucidj.explorer;
 
-import org.lucidj.api.IconHelper;
-import org.lucidj.api.NavigatorManager;
-import org.lucidj.api.ObjectRenderer;
-import org.lucidj.api.RendererFactory;
+import org.lucidj.api.vui.IconHelper;
+import org.lucidj.api.vui.NavigatorManager;
+import org.lucidj.api.vui.ObjectRenderer;
+import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.SecuritySubject;
 import org.lucidj.api.ServiceContext;
@@ -41,7 +41,6 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.Tree;
-import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
 import java.io.File;

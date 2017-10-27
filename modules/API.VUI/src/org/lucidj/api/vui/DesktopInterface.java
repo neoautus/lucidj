@@ -14,17 +14,18 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.api.vui;
 
-import com.vaadin.ui.Component;
+import com.vaadin.ui.Layout;
+import com.vaadin.ui.UI;
 
-public interface ObjectRenderer extends Component, Aggregate
+public interface DesktopInterface
 {
-    boolean   isRendered         ();
-    void      link               (Object source);
-    void      unlink             ();
-    void      updateComponent    ();
-
+    void init (UI ui);
+    Layout getMainLayout ();
+    Layout getSecurityLayout ();
+    void attach ();
+    void detach ();
 }
 
 // EOF

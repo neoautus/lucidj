@@ -16,14 +16,14 @@
 
 package org.lucidj.ui.gauss;
 
-import org.lucidj.api.ApplicationInterface;
-import org.lucidj.api.DesktopInterface;
+import org.lucidj.api.vui.ApplicationInterface;
+import org.lucidj.api.vui.DesktopInterface;
 import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
-import org.lucidj.api.NavigatorManager;
-import org.lucidj.api.ObjectRenderer;
-import org.lucidj.api.RendererFactory;
+import org.lucidj.api.vui.NavigatorManager;
+import org.lucidj.api.vui.ObjectRenderer;
+import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.ServiceContext;
 import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;

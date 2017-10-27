@@ -16,8 +16,8 @@
 
 package org.lucidj.containertree;
 
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.vui.RendererProvider;
 import org.lucidj.api.ServiceContext;
 
 import org.osgi.framework.BundleContext;

@@ -16,13 +16,10 @@
 
 package org.lucidj.vaadin;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
 import org.lucidj.api.Serializer;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,14 +38,14 @@ import org.apache.felix.ipojo.annotations.Validate;
 @org.apache.felix.ipojo.annotations.Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class VaadinSerializer implements Serializer, ManagedObjectProvider
+public class VaadinSerializer implements Serializer
 {
     private final static transient Logger log = LoggerFactory.getLogger (VaadinSerializer.class);
 
     private VaadinComponentFactory vcf = new VaadinComponentFactory ();
 
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     @Requires
     private SerializerEngine serializer;
@@ -56,7 +53,7 @@ public class VaadinSerializer implements Serializer, ManagedObjectProvider
     @Validate
     private void validate ()
     {
-        objectFactory.register (Vaadin.class, this, null);
+        serviceContext.register (Vaadin.class);
         serializer.register (Vaadin.class, this);
         serializer.register (Component.class, this);
     }
@@ -88,12 +85,6 @@ public class VaadinSerializer implements Serializer, ManagedObjectProvider
         Design.setComponentFactory (vcf);
         // TODO: WRAP MANAGED OBJECT
         return (Design.read (new ByteArrayInputStream (instance.getValue ().getBytes ())));
-    }
-
-    @Override // ManagedObjectProvider
-    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
-    {
-        return (new Vaadin ());
     }
 
     class VaadinComponentFactory extends Design.DefaultComponentFactory

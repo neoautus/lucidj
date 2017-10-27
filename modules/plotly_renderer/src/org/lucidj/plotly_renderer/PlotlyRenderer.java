@@ -21,7 +21,7 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.Renderer;
 import org.lucidj.plotly.Plotly;
 import org.lucidj.plotly.Trace;
 import xyz.kuori.timeseries.TimeSeries;

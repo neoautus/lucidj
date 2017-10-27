@@ -30,9 +30,9 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
-import org.lucidj.api.EditorInterface;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererFactory;
+import org.lucidj.api.vui.EditorInterface;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.ServiceContext;
 import org.lucidj.smartbox.SmartBox;
 import org.lucidj.aceeditor.AceEditor;

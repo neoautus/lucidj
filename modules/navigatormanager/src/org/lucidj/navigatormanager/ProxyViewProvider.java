@@ -16,7 +16,7 @@
 
 package org.lucidj.navigatormanager;
 
-import org.lucidj.api.NavigatorManager;
+import org.lucidj.api.vui.NavigatorManager;
 import org.lucidj.api.ServiceContext;
 import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;

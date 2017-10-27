@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,16 +14,12 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.api.vui;
 
-import com.vaadin.ui.AbstractComponent;
-
-// TODO: MOVE THIS TO gui.api
-public interface ApplicationInterface
+public interface RendererFactory
 {
-    AbstractComponent getToolbar ();
-    AbstractComponent getSidebar ();
-    String getCaption ();
+    ObjectRenderer newRenderer ();
+    ObjectRenderer newRenderer (Object object);
 }
 
 // EOF

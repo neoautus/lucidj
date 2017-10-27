@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -21,7 +21,7 @@ import org.lucidj.api.MenuEntry;
 import org.lucidj.api.MenuInstance;
 import org.lucidj.api.MenuManager;
 import org.lucidj.api.MenuProvider;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

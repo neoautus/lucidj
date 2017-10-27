@@ -14,20 +14,24 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.api.vui;
 
-import com.vaadin.navigator.Navigator;
-import com.vaadin.navigator.ViewProvider;
+import org.lucidj.api.EventHelper;
 
-import java.util.Map;
+import com.vaadin.ui.Component;
 
-public interface NavigatorManager
+public interface Renderer
 {
-    String HOME = "home";
+    void objectLinked (Object obj);
+    void objectUnlinked ();
+    Component renderingComponent ();
+    void objectUpdated ();
 
-    boolean configureNavigator (Navigator navigator, Map<String, Object> properties);
-    ViewProvider findViewProvider   (String navigationState);
-    boolean navigateTo (String navigationState, Map<String, Object> dataProperties);
+    interface Observable
+    {
+        void addObserver (EventHelper.Subscriber observer);
+        void deleteObserver (EventHelper.Subscriber observer);
+    }
 }
 
 // EOF

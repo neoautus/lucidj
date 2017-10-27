@@ -17,7 +17,7 @@
 package org.lucidj.console;
 
 import org.lucidj.api.EventHelper;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.Renderer;  // <------ TODO: REMOVE THIS DEPENDENCY
 import org.lucidj.api.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -18,8 +18,8 @@ package org.lucidj.renderer.treemenu;
 
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.vui.RendererProvider;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;

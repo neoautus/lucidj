@@ -14,7 +14,7 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.api.vui;
 
 import com.vaadin.server.Resource;
 

@@ -16,8 +16,7 @@
 
 package org.rationalq.exception;
 
-import com.google.common.base.Throwables;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.Renderer;
 
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.label.ContentMode;

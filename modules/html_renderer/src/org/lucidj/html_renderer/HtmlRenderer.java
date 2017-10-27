@@ -16,8 +16,8 @@
 
 package org.lucidj.html_renderer;
 
-import org.lucidj.api.EditorInterface;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.EditorInterface;
+import org.lucidj.api.vui.Renderer;
 import org.lucidj.html.Html;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

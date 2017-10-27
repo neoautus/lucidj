@@ -22,6 +22,7 @@ public interface DisplayManager
 {
     void showObject (Object obj);
     void showObject (int index, Object obj);
+    boolean showAutoDisplay (Object obj);
     void setObjectTag (Object obj, String tag);
     void removeObject (Object obj);
     void clearObjects ();
@@ -47,7 +48,7 @@ public interface DisplayManager
         void removingObject (Object obj, int index);
     }
 
-    interface Autodisplay
+    interface AutoDisplay
     {
         // The component requests automatic display on use
     }

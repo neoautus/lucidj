@@ -16,9 +16,9 @@
 
 package org.lucidj.iconlist.renderer;
 
-import org.lucidj.api.IconHelper;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.vui.IconHelper;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.vui.RendererProvider;
 import org.lucidj.api.ServiceContext;
 
 import org.osgi.framework.BundleContext;

@@ -16,10 +16,8 @@
 
 package org.lucidj.browser;
 
-import com.vaadin.event.FieldEvents;
 import com.vaadin.event.LayoutEvents;
 import com.vaadin.event.ShortcutAction;
-import com.vaadin.event.ShortcutListener;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.ExternalResource;
@@ -47,14 +45,14 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import org.lucidj.api.Aggregate;
-import org.lucidj.api.ApplicationInterface;
+import org.lucidj.api.vui.ApplicationInterface;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.Embedding;
 import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.Package;
-import org.lucidj.api.RendererFactory;
+import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;

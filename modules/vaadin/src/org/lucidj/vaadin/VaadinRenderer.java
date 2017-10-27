@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -18,7 +18,7 @@ package org.lucidj.vaadin;
 
 import org.lucidj.api.ManagedObject;
 import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.Renderer;
 
 import com.vaadin.ui.Component;
 

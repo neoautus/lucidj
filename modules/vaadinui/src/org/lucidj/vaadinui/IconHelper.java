@@ -47,7 +47,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class IconHelper implements org.lucidj.api.IconHelper
+public class IconHelper implements org.lucidj.api.vui.IconHelper
 {
     private final static Logger log = LoggerFactory.getLogger (IconHelper.class);
 

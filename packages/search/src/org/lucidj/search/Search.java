@@ -16,7 +16,7 @@
 
 package org.lucidj.search;
 
-import org.lucidj.api.IconHelper;
+import org.lucidj.api.vui.IconHelper;
 import org.lucidj.api.ManagedObjectFactory;
 import org.lucidj.api.ManagedObjectInstance;
 import org.lucidj.api.MenuInstance;

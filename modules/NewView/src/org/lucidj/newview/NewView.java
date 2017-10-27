@@ -16,9 +16,9 @@
 
 package org.lucidj.newview;
 
-import org.lucidj.api.NavigatorManager;
-import org.lucidj.api.ObjectRenderer;
-import org.lucidj.api.RendererFactory;
+import org.lucidj.api.vui.NavigatorManager;
+import org.lucidj.api.vui.ObjectRenderer;
+import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.SecurityEngine;
 import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;

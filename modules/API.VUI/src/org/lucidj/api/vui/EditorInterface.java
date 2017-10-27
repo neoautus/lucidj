@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,18 +14,16 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.api.vui;
 
-import java.util.List;
+import com.vaadin.ui.AbstractLayout;
+import com.vaadin.ui.Component;
 
-public interface SearchPlugin extends Renderer.Observable
+public interface EditorInterface
 {
-    public String pluginId ();
-    public void progressiveSearch (String query);
-    public void runSearch (String query);
-    public boolean searchRunning ();
-    public void cancelSearch ();
-    public List<SearchResult> getResults ();
+    boolean isModified ();
+    AbstractLayout toolbar ();
+    Component.Focusable getFocusComponent ();
 }
 
 // EOF

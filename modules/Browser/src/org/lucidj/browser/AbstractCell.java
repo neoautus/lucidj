@@ -21,9 +21,9 @@ import org.lucidj.api.Aggregate;
 import org.lucidj.api.ComponentDescriptor;
 import org.lucidj.api.ComponentInterface;
 import org.lucidj.api.ComponentState;
-import org.lucidj.api.EditorInterface;
-import org.lucidj.api.ObjectRenderer;
-import org.lucidj.api.RendererFactory;
+import org.lucidj.api.vui.EditorInterface;
+import org.lucidj.api.vui.ObjectRenderer;
+import org.lucidj.api.vui.RendererFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

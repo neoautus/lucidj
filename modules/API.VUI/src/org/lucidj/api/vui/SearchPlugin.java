@@ -14,12 +14,21 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.api.vui;
 
-public interface RendererFactory
+import org.lucidj.api.SearchResult;
+
+import java.util.List;
+
+// TODO: THIS IS NOT QUITE A VUI COMPONENT, SEE WHERE IT FITS
+public interface SearchPlugin extends Renderer.Observable
 {
-    ObjectRenderer newRenderer ();
-    ObjectRenderer newRenderer (Object object);
+    public String pluginId ();
+    public void progressiveSearch (String query);
+    public void runSearch (String query);
+    public boolean searchRunning ();
+    public void cancelSearch ();
+    public List<SearchResult> getResults ();
 }
 
 // EOF

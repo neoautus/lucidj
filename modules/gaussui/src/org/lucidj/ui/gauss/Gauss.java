@@ -16,10 +16,10 @@
 
 package org.lucidj.ui.gauss;
 
-import org.lucidj.api.DesktopInterface;
+import org.lucidj.api.vui.DesktopInterface;
 import org.lucidj.api.MenuManager;
-import org.lucidj.api.NavigatorManager;
-import org.lucidj.api.RendererFactory;
+import org.lucidj.api.vui.NavigatorManager;
+import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.ServiceContext;
 import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;

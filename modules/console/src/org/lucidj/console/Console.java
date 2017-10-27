@@ -152,7 +152,7 @@ public class Console implements Stdio, Renderer.Observable
         output (HTML, output);
     }
 
-    @Override // Stdio
+    @Override // DisplayManager.Clearable
     public void clear ()
     {
         contents = null;

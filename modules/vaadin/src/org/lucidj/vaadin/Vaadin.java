@@ -21,12 +21,18 @@ import org.lucidj.api.DisplayManager;
 import com.vaadin.ui.VerticalLayout;
 
 // TODO: MAKE IT _AUTOSERVICE_-COMPATIBLE -- vaadin.etcEtc()
-public class Vaadin extends VerticalLayout implements DisplayManager.AutoDisplay
+public class Vaadin extends VerticalLayout implements DisplayManager.AutoDisplay, DisplayManager.Clearable
 {
     public Vaadin ()
     {
         setWidth (100, Unit.PERCENTAGE);
         setHeightUndefined ();
+    }
+
+    @Override
+    public void clear ()
+    {
+        removeAllComponents ();
     }
 }
 

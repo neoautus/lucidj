@@ -16,7 +16,7 @@
 
 package org.lucidj.api;
 
-public interface Stdio
+public interface Stdio extends DisplayManager.Clearable
 {
     String STDOUT = "OUT";
     String STDERR = "ERR";
@@ -26,7 +26,6 @@ public interface Stdio
     void stdout (String output);
     void stderr (String output);
     void stdhtml (String output);
-    void clear ();
     String getRawBuffer ();
     void setRawBuffer (String value);
 }

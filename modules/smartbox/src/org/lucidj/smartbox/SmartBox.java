@@ -162,8 +162,6 @@ public class SmartBox implements ComponentInterface, ComponentState
     private void eventhandler_run ()
     {
         log.info (">>> RUN {}", code);
-        get_console (false).clear ();
-//        get_vaadin (false).removeAllComponents ();
         displayManager.restrain ();
         displayManager.clearObjects ();
         code_engine.exec (code, null);

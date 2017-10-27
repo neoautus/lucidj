@@ -116,7 +116,13 @@ public class DefaultDisplayManager implements DisplayManager
                 }
             }
         }
-
+        for (Object tagged: tagged_objects.values ())
+        {
+            if (tagged instanceof Clearable)
+            {
+                ((Clearable)tagged).clear ();
+            }
+        }
         object_list.clear ();
         tagged_objects.clear ();
     }

@@ -55,7 +55,7 @@ public interface DisplayManager
 
     interface Clearable
     {
-        // The component can be cleared (???)
+        // The component can be cleared
         void clear ();
     }
 }

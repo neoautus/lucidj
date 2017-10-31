@@ -16,7 +16,7 @@
 
 package org.lucidj.artifactdeployer;
 
-import org.lucidj.api.ArtifactDeployer;
+import org.lucidj.api.BundleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ class ResourceMapper implements HttpContext
     private HttpService http_service;
 
     @Requires
-    private ArtifactDeployer artifactDeployer;
+    private BundleManager bundleManager;
 
     @Context
     public BundleContext context;
@@ -82,7 +82,7 @@ class ResourceMapper implements HttpContext
             String resource_path = resource_spec.substring (resource_path_pos + 1);
 
             // Component is a bundle symbolic name
-            Bundle resource_bundle = artifactDeployer.getArtifactByDescription (resource_component, null);
+            Bundle resource_bundle = bundleManager.getBundleByDescription (resource_component, null);
 
             log.debug ("resource_component={}, resource_path=>{}<, resource_bundle={}",
                 resource_component, resource_path, resource_bundle);

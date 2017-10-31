@@ -18,6 +18,7 @@ package org.lucidj.explorer;
 
 import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
+import org.lucidj.api.DeploymentInstance;
 import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,6 @@ import com.vaadin.ui.VerticalLayout;
 
 import java.util.Map;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 public class OpenView extends VerticalLayout implements View, Runnable, Thread.UncaughtExceptionHandler
@@ -43,7 +43,7 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
     private ArtifactDeployer artifactDeployer;
     private VerticalLayout install_pane;
     private Thread install_thread;
-    private Bundle install_bundle;
+    private DeploymentInstance install_instance;
 
     private String artifact_url;
     private String parameters;
@@ -85,8 +85,8 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
 
         try
         {
-            install_bundle = artifactDeployer.installArtifact (artifact_url);
-            install_pane.addComponent (new Label ("Bundle installed: " + install_bundle));
+            install_instance = artifactDeployer.installArtifact (artifact_url);
+            install_pane.addComponent (new Label ("Bundle installed: " + install_instance));
 
             Button go_to_bundle = new Button ("Go to new bundle");
             go_to_bundle.addClickListener (new Button.ClickListener ()
@@ -94,7 +94,8 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
                 @Override
                 public void buttonClick (Button.ClickEvent clickEvent)
                 {
-                    getUI ().getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getSymbolicName ()));
+                    String view_name = BundleView.buildViewName (install_instance.getMainBundle ().getSymbolicName ());
+                    getUI ().getNavigator ().navigateTo (view_name);
                 }
             });
 
@@ -108,7 +109,7 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
                 opening += ".";
                 animation_label.setValue (opening);
 
-                int ext_state = artifactDeployer.getExtState (install_bundle);
+                int ext_state = install_instance.getExtState ();
 
                 if (ext_state == Artifact.STATE_EX_OPEN)
                 {
@@ -150,7 +151,7 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
     private void start_deploy ()
     {
         // First try to locate the artifact already installed
-        if ((install_bundle = artifactDeployer.getArtifactByLocation (artifact_url)) == null)
+        if ((install_instance = artifactDeployer.getArtifactByLocation (artifact_url)) == null)
         {
             // Not found, should install
             if (install_thread == null)
@@ -183,10 +184,11 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
             start_deploy ();
         }
 
-        if (install_bundle != null)
+        if (install_instance != null)
         {
-            log.info ("Redirecting {} to {}", event.getViewName (), install_bundle);
-            event.getNavigator ().navigateTo (BundleView.buildViewName (install_bundle.getSymbolicName ()));
+            log.info ("Redirecting {} to {}", event.getViewName (), install_instance);
+            String view_name = BundleView.buildViewName (install_instance.getMainBundle ().getSymbolicName ());
+            event.getNavigator ().navigateTo (BundleView.buildViewName (view_name));
         }
     }
 }

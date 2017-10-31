@@ -16,13 +16,21 @@
 
 package org.lucidj.api;
 
+import java.util.Properties;
+
 import org.osgi.framework.Bundle;
 
-public interface ArtifactDeployer
+public interface DeploymentInstance
 {
-    DeploymentInstance installArtifact (String location) throws Exception;
-    DeploymentInstance getDeploymentInstance (Bundle bundle);
-    DeploymentInstance getArtifactByLocation (String location);
+    Bundle  getMainBundle ();
+    int     getState      () throws IllegalStateException;
+    int     getExtState   ();
+    Bundle  install       (String location, Properties properties) throws Exception;
+    boolean open          ();
+    boolean close         ();
+    boolean update        ();
+    boolean refresh       ();
+    boolean uninstall     ();
 }
 
 // EOF

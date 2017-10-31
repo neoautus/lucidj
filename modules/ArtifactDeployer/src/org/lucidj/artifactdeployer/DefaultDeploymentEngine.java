@@ -16,9 +16,9 @@
 
 package org.lucidj.artifactdeployer;
 
-import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
+import org.lucidj.api.DeploymentInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,7 @@ import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import org.osgi.framework.Bundle;
+import org.apache.felix.ipojo.ServiceContext;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -37,11 +37,14 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Provides
 public class DefaultDeploymentEngine implements DeploymentEngine
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultDeploymentEngine.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultDeploymentEngine.class);
     private final static int ENGINE_LEVEL = 1;
 
     @Requires
-    private BundleManager bundle_manager;
+    private BundleManager bundleManager;
+
+    @Requires
+    private ServiceContext serviceContext;
 
     @Override
     public String getEngineName ()
@@ -59,7 +62,7 @@ public class DefaultDeploymentEngine implements DeploymentEngine
             return (0);
         }
 
-        Manifest mf = bundle_manager.getManifest (location);
+        Manifest mf = bundleManager.getManifest (location);
 
         if (mf == null)
         {
@@ -75,56 +78,12 @@ public class DefaultDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public int getState (Bundle bnd)
-    {
-        // We handle only simple bundles
-        // TODO: HANDLE open() AND close()
-        return (bnd.getState ());
-    }
-
-    @Override
-    public int getExtState (Bundle bnd)
-    {
-        return (Artifact.STATE_EX_NONE);
-    }
-
-    @Override
-    public Bundle install (String location, Properties properties)
+    public DeploymentInstance install (String location, Properties properties)
         throws Exception
     {
-        return (bundle_manager.installBundle (location, properties));
-    }
-
-    @Override
-    public boolean open (Bundle bnd)
-    {
-        // Always open
-        return (true);
-    }
-
-    @Override
-    public boolean close (Bundle bnd)
-    {
-        // Always close
-        return (true);
-    }
-
-    @Override
-    public boolean update (Bundle bnd)
-    {
-        return (bundle_manager.updateBundle (bnd));
-    }
-
-    @Override
-    public boolean refresh (Bundle bnd)
-    {
-        return (bundle_manager.refreshBundle (bnd));
-    }
-
-    @Override
-    public boolean uninstall (Bundle bnd)
-    {
-        return (bundle_manager.uninstallBundle (bnd));
+        DeploymentInstance instance = new DefaultDeploymentInstance (bundleManager);
+        instance.install (location, properties);
+        return (instance);
     }
 }
 

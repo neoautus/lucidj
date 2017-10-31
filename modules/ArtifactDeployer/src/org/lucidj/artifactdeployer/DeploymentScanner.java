@@ -17,6 +17,7 @@
 package org.lucidj.artifactdeployer;
 
 import org.lucidj.api.ArtifactDeployer;
+import org.lucidj.api.DeploymentInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +25,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
@@ -66,9 +66,9 @@ public class DeploymentScanner implements Runnable
 
             log.debug ("INSTALL Scanning {} -> {}", package_uri, package_file);
 
-            Bundle bnd = artifactDeployer.getArtifactByLocation (package_uri);
+            DeploymentInstance instance = artifactDeployer.getArtifactByLocation (package_uri);
 
-            if (bnd == null) // The bundle isn't installed yet
+            if (instance == null) // The bundle isn't installed yet
             {
                 try
                 {

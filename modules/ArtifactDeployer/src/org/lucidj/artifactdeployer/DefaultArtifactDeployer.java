@@ -20,18 +20,20 @@ import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
+import org.lucidj.api.DeploymentInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Version;
 import org.apache.felix.ipojo.annotations.Bind;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
@@ -56,6 +58,8 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
     private BundleManager bundle_manager;
 
     private Map<String, DeploymentEngine> deployment_engines = new ConcurrentHashMap<> ();
+    private Map<Bundle, DeploymentInstance> bundle_to_instance = new ConcurrentHashMap<> (); // TODO: REMOVE THIS
+    private Map<String, DeploymentInstance> location_to_instance = new ConcurrentHashMap<> ();
 
     private Thread poll_thread;
     private int thread_poll_ms = 1000;
@@ -94,45 +98,11 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
                 found_level = level;
             }
         }
-
         return (found_engine);
     }
 
-    private DeploymentEngine get_deployment_engine (Bundle bnd)
-        throws IllegalStateException
-    {
-        Properties properties = bundle_manager.getBundleProperties (bnd);
-
-        if (properties == null)
-        {
-            throw (new IllegalStateException ("Bundle is unmanaged: " + bnd));
-        }
-
-        String deployment_engine_name = properties.getProperty (Artifact.PROP_DEPLOYMENT_ENGINE);
-
-        if (deployment_engine_name == null)
-        {
-            throw (new IllegalStateException ("Internal error: Missing property: " + Artifact.PROP_DEPLOYMENT_ENGINE));
-        }
-
-        DeploymentEngine engine = deployment_engines.get (deployment_engine_name);
-
-        if (engine == null)
-        {
-            throw (new IllegalStateException ("Deployment Engine not found: " + deployment_engine_name));
-        }
-
-        return (engine);
-    }
-
     @Override // ArtifactDeployer
-    public Bundle getArtifactByDescription (String symbolic_name, Version version)
-    {
-        return (bundle_manager.getBundleByDescription (symbolic_name, version));
-    }
-
-    @Override // ArtifactDeployer
-    public Bundle installArtifact (String location)
+    public DeploymentInstance installArtifact (String location)
         throws Exception
     {
         File bundle_file = get_valid_file (location);
@@ -155,106 +125,31 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         properties.setProperty (Artifact.PROP_SOURCE, location);
 
         // Install bundle!
-        Bundle new_bundle = deployment_engine.install (location, properties);
-        log.info ("Installing package {} from {}", new_bundle, location);
-        return (new_bundle);
+        DeploymentInstance new_deploy = deployment_engine.install (location, properties);
+        bundle_to_instance.put (new_deploy.getMainBundle (), new_deploy);
+        location_to_instance.put (location, new_deploy);
+        log.info ("Installing package {} from {}", new_deploy, location);
+
+        // Register the bundle controller
+        Dictionary<String, Object> props = new Hashtable<> ();
+        props.put ("@location", location);
+        props.put ("@engine", deployment_engine.getEngineName ());
+        props.put ("@bundleid", new_deploy.getMainBundle ().getBundleId ());
+        props.put ("@bsn", new_deploy.getMainBundle ().toString ());
+        context.registerService (DeploymentInstance.class, new_deploy, props);
+        return (new_deploy);
+    }
+
+    @Override
+    public DeploymentInstance getDeploymentInstance (Bundle bundle)
+    {
+        return (bundle_to_instance.get (bundle));
     }
 
     @Override // ArtifactDeployer
-    public int getState (Bundle bnd)
-        throws IllegalStateException // TODO: THROW A CHECKED EXCEPTION INSTEAD!
+    public DeploymentInstance getArtifactByLocation (String location)
     {
-        return (get_deployment_engine (bnd).getState (bnd));
-    }
-
-    @Override // ArtifactDeployer
-    public int getExtState (Bundle bnd)
-    {
-        try
-        {
-            return (get_deployment_engine (bnd).getExtState (bnd));
-        }
-        catch (IllegalStateException e)
-        {
-            log.error ("Exception reading extended state for bundle {}", bnd, e);
-            return (Artifact.STATE_EX_ERROR);
-        }
-    }
-
-    @Override // ArtifactDeployer
-    public boolean openArtifact (Bundle bnd)
-    {
-        try
-        {
-            return (get_deployment_engine (bnd).open (bnd));
-        }
-        catch (IllegalStateException e)
-        {
-            log.error ("Exception opening bundle {}", bnd, e);
-            return (false);
-        }
-    }
-
-    @Override // ArtifactDeployer
-    public boolean closeArtifact (Bundle bnd)
-    {
-        try
-        {
-            return (get_deployment_engine (bnd).close (bnd));
-        }
-        catch (IllegalStateException e)
-        {
-            log.error ("Exception closing bundle {}", bnd, e);
-            return (false);
-        }
-    }
-
-    @Override // ArtifactDeployer
-    public boolean updateArtifact (Bundle bnd)
-    {
-        try
-        {
-            return (get_deployment_engine (bnd).update (bnd));
-        }
-        catch (IllegalStateException e)
-        {
-            log.error ("Exception updating bundle {}", bnd, e);
-            return (false);
-        }
-    }
-
-    @Override // ArtifactDeployer
-    public boolean refreshArtifact (Bundle bnd)
-    {
-        try
-        {
-            return (get_deployment_engine (bnd).refresh (bnd));
-        }
-        catch (IllegalStateException e)
-        {
-            log.error ("Exception refreshing bundle {}", bnd, e);
-            return (false);
-        }
-    }
-
-    @Override // ArtifactDeployer
-    public boolean uninstallArtifact (Bundle bnd)
-    {
-        try
-        {
-            return (get_deployment_engine (bnd).uninstall (bnd));
-        }
-        catch (IllegalStateException e)
-        {
-            log.error ("Exception uninstalling bundle: {}", bnd, e);
-            return (false);
-        }
-    }
-
-    @Override // ArtifactDeployer
-    public Bundle getArtifactByLocation (String location)
-    {
-        return (bundle_manager.getBundleByProperty (Artifact.PROP_SOURCE, location));
+        return (location_to_instance.get (location));
     }
 
     private void poll_repository_for_updates_and_removals ()
@@ -265,12 +160,19 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         {
             String location = bundle_entry.getValue ().getProperty (Artifact.PROP_LOCATION);
             Bundle bundle = bundle_entry.getKey ();
+            DeploymentInstance instance = bundle_to_instance.get (bundle);
+
+            if (instance == null)
+            {
+                // Not managed by us
+                continue;
+            }
 
             // TODO: USE DeploymentEngine.validBundle() METHOD INSTEAD
             if (get_valid_file (location) == null)
             {
                 // The bundle probably was removed
-                uninstallArtifact (bundle);
+                instance.uninstall ();
             }
             else // Bundle file exists, check for changes
             {
@@ -280,7 +182,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
                     try
                     {
                         // Refresh the artifact, but ignore if the DeploymentEngine is not available
-                        get_deployment_engine (bundle).refresh (bundle);
+                        instance.refresh ();
                     }
                     catch (IllegalStateException ignore) {};
                 }

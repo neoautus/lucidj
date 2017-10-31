@@ -18,20 +18,11 @@ package org.lucidj.api;
 
 import java.util.Properties;
 
-import org.osgi.framework.Bundle;
-
 public interface DeploymentEngine
 {
     String  getEngineName ();
     int     compatibleArtifact (String location);
-    int     getState  (Bundle bnd) throws IllegalStateException;
-    int     getExtState (Bundle bnd);
-    Bundle  install   (String location, Properties properties) throws Exception;
-    boolean open      (Bundle bnd);
-    boolean close     (Bundle bnd);
-    boolean update    (Bundle bnd);
-    boolean refresh   (Bundle bnd);
-    boolean uninstall (Bundle bnd);
+    DeploymentInstance install (String location, Properties properties) throws Exception;
 }
 
 // EOF

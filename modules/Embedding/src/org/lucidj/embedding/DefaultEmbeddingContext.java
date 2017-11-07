@@ -25,6 +25,7 @@ import org.lucidj.api.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -248,6 +249,44 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject,
             return (Collections.unmodifiableList (((EmbeddingImpl)embedded_file).getChildren ()));
         }
         return (Collections.emptyList ());
+    }
+
+    @Override
+    public Embedding getEmbedding (String path, String handler)
+    {
+        Embedding found_file = null;
+
+        for (Embedding file: getEmbeddedFiles ())
+        {
+            if (URI.create (file.getName ()).getPath ().equals (path))
+            {
+                found_file = file;
+                break;
+            }
+        }
+
+        if (found_file != null)
+        {
+            // We have a matching file path, try to find an embedding
+            for (Embedding embedding: getEmbeddings (found_file))
+            {
+                if (embedding.getName ().startsWith (handler + ":"))
+                {
+                    log.debug ("getEmbedding (path={}, handler={}): [{}] {} -> {}={}",
+                        path, handler, found_file.getName (), found_file.getObject (),
+                        embedding.getName (), embedding.getObject ());
+                    return (embedding);
+                }
+            }
+        }
+        return (null);
+    }
+
+    @Override
+    public Object getObject (String path, String handler)
+    {
+        Embedding e = getEmbedding (path, handler);
+        return (e == null? null: e.getObject ());
     }
 
     @Override // EmbeddingManager.EmbeddingListener

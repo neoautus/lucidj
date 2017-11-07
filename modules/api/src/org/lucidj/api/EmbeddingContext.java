@@ -31,6 +31,8 @@ public interface EmbeddingContext
     Future updateEmbeddings ();
     List<Embedding> getEmbeddedFiles ();
     List<Embedding> getEmbeddings (Embedding embedded_file);
+    Embedding getEmbedding (String path, String handler);
+    Object getObject (String path, String handler);
 }
 
 // EOF

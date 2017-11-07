@@ -50,7 +50,6 @@ import org.lucidj.api.vui.ApplicationInterface;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentState;
-import org.lucidj.api.Embedding;
 import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.SerializerEngine;
@@ -59,8 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -788,43 +785,10 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
             return (false);
         }
 
-        // TODO: REFACTOR THIS CONVOLUTED THING
         EmbeddingContext ec = instance.adapt (EmbeddingContext.class);
 
-        // TODO: Object ec.getEmbeddedObject(...) ?
-        for (Embedding file: ec.getEmbeddedFiles ())
-        {
-            log.info ("Embedding: [{}] -> {}", file.getName (), file.getObject ());
-
-            try
-            {
-                URI file_uri = new URI (file.getName ());
-                log.info ("file_uri.getPath() = {}", file_uri.getPath ());
-                if (!file_uri.getPath ().equals (object_path))
-                {
-                    // Embedded file path doesn't match
-                    continue;
-                }
-            }
-            catch (URISyntaxException e)
-            {
-                log.warn ("Embedding exception", e);
-                continue;
-            }
-
-            // We have a matching file path, try to find an embedding
-            for (Embedding embedding : ec.getEmbeddings (file))
-            {
-                root_object = embedding.getObject ();
-                // TODO: FIX!!!!
-// !!!!!!               root_source = ec.getWritableFile (file);
-                log.info ("Embedding: [{}] {} -> {}={}",
-                    file.getName (), embedding.getName (), root_source, root_object);
-                break; // Just the first for now
-            }
-        }
-
-        if (root_object == null)
+        // Try to find a 'gluon' embedding
+        if ((root_object = ec.getObject (object_path, "gluon")) == null)
         {
             return (false);
         }

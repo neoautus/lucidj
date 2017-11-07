@@ -14,17 +14,17 @@
  * the License.
  */
 
-package org.lucidj.api;
+package org.lucidj.artifactdeployer;
 
-public interface Artifact
+public interface Constants
 {
-    // Extended states
-    int STATE_EX_ERROR    = -1;    // Error obtaining extended state
-    int STATE_EX_NONE     = 0;     // No extended state available (not active)
-    int STATE_EX_ACTIVE   = 1;     // Active but not open
-    int STATE_EX_OPENING  = 2;     // Opening the provided services
-    int STATE_EX_OPEN     = 3;     // All services up and running
-    int STATE_EX_CLOSING  = 4;     // Closing provided services
+    String PROP_SOURCE             = ".Artifact-Source";
+    String PROP_DEPLOYMENT_ENGINE  = ".Artifact-Deployment-Engine";
+    String PROP_LOCATION           = ".Artifact-Location";
+    String PROP_LAST_MODIFIED      = ".Artifact-Last-Modified";
+    String PROP_BUNDLE_STATE       = ".Artifact-Bundle-State";
+    String PROP_BUNDLE_STATE_HUMAN = ".Artifact-Bundle-State-Human";
+    String PROP_BUNDLE_START       = ".Artifact-Bundle-Start";
 }
 
 // EOF

@@ -16,7 +16,6 @@
 
 package org.lucidj.artifactdeployer;
 
-import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -132,9 +131,9 @@ public class DefaultBundleManager implements BundleManager, BundleListener
                 Properties properties = new Properties ();
                 properties.load (new FileInputStream (bundle_data_file));
 
-                if (properties.containsKey (Artifact.PROP_LOCATION))
+                if (properties.containsKey (Constants.PROP_LOCATION))
                 {
-                    bundle_prop_cache.put (properties.getProperty (Artifact.PROP_LOCATION), properties);
+                    bundle_prop_cache.put (properties.getProperty (Constants.PROP_LOCATION), properties);
                 }
                 else
                 {
@@ -155,7 +154,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         try
         {
             // Always store location so we can populate the bundle cache properly
-            properties.setProperty (Artifact.PROP_LOCATION, location);
+            properties.setProperty (Constants.PROP_LOCATION, location);
             properties.store (new FileOutputStream (get_bundle_data_file (location)), null);
             return (true);
         }
@@ -197,8 +196,8 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         }
         
         // Store bundle state
-        properties.setProperty (Artifact.PROP_BUNDLE_STATE, Integer.toString (bnd.getState ()));
-        properties.setProperty (Artifact.PROP_BUNDLE_STATE_HUMAN, get_state_string (bnd.getState ()));
+        properties.setProperty (Constants.PROP_BUNDLE_STATE, Integer.toString (bnd.getState ()));
+        properties.setProperty (Constants.PROP_BUNDLE_STATE_HUMAN, get_state_string (bnd.getState ()));
         store_properties (location, properties);
 
         switch (bundleEvent.getType ())
@@ -220,7 +219,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
             {
                 try
                 {
-                    if ("transient".equalsIgnoreCase (properties.getProperty (Artifact.PROP_BUNDLE_START, "normal")))
+                    if ("transient".equalsIgnoreCase (properties.getProperty (Constants.PROP_BUNDLE_START, "normal")))
                     {
                         log.info ("Bundle {} is resolved -- will start transient now", bnd);
                         bnd.start (Bundle.START_TRANSIENT);
@@ -443,8 +442,8 @@ public class DefaultBundleManager implements BundleManager, BundleListener
             }
 
             // Add bundle properties to repository, so we can manage it
-            properties.setProperty (Artifact.PROP_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
-            properties.setProperty (Artifact.PROP_BUNDLE_STATE, Integer.toString (Bundle.UNINSTALLED));
+            properties.setProperty (Constants.PROP_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
+            properties.setProperty (Constants.PROP_BUNDLE_STATE, Integer.toString (Bundle.UNINSTALLED));
             store_properties (location, properties);
 
             // Install bundle
@@ -488,7 +487,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         }
 
         Properties properties = bundle_prop_cache.get (location);
-        long bundle_lastmodified = Long.parseLong (properties.getProperty (Artifact.PROP_LAST_MODIFIED));
+        long bundle_lastmodified = Long.parseLong (properties.getProperty (Constants.PROP_LAST_MODIFIED));
 
         if (bundle_lastmodified != bundle_file.lastModified ())
         {
@@ -497,7 +496,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
 
             if (updateBundle (bnd))
             {
-                properties.setProperty (Artifact.PROP_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
+                properties.setProperty (Constants.PROP_LAST_MODIFIED, Long.toString (bundle_file.lastModified ()));
                 store_properties (location, properties);
                 return (true);
             }

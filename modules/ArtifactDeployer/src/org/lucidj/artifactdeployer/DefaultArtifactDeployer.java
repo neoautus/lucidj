@@ -16,7 +16,6 @@
 
 package org.lucidj.artifactdeployer;
 
-import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
@@ -121,8 +120,8 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
 
         // These properties will be stored alongside the bundle and other internal properties
         Properties properties = new Properties ();
-        properties.setProperty (Artifact.PROP_DEPLOYMENT_ENGINE, deployment_engine.getEngineName ());
-        properties.setProperty (Artifact.PROP_SOURCE, location);
+        properties.setProperty (Constants.PROP_DEPLOYMENT_ENGINE, deployment_engine.getEngineName ());
+        properties.setProperty (Constants.PROP_SOURCE, location);
 
         // Install bundle!
         DeploymentInstance new_deploy = deployment_engine.install (location, properties);
@@ -135,7 +134,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         props.put ("@location", location);
         props.put ("@engine", deployment_engine.getEngineName ());
         props.put ("@bundleid", new_deploy.getMainBundle ().getBundleId ());
-        props.put ("@bsn", new_deploy.getMainBundle ().toString ());
+        props.put ("@bsn", new_deploy.getMainBundle ().getSymbolicName ());
         context.registerService (DeploymentInstance.class, new_deploy, props);
         return (new_deploy);
     }
@@ -158,7 +157,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
 
         for (Map.Entry<Bundle, Properties> bundle_entry: bundles.entrySet ())
         {
-            String location = bundle_entry.getValue ().getProperty (Artifact.PROP_LOCATION);
+            String location = bundle_entry.getValue ().getProperty (Constants.PROP_LOCATION);
             Bundle bundle = bundle_entry.getKey ();
             DeploymentInstance instance = bundle_to_instance.get (bundle);
 

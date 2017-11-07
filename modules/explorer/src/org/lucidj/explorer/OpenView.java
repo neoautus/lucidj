@@ -104,6 +104,8 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
             Label animation_label = new Label ();
             install_pane.addComponent (animation_label);
 
+            install_instance.open ();
+
             for (;;)
             {
                 opening += ".";
@@ -188,7 +190,7 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
         {
             log.info ("Redirecting {} to {}", event.getViewName (), install_instance);
             String view_name = BundleView.buildViewName (install_instance.getMainBundle ().getSymbolicName ());
-            event.getNavigator ().navigateTo (BundleView.buildViewName (view_name));
+            event.getNavigator ().navigateTo (view_name);
         }
     }
 }

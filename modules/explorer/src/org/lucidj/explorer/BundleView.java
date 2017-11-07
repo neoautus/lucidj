@@ -16,10 +16,11 @@
 
 package org.lucidj.explorer;
 
+import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
+import org.lucidj.api.DeploymentInstance;
 import org.lucidj.api.Embedding;
 import org.lucidj.api.EmbeddingContext;
-import org.lucidj.api.Package;
 import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +39,6 @@ import java.util.regex.Pattern;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 public class BundleView extends VerticalLayout implements View
 {
@@ -49,10 +49,10 @@ public class BundleView extends VerticalLayout implements View
     public static Pattern NAV_PATTERN = Pattern.compile (nav_rex);
 
     private BundleManager bundleManager;
+    private ArtifactDeployer artifactDeployer;
     private String parameters;
     private BundleContext context;
     private Bundle bundle = null;
-    private Package pkg = null;
 
     private Label parameters_label;
 
@@ -60,6 +60,7 @@ public class BundleView extends VerticalLayout implements View
     {
         this.context = context;
         bundleManager = serviceContext.getService (context, BundleManager.class);
+        artifactDeployer = serviceContext.getService (context, ArtifactDeployer.class);
     }
 
     private void build_toolbar ()
@@ -84,7 +85,16 @@ public class BundleView extends VerticalLayout implements View
         addComponent (new Label ("Bundle ID: " + bundle.getBundleId ()));
         addComponent (new Label ("Bundle: " + bundle));
 
-        EmbeddingContext ec = pkg.getEmbeddingContext ();
+        DeploymentInstance instance = artifactDeployer.getDeploymentInstance (bundle);
+
+        log.info ("bundle={} deployment_instance={}", bundle, instance);
+
+        if (instance == null)
+        {
+            return;
+        }
+
+        EmbeddingContext ec = instance.adapt (EmbeddingContext.class);
 
         // Retrieve all active embeddings/files and print them
         for (Embedding file: ec.getEmbeddedFiles ())
@@ -148,26 +158,7 @@ public class BundleView extends VerticalLayout implements View
             bundle = bundleManager.getBundleByDescription (bundle_ref, null);
             log.info ("bundle BSN {} = {}", bundle_ref, bundle);
         }
-
-        if (bundle == null)
-        {
-            return (false);
-        }
-
-        ServiceReference[] service_list = bundle.getServicesInUse ();
-
-        // Locate the Package descriptor registered for this bundle
-        for (ServiceReference service: service_list)
-        {
-            if (service.isAssignableTo (bundle, Package.class.getName ()))
-            {
-                pkg = (Package)context.getService (service);
-                break;
-            }
-        }
-
-        log.info ("Final bundle={}, pkg={}", bundle, pkg);
-        return (true);
+        return (bundle != null);
     }
 
     @Override // View

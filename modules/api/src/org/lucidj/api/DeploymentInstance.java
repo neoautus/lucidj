@@ -20,7 +20,8 @@ import java.util.Properties;
 
 import org.osgi.framework.Bundle;
 
-public interface DeploymentInstance
+// TODO: THIS ACTUALLY SHOULD BE Artifact
+public interface DeploymentInstance extends Aggregate
 {
     Bundle  getMainBundle ();
     int     getState      () throws IllegalStateException;

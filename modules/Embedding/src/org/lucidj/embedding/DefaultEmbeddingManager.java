@@ -16,7 +16,6 @@
 
 package org.lucidj.embedding;
 
-import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.EmbeddingHandler;
@@ -27,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -47,7 +45,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class DefaultEmbeddingManager implements EmbeddingManager
 {
-    private final transient static Logger log = LoggerFactory.getLogger (DefaultEmbeddingManager.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultEmbeddingManager.class);
 
     private BundleTracker bundle_cleaner;
     private List<EmbeddingHandler> embedding_handlers = new ArrayList<> ();
@@ -59,14 +57,10 @@ public class DefaultEmbeddingManager implements EmbeddingManager
     @Context
     private BundleContext ctx;
 
-    // TODO: WE NEED SOME CONSTRUCT TO WAIT FOR A SPECIFIC SERVICE/HANDLER
-
     @Override
-    public EmbeddingContext newEmbeddingContext (Bundle bnd)
+    public EmbeddingContext newEmbeddingContext ()
     {
-        Properties props = bundleManager.getBundleProperties (bnd);
-        String artifact_source = props.getProperty (Artifact.PROP_SOURCE);
-        return (new DefaultEmbeddingContext (this, artifact_source, bnd));
+        return (new DefaultEmbeddingContext (this));
     }
 
     @Override

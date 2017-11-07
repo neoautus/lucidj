@@ -19,15 +19,15 @@ package org.lucidj.pkgdeployer;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
 import org.lucidj.api.DeploymentInstance;
+import org.lucidj.api.EmbeddingContext;
+import org.lucidj.api.EmbeddingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Properties;
 
-import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
@@ -43,11 +43,11 @@ public class PackageDeploymentEngine implements DeploymentEngine
     public final static String ATTR_PACKAGE = "X-Package";
     public final static String ATTR_PACKAGE_VERSION = "1.0";
 
-    @Context
-    private BundleContext context;
-
     @Requires
     private BundleManager bundleManager;
+
+    @Requires
+    private EmbeddingManager embeddingManager;
 
     private String packages_dir;
 
@@ -89,7 +89,8 @@ public class PackageDeploymentEngine implements DeploymentEngine
     public DeploymentInstance install (String location, Properties properties)
         throws Exception
     {
-        DeploymentInstance instance = new PackageInstance (context, bundleManager, packages_dir);
+        EmbeddingContext embedding_context = embeddingManager.newEmbeddingContext ();
+        DeploymentInstance instance = new PackageInstance (embedding_context, bundleManager, packages_dir);
         instance.install (location, properties);
         return (instance);
     }

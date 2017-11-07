@@ -42,16 +42,16 @@ import com.vaadin.ui.VerticalLayout;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 import org.lucidj.api.Aggregate;
+import org.lucidj.api.ArtifactDeployer;
+import org.lucidj.api.DeploymentInstance;
 import org.lucidj.api.vui.ApplicationInterface;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ComponentState;
 import org.lucidj.api.Embedding;
 import org.lucidj.api.EmbeddingContext;
-import org.lucidj.api.Package;
 import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.SerializerEngine;
 import org.lucidj.api.ServiceContext;
@@ -89,6 +89,7 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
     private BundleContext ctx;
     private ComponentManager componentManager;
     private BundleManager bundleManager;
+    private ArtifactDeployer artifactDeployer;
     private RendererFactory rendererFactory;
 
     private long last_save = 0;
@@ -111,6 +112,7 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
         serializer = serviceContext.getService (bundleContext, SerializerEngine.class);
         componentManager = serviceContext.getService (bundleContext, ComponentManager.class);
         bundleManager = serviceContext.getService (bundleContext, BundleManager.class);
+        artifactDeployer = serviceContext.getService (bundleContext, ArtifactDeployer.class);
         rendererFactory = serviceContext.getService (bundleContext, RendererFactory.class);
     }
 
@@ -777,29 +779,19 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
             return (false);
         }
 
-        // TODO: REFACTOR THIS CONVOLUTED THING
-        ServiceReference[] service_list = bundle.getServicesInUse ();
-        Package pkg = null;
+        DeploymentInstance instance = artifactDeployer.getDeploymentInstance (bundle);
 
-        // Locate the Package descriptor registered for this bundle
-        for (ServiceReference service : service_list)
-        {
-            if (service.isAssignableTo (bundle, Package.class.getName ()))
-            {
-                pkg = (Package)ctx.getService (service);
-                break;
-            }
-        }
+        log.info ("bundle={} deployment_instance={}", bundle, instance);
 
-        log.info ("Final bundle={}, pkg={}", bundle, pkg);
-
-        if (pkg == null)
+        if (instance == null)
         {
             return (false);
         }
 
-        EmbeddingContext ec = pkg.getEmbeddingContext ();
+        // TODO: REFACTOR THIS CONVOLUTED THING
+        EmbeddingContext ec = instance.adapt (EmbeddingContext.class);
 
+        // TODO: Object ec.getEmbeddedObject(...) ?
         for (Embedding file: ec.getEmbeddedFiles ())
         {
             log.info ("Embedding: [{}] -> {}", file.getName (), file.getObject ());
@@ -824,7 +816,8 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
             for (Embedding embedding : ec.getEmbeddings (file))
             {
                 root_object = embedding.getObject ();
-                root_source = ec.getWritableFile (file);
+                // TODO: FIX!!!!
+// !!!!!!               root_source = ec.getWritableFile (file);
                 log.info ("Embedding: [{}] {} -> {}={}",
                     file.getName (), embedding.getName (), root_source, root_object);
                 break; // Just the first for now

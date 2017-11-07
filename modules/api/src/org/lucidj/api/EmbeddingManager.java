@@ -16,11 +16,9 @@
 
 package org.lucidj.api;
 
-import org.osgi.framework.Bundle;
-
 public interface EmbeddingManager
 {
-    EmbeddingContext newEmbeddingContext (Bundle bnd);
+    EmbeddingContext newEmbeddingContext ();
 
     void    registerHandler (EmbeddingHandler handler);
     EmbeddingHandler[] getHandlers (String name, Object obj);

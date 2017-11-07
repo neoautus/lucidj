@@ -19,7 +19,7 @@ package org.lucidj.pkgdeployer;
 import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentInstance;
-import org.lucidj.api.Package;
+import org.lucidj.api.EmbeddingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,16 +40,15 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleEvent;
 import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.Version;
 
 // TODO: USE ServiceObject
@@ -57,14 +56,17 @@ public class PackageInstance implements DeploymentInstance
 {
     private final static Logger log = LoggerFactory.getLogger (PackageInstance.class);
 
+    private Thread local_thread;
+    private volatile int extended_state = Artifact.STATE_EX_ACTIVE;
+
     private BundleManager bundleManager;
     private String packages_dir;
     private Bundle main_bundle;
-    private BundleContext context;
+    private EmbeddingContext embedding_context;
 
-    public PackageInstance (BundleContext context, BundleManager bundleManager, String cache_dir)
+    public PackageInstance (EmbeddingContext embedding_context, BundleManager bundleManager, String cache_dir)
     {
-        this.context = context;
+        this.embedding_context = embedding_context;
         this.bundleManager = bundleManager;
         this.packages_dir = cache_dir;
     }
@@ -73,6 +75,24 @@ public class PackageInstance implements DeploymentInstance
     public Bundle getMainBundle ()
     {
         return (main_bundle);
+    }
+
+    @Override
+    public <T> T adapt (Class<T> type)
+    {
+        if (type == null)
+        {
+            return (null);
+        }
+        else if (EmbeddingContext.class.isAssignableFrom (type))
+        {
+            return (type.cast (embedding_context));
+        }
+        if (type.isAssignableFrom (this.getClass ()))
+        {
+            return (type.cast (this));
+        }
+        return (null);
     }
 
     @Override
@@ -85,34 +105,7 @@ public class PackageInstance implements DeploymentInstance
     @Override
     public int getExtState ()
     {
-        String filter = "(service.bundleid=" + main_bundle.getBundleId () + ")";
-        int ext_state = Artifact.STATE_EX_ERROR;
-
-        try
-        {
-            ServiceReference[] ref = context.getServiceReferences (Package.class.getName (), filter);
-
-            if (ref != null)
-            {
-                // If ref != null, it must be >= 1
-                if (ref.length > 1)
-                {
-                    log.warn ("Internal error: More than 1 package descriptor found: {}", ref);
-                }
-
-                // We have a Package assigned to the main_bundle, get extended state
-                Package pkg = (Package)context.getService (ref [0]);
-                ext_state = pkg.getExtState ();
-                context.ungetService (ref [0]);
-            }
-            else // ref==null implies no Package service yet for this main_bundle
-            {
-                // No Package yet, let's assume no extended state
-                ext_state = Artifact.STATE_EX_NONE;
-            }
-        }
-        catch (InvalidSyntaxException ignore) {};
-        return (ext_state);
+        return (main_bundle.getState () == Bundle.ACTIVE? extended_state: Artifact.STATE_EX_NONE);
     }
 
     private List<String> list_existing_files (List<String> file_list, Path root_path)
@@ -449,12 +442,39 @@ public class PackageInstance implements DeploymentInstance
     @Override
     public boolean open ()
     {
+        synchronized (this)
+        {
+            if (getExtState () != Artifact.STATE_EX_ERROR)
+            {
+                // Now we are opening
+                extended_state = Artifact.STATE_EX_OPENING;
+                embedding_context.open (main_bundle);
+
+                // Proceed opening sequence
+                local_thread = new OpenTransition ();
+                local_thread.start ();
+                return (true);
+            }
+        }
         return (false);
     }
 
     @Override
     public boolean close ()
     {
+        synchronized (this)
+        {
+            if (getExtState () == Artifact.STATE_EX_OPEN)
+            {
+                // Now we are closing
+                extended_state = Artifact.STATE_EX_CLOSING;
+
+                // Proceed closing sequence
+                local_thread = new CloseTransition ();
+                local_thread.start ();
+                return (true);
+            }
+        }
         return (false);
     }
 
@@ -478,6 +498,165 @@ public class PackageInstance implements DeploymentInstance
     {
         // TODO: HANDLE Bundles/ AND Resources/
         return (bundleManager.uninstallBundle (main_bundle));
+    }
+
+    private String get_state_str (Bundle bundle)
+    {
+        switch (bundle.getState ())
+        {
+            case Bundle.INSTALLED:   return ("INSTALLED");
+            case Bundle.RESOLVED:    return ("RESOLVED");
+            case Bundle.STARTING:    return ("STARTING");
+            case Bundle.STOPPING:    return ("STOPPING");
+            case Bundle.ACTIVE:      return ("ACTIVE");
+            case Bundle.UNINSTALLED: return ("UNINSTALLED");
+        }
+        return ("Unknown");
+    }
+
+    private String get_event_str (BundleEvent bundleEvent)
+    {
+        if (bundleEvent == null)
+        {
+            return ("NULL_EVENT");
+        }
+        switch (bundleEvent.getType ())
+        {
+            case BundleEvent.INSTALLED:       return ("INSTALLED");
+            case BundleEvent.LAZY_ACTIVATION: return ("LAZY_ACTIVATION");
+            case BundleEvent.RESOLVED:        return ("RESOLVED");
+            case BundleEvent.STARTED:         return ("STARTED");
+            case BundleEvent.STARTING:        return ("STARTING");
+            case BundleEvent.STOPPED:         return ("STOPPED");
+            case BundleEvent.STOPPING:        return ("STOPPING");
+            case BundleEvent.UNINSTALLED:     return ("UNINSTALLED");
+            case BundleEvent.UNRESOLVED:      return ("UNRESOLVED");
+            case BundleEvent.UPDATED:         return ("UPDATED");
+        }
+        return ("Unknown");
+    }
+
+    class OpenTransition extends Thread
+    {
+        public OpenTransition ()
+        {
+            setName ("Open_" + main_bundle.getSymbolicName () + "_" + main_bundle.getVersion ());
+        }
+
+        private void do_opening_transition ()
+        {
+            // Prepare and load embeddings context
+            try
+            {
+                embedding_context.updateEmbeddings ().get ();
+            }
+            catch (InterruptedException | ExecutionException e)
+            {
+                log.error ("Exception opening bundle: {}", main_bundle, e);
+            }
+
+            // After Opening, we are Running
+            extended_state = Artifact.STATE_EX_OPEN;
+        }
+
+        @Override
+        public void run ()
+        {
+            try
+            {
+                if (main_bundle.getState () != Bundle.ACTIVE)
+                {
+                    log.info ("---------------------->> Waiting for package {} activation (state = {})",
+                        main_bundle, get_state_str (main_bundle));
+
+                    while (main_bundle.getState () != Bundle.ACTIVE)
+                    {
+                        try
+                        {
+                            log.info ("..... Waiting for package {} activation (state = {})",
+                                    main_bundle, get_state_str (main_bundle));
+
+                            Thread.sleep (100);
+                        }
+                        catch (InterruptedException interrupt)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                log.info ("Opening package {} (state = {})",
+                    main_bundle, get_state_str (main_bundle));
+
+                if (main_bundle.getState () == Bundle.ACTIVE)
+                {
+                    do_opening_transition ();
+                }
+
+                if (extended_state == Artifact.STATE_EX_ERROR)
+                {
+                    log.warn ("Package {} not opened (state = {})",
+                        main_bundle, get_state_str (main_bundle));
+                }
+                else
+                {
+                    log.info ("Package {} opened (state = {})",
+                        main_bundle, get_state_str (main_bundle));
+                }
+            }
+            catch (Throwable transition_exception)
+            {
+                log.error ("Unhandled exception opening package {}", main_bundle, transition_exception);
+            }
+        }
+    }
+
+    class CloseTransition extends Thread
+    {
+        public CloseTransition ()
+        {
+            setName ("Close_" + main_bundle.getSymbolicName () + "_" + main_bundle.getVersion ());
+        }
+
+        private void do_closing_transition ()
+        {
+            extended_state = Artifact.STATE_EX_CLOSING;
+
+            // Incredibly complex things....
+
+            // Back to pure OSGi state
+            extended_state = Artifact.STATE_EX_NONE;
+
+            // Close all embeddings
+            embedding_context.close ();
+        }
+
+        @Override
+        public void run ()
+        {
+            try
+            {
+                log.info ("Closing package {} (state = {})",
+                        main_bundle, get_state_str (main_bundle));
+
+                do_closing_transition ();
+
+                if (extended_state == Artifact.STATE_EX_ERROR)
+                {
+                    log.warn ("Package {} not closed (state = {})",
+                            main_bundle, get_state_str (main_bundle));
+                }
+                else
+                {
+                    log.info ("Package {} closed (state = {})",
+                            main_bundle, get_state_str (main_bundle));
+                }
+            }
+            catch (Throwable transition_exception)
+            {
+                log.error ("Unhandled exception closing package {}", main_bundle, transition_exception);
+            }
+        }
     }
 }
 

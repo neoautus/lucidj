@@ -16,6 +16,7 @@
 
 package org.lucidj.browser;
 
+import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
 import org.lucidj.api.ManagedObjectFactory;
@@ -68,6 +69,9 @@ public class Browser implements ViewProvider
     private BundleManager bundleManager;
 
     @Requires
+    private ArtifactDeployer artifactDeployer;
+
+    @Requires
     private ServiceContext serviceContext;
 
     @Override // ViewProvider
@@ -101,6 +105,7 @@ public class Browser implements ViewProvider
         serviceContext.putService (context, ComponentManager.class, componentManager);
         serviceContext.putService (context, SerializerEngine.class, serializerEngine);
         serviceContext.putService (context, BundleManager.class, bundleManager);
+        serviceContext.putService (context, ArtifactDeployer.class, artifactDeployer);
         serviceContext.register (BrowserView.class);
     }
 }

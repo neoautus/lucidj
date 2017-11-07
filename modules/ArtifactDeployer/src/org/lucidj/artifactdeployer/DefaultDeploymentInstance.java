@@ -18,14 +18,13 @@ package org.lucidj.artifactdeployer;
 
 import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
-import org.lucidj.api.DeploymentInstance;
 
 import java.util.Properties;
 
 import org.osgi.framework.Bundle;
 
 // TODO: USE ServiceObject
-public class DefaultDeploymentInstance implements DeploymentInstance
+public class DefaultDeploymentInstance implements Artifact
 {
     private BundleManager bundleManager;
 

@@ -44,8 +44,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 import org.lucidj.api.Aggregate;
+import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
-import org.lucidj.api.DeploymentInstance;
 import org.lucidj.api.vui.ApplicationInterface;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.ComponentManager;
@@ -779,7 +779,7 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
             return (false);
         }
 
-        DeploymentInstance instance = artifactDeployer.getDeploymentInstance (bundle);
+        Artifact instance = artifactDeployer.getArtifact (bundle);
 
         log.info ("bundle={} deployment_instance={}", bundle, instance);
 

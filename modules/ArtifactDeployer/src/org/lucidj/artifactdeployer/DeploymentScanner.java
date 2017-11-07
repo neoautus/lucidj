@@ -16,8 +16,8 @@
 
 package org.lucidj.artifactdeployer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
-import org.lucidj.api.DeploymentInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +66,7 @@ public class DeploymentScanner implements Runnable
 
             log.debug ("INSTALL Scanning {} -> {}", package_uri, package_file);
 
-            DeploymentInstance instance = artifactDeployer.getArtifactByLocation (package_uri);
+            Artifact instance = artifactDeployer.getArtifact (package_uri);
 
             if (instance == null) // The bundle isn't installed yet
             {

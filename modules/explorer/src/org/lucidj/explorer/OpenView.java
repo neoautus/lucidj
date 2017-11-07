@@ -18,7 +18,6 @@ package org.lucidj.explorer;
 
 import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
-import org.lucidj.api.DeploymentInstance;
 import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,7 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
     private ArtifactDeployer artifactDeployer;
     private VerticalLayout install_pane;
     private Thread install_thread;
-    private DeploymentInstance install_instance;
+    private Artifact install_instance;
 
     private String artifact_url;
     private String parameters;
@@ -153,7 +152,7 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
     private void start_deploy ()
     {
         // First try to locate the artifact already installed
-        if ((install_instance = artifactDeployer.getArtifactByLocation (artifact_url)) == null)
+        if ((install_instance = artifactDeployer.getArtifact (artifact_url)) == null)
         {
             // Not found, should install
             if (install_thread == null)

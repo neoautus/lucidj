@@ -16,10 +16,10 @@
 
 package org.lucidj.artifactdeployer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
-import org.lucidj.api.DeploymentInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +57,8 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
     private BundleManager bundle_manager;
 
     private Map<String, DeploymentEngine> deployment_engines = new ConcurrentHashMap<> ();
-    private Map<Bundle, DeploymentInstance> bundle_to_instance = new ConcurrentHashMap<> (); // TODO: REMOVE THIS
-    private Map<String, DeploymentInstance> location_to_instance = new ConcurrentHashMap<> ();
+    private Map<Bundle, Artifact> bundle_to_instance = new ConcurrentHashMap<> (); // TODO: REMOVE THIS
+    private Map<String, Artifact> location_to_instance = new ConcurrentHashMap<> ();
 
     private Thread poll_thread;
     private int thread_poll_ms = 1000;
@@ -101,7 +101,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
     }
 
     @Override // ArtifactDeployer
-    public DeploymentInstance installArtifact (String location)
+    public Artifact installArtifact (String location)
         throws Exception
     {
         File bundle_file = get_valid_file (location);
@@ -124,7 +124,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         properties.setProperty (Constants.PROP_SOURCE, location);
 
         // Install bundle!
-        DeploymentInstance new_deploy = deployment_engine.install (location, properties);
+        Artifact new_deploy = deployment_engine.install (location, properties);
         bundle_to_instance.put (new_deploy.getMainBundle (), new_deploy);
         location_to_instance.put (location, new_deploy);
         log.info ("Installing package {} from {}", new_deploy, location);
@@ -135,18 +135,18 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         props.put ("@engine", deployment_engine.getEngineName ());
         props.put ("@bundleid", new_deploy.getMainBundle ().getBundleId ());
         props.put ("@bsn", new_deploy.getMainBundle ().getSymbolicName ());
-        context.registerService (DeploymentInstance.class, new_deploy, props);
+        context.registerService (Artifact.class, new_deploy, props);
         return (new_deploy);
     }
 
-    @Override
-    public DeploymentInstance getDeploymentInstance (Bundle bundle)
+    @Override // ArtifactDeployer
+    public Artifact getArtifact (Bundle bundle)
     {
         return (bundle_to_instance.get (bundle));
     }
 
     @Override // ArtifactDeployer
-    public DeploymentInstance getArtifactByLocation (String location)
+    public Artifact getArtifact (String location)
     {
         return (location_to_instance.get (location));
     }
@@ -159,7 +159,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         {
             String location = bundle_entry.getValue ().getProperty (Constants.PROP_LOCATION);
             Bundle bundle = bundle_entry.getKey ();
-            DeploymentInstance instance = bundle_to_instance.get (bundle);
+            Artifact instance = bundle_to_instance.get (bundle);
 
             if (instance == null)
             {

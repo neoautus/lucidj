@@ -18,7 +18,6 @@ package org.lucidj.pkgdeployer;
 
 import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
-import org.lucidj.api.DeploymentInstance;
 import org.lucidj.api.EmbeddingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +51,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 
 // TODO: USE ServiceObject
-public class PackageInstance implements DeploymentInstance
+public class PackageInstance implements Artifact
 {
     private final static Logger log = LoggerFactory.getLogger (PackageInstance.class);
 

@@ -16,9 +16,9 @@
 
 package org.lucidj.explorer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.ArtifactDeployer;
 import org.lucidj.api.BundleManager;
-import org.lucidj.api.DeploymentInstance;
 import org.lucidj.api.Embedding;
 import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.ServiceContext;
@@ -85,7 +85,7 @@ public class BundleView extends VerticalLayout implements View
         addComponent (new Label ("Bundle ID: " + bundle.getBundleId ()));
         addComponent (new Label ("Bundle: " + bundle));
 
-        DeploymentInstance instance = artifactDeployer.getDeploymentInstance (bundle);
+        Artifact instance = artifactDeployer.getArtifact (bundle);
 
         log.info ("bundle={} deployment_instance={}", bundle, instance);
 

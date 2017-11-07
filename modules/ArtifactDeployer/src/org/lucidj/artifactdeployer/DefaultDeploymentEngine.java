@@ -16,9 +16,9 @@
 
 package org.lucidj.artifactdeployer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
-import org.lucidj.api.DeploymentInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,10 +78,10 @@ public class DefaultDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public DeploymentInstance install (String location, Properties properties)
+    public Artifact install (String location, Properties properties)
         throws Exception
     {
-        DeploymentInstance instance = new DefaultDeploymentInstance (bundleManager);
+        Artifact instance = new DefaultDeploymentInstance (bundleManager);
         instance.install (location, properties);
         return (instance);
     }

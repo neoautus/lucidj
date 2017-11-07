@@ -16,9 +16,9 @@
 
 package org.lucidj.pkgdeployer;
 
+import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 import org.lucidj.api.DeploymentEngine;
-import org.lucidj.api.DeploymentInstance;
 import org.lucidj.api.EmbeddingContext;
 import org.lucidj.api.EmbeddingManager;
 import org.slf4j.Logger;
@@ -86,11 +86,11 @@ public class PackageDeploymentEngine implements DeploymentEngine
     }
 
     @Override
-    public DeploymentInstance install (String location, Properties properties)
+    public Artifact install (String location, Properties properties)
         throws Exception
     {
         EmbeddingContext embedding_context = embeddingManager.newEmbeddingContext ();
-        DeploymentInstance instance = new PackageInstance (embedding_context, bundleManager, packages_dir);
+        Artifact instance = new PackageInstance (embedding_context, bundleManager, packages_dir);
         instance.install (location, properties);
         return (instance);
     }

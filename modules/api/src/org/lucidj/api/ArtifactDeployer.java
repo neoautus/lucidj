@@ -20,9 +20,9 @@ import org.osgi.framework.Bundle;
 
 public interface ArtifactDeployer
 {
-    DeploymentInstance installArtifact (String location) throws Exception;
-    DeploymentInstance getDeploymentInstance (Bundle bundle);
-    DeploymentInstance getArtifactByLocation (String location);
+    Artifact installArtifact (String location) throws Exception;
+    Artifact getArtifact     (Bundle bundle);
+    Artifact getArtifact     (String location);
 }
 
 // EOF

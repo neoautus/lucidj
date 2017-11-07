@@ -16,7 +16,11 @@
 
 package org.lucidj.api;
 
-public interface Artifact
+import java.util.Properties;
+
+import org.osgi.framework.Bundle;
+
+public interface Artifact extends Aggregate
 {
     // Extended states
     int STATE_EX_ERROR    = -1;    // Error obtaining extended state
@@ -25,6 +29,16 @@ public interface Artifact
     int STATE_EX_OPENING  = 2;     // Opening the provided services
     int STATE_EX_OPEN     = 3;     // All services up and running
     int STATE_EX_CLOSING  = 4;     // Closing provided services
+
+    Bundle  getMainBundle ();
+    int     getState      () throws IllegalStateException;
+    int     getExtState   ();
+    Bundle  install       (String location, Properties properties) throws Exception;
+    boolean open          ();
+    boolean close         ();
+    boolean update        ();
+    boolean refresh       ();
+    boolean uninstall     ();
 }
 
 // EOF

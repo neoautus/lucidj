@@ -22,7 +22,7 @@ public interface DeploymentEngine
 {
     String  getEngineName ();
     int     compatibleArtifact (String location);
-    DeploymentInstance install (String location, Properties properties) throws Exception;
+    Artifact install (String location, Properties properties) throws Exception;
 }
 
 // EOF

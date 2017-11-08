@@ -256,6 +256,11 @@ public class DefaultEmbeddingContext implements EmbeddingContext, ManagedObject,
     {
         Embedding found_file = null;
 
+        if (!path.startsWith ("/"))
+        {
+            path = "/" + path;
+        }
+
         for (Embedding file: getEmbeddedFiles ())
         {
             if (URI.create (file.getName ()).getPath ().equals (path))

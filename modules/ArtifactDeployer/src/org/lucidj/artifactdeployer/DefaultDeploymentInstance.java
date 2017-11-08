@@ -19,6 +19,9 @@ package org.lucidj.artifactdeployer;
 import org.lucidj.api.Artifact;
 import org.lucidj.api.BundleManager;
 
+import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.osgi.framework.Bundle;
@@ -29,10 +32,24 @@ public class DefaultDeploymentInstance implements Artifact
     private BundleManager bundleManager;
 
     private Bundle main_bundle;
+    private URI location_uri;
 
     public DefaultDeploymentInstance (BundleManager bundleManager)
     {
         this.bundleManager = bundleManager;
+    }
+
+    @Override
+    public URI getLocation ()
+    {
+        return (location_uri);
+    }
+
+    @Override
+    public URI getLocation (String entry_path)
+    {
+        Path source_path = Paths.get (location_uri).resolve (entry_path);
+        return (source_path == null? null: source_path.toUri ());
     }
 
     @Override
@@ -58,6 +75,7 @@ public class DefaultDeploymentInstance implements Artifact
     public Bundle install (String location, Properties properties)
         throws Exception
     {
+        location_uri = new URI (location);
         main_bundle = bundleManager.installBundle (location, properties);
         return (main_bundle);
     }

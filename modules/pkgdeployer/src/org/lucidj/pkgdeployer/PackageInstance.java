@@ -32,6 +32,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -62,12 +63,26 @@ public class PackageInstance implements Artifact
     private String packages_dir;
     private Bundle main_bundle;
     private EmbeddingContext embedding_context;
+    private URI location_uri;
 
     public PackageInstance (EmbeddingContext embedding_context, BundleManager bundleManager, String cache_dir)
     {
         this.embedding_context = embedding_context;
         this.bundleManager = bundleManager;
         this.packages_dir = cache_dir;
+    }
+
+    @Override
+    public URI getLocation ()
+    {
+        return (location_uri);
+    }
+
+    @Override
+    public URI getLocation (String entry_path)
+    {
+        Path source_path = Paths.get (location_uri).resolve (entry_path);
+        return (source_path == null? null: source_path.toUri ());
     }
 
     @Override
@@ -132,7 +147,7 @@ public class PackageInstance implements Artifact
 
     private List<String> list_existing_files (File root_dir)
     {
-        return (list_existing_files (new ArrayList<String> (), root_dir.toPath ()));
+        return (list_existing_files (new ArrayList<> (), root_dir.toPath ()));
     }
 
     private boolean copy_or_update_file_tree (File source_package, final File dest_dir)
@@ -262,7 +277,8 @@ public class PackageInstance implements Artifact
         // it's deployment status, errors, warnings, configurations and so forth.
 
         // Exceptions are unlikely, but may bubble up
-        File source_location = new File (new URI (location));
+        location_uri = new URI (location);
+        File source_location = new File (location_uri);
 
         //-----------------------------------------------------
         // 1) DETERMINE Bundle-SymbolicName AND Bundle-Version
@@ -563,18 +579,17 @@ public class PackageInstance implements Artifact
         {
             try
             {
+                // TODO: WE MAY ACTIVATE A TRANSIENT BUNDLE HERE
                 if (main_bundle.getState () != Bundle.ACTIVE)
                 {
-                    log.info ("---------------------->> Waiting for package {} activation (state = {})",
+                    log.info ("Waiting for package {} activation (state = {})",
                         main_bundle, get_state_str (main_bundle));
 
+                    // TODO: WE MAY USE BUNDLE LISTENERS
                     while (main_bundle.getState () != Bundle.ACTIVE)
                     {
                         try
                         {
-                            log.info ("..... Waiting for package {} activation (state = {})",
-                                    main_bundle, get_state_str (main_bundle));
-
                             Thread.sleep (100);
                         }
                         catch (InterruptedException interrupt)

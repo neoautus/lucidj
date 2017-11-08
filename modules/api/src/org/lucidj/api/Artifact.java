@@ -16,6 +16,7 @@
 
 package org.lucidj.api;
 
+import java.net.URI;
 import java.util.Properties;
 
 import org.osgi.framework.Bundle;
@@ -30,6 +31,8 @@ public interface Artifact extends Aggregate
     int STATE_EX_OPEN     = 3;     // All services up and running
     int STATE_EX_CLOSING  = 4;     // Closing provided services
 
+    URI     getLocation   ();
+    URI     getLocation   (String entry_path);
     Bundle  getMainBundle ();
     int     getState      () throws IllegalStateException;
     int     getExtState   ();

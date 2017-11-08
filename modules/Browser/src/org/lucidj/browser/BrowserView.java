@@ -58,6 +58,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -766,7 +767,7 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
         }
 
         String bundle_symbolic_name = m.group (1);
-        String object_path = '/' + m.group (2);
+        String object_path = m.group (2);
         Bundle bundle = bundleManager.getBundleByDescription (bundle_symbolic_name, null);
 
         log.info ("bundle_symbolic_name={} object_path={} bundle={}", bundle_symbolic_name, object_path, bundle);
@@ -792,6 +793,10 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
         {
             return (false);
         }
+
+        // Get the source location for the object
+        URI object_uri = instance.getLocation (object_path);
+        root_source = new File (object_uri);
 
         // We have a valid embedding!
         object_list = Aggregate.adapt (List.class, root_object);

@@ -31,6 +31,7 @@ public interface Artifact extends Aggregate
     int STATE_EX_OPEN     = 3;     // All services up and running
     int STATE_EX_CLOSING  = 4;     // Closing provided services
 
+    String  getMimeType   ();
     URI     getLocation   ();
     URI     getLocation   (String entry_path);
     Bundle  getMainBundle ();

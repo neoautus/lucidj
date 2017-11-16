@@ -40,6 +40,12 @@ public class DefaultDeploymentInstance implements Artifact
     }
 
     @Override
+    public String getMimeType ()
+    {
+        return ("application/x-jar");
+    }
+
+    @Override
     public URI getLocation ()
     {
         return (location_uri);

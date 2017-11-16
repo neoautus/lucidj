@@ -73,6 +73,12 @@ public class PackageInstance implements Artifact
     }
 
     @Override
+    public String getMimeType ()
+    {
+        return ("application/x-lucidj-leap");
+    }
+
+    @Override
     public URI getLocation ()
     {
         return (location_uri);

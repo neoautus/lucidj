@@ -98,6 +98,11 @@ public class ContainerTreeRenderer extends Tree implements Renderer, ItemClickEv
                 }
             }
         }
+
+        if (properties.containsKey ("@expandItem"))
+        {
+            expandItem (properties.get ("@expandItem"));
+        }
         update_components ();
     }
 

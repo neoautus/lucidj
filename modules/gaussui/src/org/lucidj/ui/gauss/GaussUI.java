@@ -29,6 +29,7 @@ import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.vaadin.event.ItemClickEvent;
 import com.vaadin.event.LayoutEvents;
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
@@ -56,6 +57,7 @@ import com.vaadin.ui.themes.ValoTheme;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URI;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -276,6 +278,25 @@ public class GaussUI implements DesktopInterface, MenuInstance.EventListener
                 ObjectRenderer r = rendererFactory.newRenderer (ref);
                 r.setWidthUndefined ();
                 r.setHeightUndefined ();
+
+                r.addListener (new Component.Listener ()
+                {
+                    @Override
+                    public void componentEvent (Component.Event event)
+                    {
+                        if (event instanceof ItemClickEvent)
+                        {
+                            ItemClickEvent itemClickEvent = (ItemClickEvent)event;
+                            URI uri = (URI)itemClickEvent.getItem ().getItemProperty (URI.class.getName ()).getValue ();
+
+                            if (uri != null && uri.getScheme ().equals ("navigator"))
+                            {
+                                log.info ("Navigator URI: {}", uri);
+                                navigator.navigateTo (uri.getHost () + uri.getPath ());
+                            }
+                        }
+                    }
+                });
 
                 add_smart_tab (layout, (String)ref.getProperty ("@caption"), r);
             }

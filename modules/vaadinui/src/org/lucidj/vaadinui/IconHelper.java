@@ -75,10 +75,19 @@ public class IconHelper implements org.lucidj.api.vui.IconHelper
         }
 
         // For now we ignore both size and scale, since breeze is a vectorial theme
-        String family, name;
+        String family, name, icon_path;
 
         if (familyAndName.contains ("/"))
         {
+            // First, test for a pure mime-type
+            icon_path = "public/" + theme + "/mimetypes/32/" + familyAndName.replace ("/", "-") + ".svg";
+
+            if (bundle.getEntry (icon_path) != null)
+            {
+                return (bundle.getResource (icon_path));
+            }
+
+            // Not a pure mime-type, look into the family/name icon archives
             int slash_pos = familyAndName.indexOf ("/");
             family = familyAndName.substring (0, slash_pos);
             name = familyAndName.substring (slash_pos + 1);
@@ -90,7 +99,7 @@ public class IconHelper implements org.lucidj.api.vui.IconHelper
         }
 
         // Family is either actions/apps/categories/.../status OR the app name
-        String icon_path = "public/" + theme + "/" + family + "/32/" + name + ".svg";
+        icon_path = "public/" + theme + "/" + family + "/32/" + name + ".svg";
 
         // If not found, let's try other alternative path
         if (bundle.getEntry (icon_path) == null)

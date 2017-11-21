@@ -101,7 +101,7 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
     }
 
     @Override // ArtifactDeployer
-    public Artifact installArtifact (String location)
+    public Artifact installArtifact (String location, boolean start_transient)
         throws Exception
     {
         File bundle_file = get_valid_file (location);
@@ -120,8 +120,10 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
 
         // These properties will be stored alongside the bundle and other internal properties
         Properties properties = new Properties ();
+        properties.setProperty (BundleManager.BND_SOURCE, location);
         properties.setProperty (Constants.PROP_DEPLOYMENT_ENGINE, deployment_engine.getEngineName ());
-        properties.setProperty (Constants.PROP_SOURCE, location);
+        properties.setProperty (Constants.PROP_BUNDLE_START,
+            start_transient? Constants.BUNDLE_START_TRANSIENT: Constants.BUNDLE_START_NORMAL);
 
         // Install bundle!
         Artifact new_deploy = deployment_engine.install (location, properties);
@@ -135,8 +137,16 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         props.put ("@engine", deployment_engine.getEngineName ());
         props.put ("@bundleid", new_deploy.getMainBundle ().getBundleId ());
         props.put ("@bsn", new_deploy.getMainBundle ().getSymbolicName ());
+        props.put ("@bundle_start", properties.getProperty (Constants.PROP_BUNDLE_START));
         context.registerService (Artifact.class, new_deploy, props);
         return (new_deploy);
+    }
+
+    @Override
+    public Artifact installArtifact (String location)
+        throws Exception
+    {
+        return (installArtifact (location, false));
     }
 
     @Override // ArtifactDeployer

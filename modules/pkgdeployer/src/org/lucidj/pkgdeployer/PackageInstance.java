@@ -72,32 +72,49 @@ public class PackageInstance implements Artifact
         this.packages_dir = cache_dir;
     }
 
-    @Override
+    public PackageInstance (EmbeddingContext embedding_context, BundleManager bundleManager, String cache_dir, Bundle main_bundle)
+    {
+        this (embedding_context, bundleManager, cache_dir);
+        this.main_bundle = main_bundle;
+        String bnd_source = bundleManager.getBundleProperty (main_bundle, BundleManager.BND_SOURCE, null);
+
+        if (bnd_source != null)
+        {
+            location_uri = URI.create (bnd_source);
+        }
+        else
+        {
+            // TODO: NULLIFY main_bundle?
+            log.error ("Internal error: Missing bundle source for {}", main_bundle);
+        }
+    }
+
+    @Override // Artifact
     public String getMimeType ()
     {
         return ("application/x-lucidj-leap");
     }
 
-    @Override
+    @Override // Artifact
     public URI getLocation ()
     {
         return (location_uri);
     }
 
-    @Override
+    @Override // Artifact
     public URI getLocation (String entry_path)
     {
         Path source_path = Paths.get (location_uri).resolve (entry_path);
         return (source_path == null? null: source_path.toUri ());
     }
 
-    @Override
+    @Override // Artifact
     public Bundle getMainBundle ()
     {
         return (main_bundle);
     }
 
-    @Override
+    @Override // Artifact
     public <T> T adapt (Class<T> type)
     {
         if (type == null)
@@ -115,14 +132,14 @@ public class PackageInstance implements Artifact
         return (null);
     }
 
-    @Override
+    @Override // Artifact
     public int getState ()
     {
         // TODO: WE NEED open() AND close()
         return (main_bundle.getState ());
     }
 
-    @Override
+    @Override // Artifact
     public int getExtState ()
     {
         return (main_bundle.getState () == Bundle.ACTIVE? extended_state: Artifact.STATE_EX_NONE);
@@ -274,7 +291,7 @@ public class PackageInstance implements Artifact
     }
 
     // TODO: PROVIDE A PROPER EXCEPTION CLASS FOR THIS SUBSYSTEM
-    @Override
+    @Override // Artifact
     public Bundle install (String location, Properties properties)
         throws Exception
     {
@@ -284,13 +301,20 @@ public class PackageInstance implements Artifact
 
         // Exceptions are unlikely, but may bubble up
         location_uri = new URI (location);
-        File source_location = new File (location_uri);
+
+        // Check whether the bundle is already installed
+        if ((main_bundle = bundleManager.getBundleByProperty (BundleManager.BND_SOURCE, location)) != null)
+        {
+            // TODO: OPEN IT
+            return (main_bundle);
+        }
 
         //-----------------------------------------------------
         // 1) DETERMINE Bundle-SymbolicName AND Bundle-Version
         //-----------------------------------------------------
 
         // The default symbolic name is the package filename without .leap extension
+        File source_location = new File (location_uri);
         String source_filename = source_location.getName ();
         String bundle_symbolic_name = source_filename.substring (0, source_filename.lastIndexOf ("."));
         Version bundle_version = new Version ("0");
@@ -366,8 +390,8 @@ public class PackageInstance implements Artifact
             Attributes atts = manifest.getMainAttributes ();
             atts.put (Attributes.Name.MANIFEST_VERSION, "1.0");
             atts.putValue ("Created-By",
-                    System.getProperty("java.version") +
-                            " (" + System.getProperty("java.vendor") + ") & LucidJ");
+                System.getProperty("java.version") +
+                " (" + System.getProperty("java.vendor") + ") & LucidJ");
             atts.putValue (Constants.BUNDLE_MANIFESTVERSION, "2");
             atts.putValue (Constants.BUNDLE_SYMBOLICNAME, bundle_symbolic_name);
             atts.putValue (PackageDeploymentEngine.ATTR_PACKAGE, PackageDeploymentEngine.ATTR_PACKAGE_VERSION);
@@ -449,7 +473,7 @@ public class PackageInstance implements Artifact
                 String runtime_location_ref = "reference:" + runtime_location.toURI ().toString ();
                 main_bundle = bundleManager.installBundle (runtime_location_ref, properties);
                 log.info ("----------- BUNDLE INSTALL: main_bundle={} state={} context={}",
-                        main_bundle, main_bundle.getState (), main_bundle.getBundleContext ());
+                    main_bundle, main_bundle.getState (), main_bundle.getBundleContext ());
                 return (main_bundle);
             }
             catch (Exception e)

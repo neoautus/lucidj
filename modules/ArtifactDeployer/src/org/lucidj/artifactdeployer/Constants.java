@@ -18,13 +18,15 @@ package org.lucidj.artifactdeployer;
 
 public interface Constants
 {
-    String PROP_SOURCE             = ".Artifact-Source";
     String PROP_DEPLOYMENT_ENGINE  = ".Artifact-Deployment-Engine";
     String PROP_LOCATION           = ".Artifact-Location";
     String PROP_LAST_MODIFIED      = ".Artifact-Last-Modified";
     String PROP_BUNDLE_STATE       = ".Artifact-Bundle-State";
     String PROP_BUNDLE_STATE_HUMAN = ".Artifact-Bundle-State-Human";
     String PROP_BUNDLE_START       = ".Artifact-Bundle-Start";
+
+    String BUNDLE_START_TRANSIENT  = "transient";
+    String BUNDLE_START_NORMAL     = "normal";
 }
 
 // EOF

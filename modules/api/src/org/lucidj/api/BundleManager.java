@@ -26,6 +26,8 @@ import org.osgi.framework.Version;
 
 public interface BundleManager
 {
+    String BND_SOURCE = ".BundleManager-Source";
+
     Manifest   getManifest            (String location);
     Manifest   getManifest            (File jar);
     Bundle     getBundleByDescription (String symbolic_name, Version version);
@@ -33,6 +35,7 @@ public interface BundleManager
     Bundle     getBundleByProperty    (String property, String value);
     Map<Bundle, Properties> getBundles ();
     Properties getBundleProperties    (Bundle bnd);
+    String     getBundleProperty      (Bundle bnd, String key, String default_value);
     Bundle     installBundle          (String location, Properties properties) throws Exception;
     boolean    updateBundle           (Bundle bnd);
     boolean    refreshBundle          (Bundle bnd);

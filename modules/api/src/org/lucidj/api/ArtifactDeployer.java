@@ -21,6 +21,7 @@ import org.osgi.framework.Bundle;
 public interface ArtifactDeployer
 {
     Artifact installArtifact (String location) throws Exception;
+    Artifact installArtifact (String location, boolean transient_start) throws Exception;
     Artifact getArtifact     (Bundle bundle);
     Artifact getArtifact     (String location);
 }

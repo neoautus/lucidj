@@ -219,7 +219,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
             {
                 try
                 {
-                    if ("transient".equalsIgnoreCase (properties.getProperty (Constants.PROP_BUNDLE_START, "normal")))
+                    if (Constants.BUNDLE_START_TRANSIENT.equalsIgnoreCase (properties.getProperty (Constants.PROP_BUNDLE_START, Constants.BUNDLE_START_NORMAL)))
                     {
                         log.info ("Bundle {} is resolved -- will start transient now", bnd);
                         bnd.start (Bundle.START_TRANSIENT);
@@ -591,7 +591,14 @@ public class DefaultBundleManager implements BundleManager, BundleListener
     @Override // BundleManager
     public Properties getBundleProperties (Bundle bnd)
     {
-        return (bundle_prop_cache.get (bnd.getLocation ()));
+        return (bnd == null? null: bundle_prop_cache.get (bnd.getLocation ()));
+    }
+
+    @Override // BundleManager
+    public String getBundleProperty (Bundle bnd, String key, String default_value)
+    {
+        Properties bnd_props = getBundleProperties (bnd);
+        return (bnd_props == null? default_value: bnd_props.getProperty (key, default_value));
     }
 
     @Validate

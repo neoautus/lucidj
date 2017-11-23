@@ -108,7 +108,7 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
 
         try
         {
-            install_instance = artifactDeployer.installArtifact (artifact_url);
+            install_instance = artifactDeployer.installArtifact (artifact_url, true);
             install_pane.addComponent (new Label ("Bundle installed: " + install_instance));
 
             Button go_to_bundle = new Button ("Go to new bundle");
@@ -126,8 +126,6 @@ public class OpenView extends VerticalLayout implements View, Runnable, Thread.U
             String opening = "Opening";
             Label animation_label = new Label ();
             install_pane.addComponent (animation_label);
-
-            install_instance.open ();
 
             for (;;)
             {

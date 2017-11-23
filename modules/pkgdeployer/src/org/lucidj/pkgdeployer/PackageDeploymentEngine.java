@@ -58,7 +58,7 @@ public class PackageDeploymentEngine implements
     private String packages_dir;
     private BundleTracker bundleTracker;
 
-    private Map<String, PackageInstance> instance_map = new HashMap<> ();
+    private Map<String, PackageInstance> source_to_instance = new HashMap<> ();
 
     @Requires
     private BundleManager bundleManager;
@@ -103,67 +103,53 @@ public class PackageDeploymentEngine implements
         return (location_file.getName ().toLowerCase ().endsWith (".leap")? ENGINE_LEVEL: 0);
     }
 
-    private Artifact bind_instance (String location, Properties properties, Bundle bundle)
-        throws Exception
-    {
-        log.info ("#####> [ENTER bind_instance] location={} bundle={} properties={}",
-            location, bundle, properties);
-
-        if (bundle == null)
-        {
-            bundle = bundleManager.getBundleByProperty (BundleManager.BND_SOURCE, location);
-            log.info ("#####> [bind_instance] bundle on source location returns {}", bundle);
-        }
-
-        PackageInstance instance = instance_map.get (bundle == null? location: bundle.getLocation ());
-        log.info ("#####> [bind_instance] bundle.getBundle instance={} bundle={}", instance, (instance == null)? null: instance.getMainBundle ());
-
-        if (instance != null)
-        {
-            log.info ("#####> [bind_instance] ALREADY EXISTS return={} bundle={}", instance, instance.getMainBundle ());
-            return (instance);
-        }
-
-        log.info ("#####> [bind_instance] instance doesn't exists, will create new");
-        EmbeddingContext embedding_context = embeddingManager.newEmbeddingContext ();
-        instance = new PackageInstance (embedding_context, bundleManager, packages_dir, bundle);
-
-        if (bundle == null)
-        {
-            log.info ("#####> [bind_instance] INSTALL instance '{}' -> location = {}", location, instance.getLocation ());
-            bundle = instance.install (location, properties);
-        }
-
-        log.info ("#####> [bind_instance] INSTANCE={} location={}", instance, bundle.getLocation ());
-        instance_map.put (bundle.getLocation (), instance);
-        return (instance);
-    }
-
     @Override // DeploymentEngine
-    public Artifact install (String location, Properties properties)
+    public Artifact install (String source, Properties properties)
         throws Exception
     {
-        return (bind_instance (location, properties, null));
+        EmbeddingContext embedding_context = embeddingManager.newEmbeddingContext ();
+        PackageInstance instance = new PackageInstance (embedding_context, bundleManager, packages_dir);
+        source_to_instance.put (source, instance);
+        instance.install (source, properties);
+        return (instance);
     }
 
     @Override // BundleTrackerCustomizer<ServiceRegistration<PackageInstance>>
     public ServiceRegistration<Artifact> addingBundle (Bundle bundle, BundleEvent bundleEvent)
     {
+        // TODO: USE JUST compatibleArtifact()
         if (bundle.getHeaders ().get (PackageDeploymentEngine.ATTR_PACKAGE) == null)
         {
             return (null);
         }
 
-        log.info ("#####> [addingBundle] bundle location = {}", bundle.getLocation ());
         try
         {
-            Artifact artifact = bind_instance (bundle.getLocation (), null, bundle);
+            String source = bundleManager.getBundleProperty (bundle, BundleManager.BND_SOURCE, null);
 
-            log.info ("#####> [addingBundle] bundle={} INSTANCE={}", bundle, artifact);
+            if (source == null)
+            {
+                log.error ("Source location not found for {}", bundle);
+                return (null);
+            }
+
+            PackageInstance instance = source_to_instance.get (source);
+
+            if (instance == null)
+            {
+                EmbeddingContext embedding_context = embeddingManager.newEmbeddingContext ();
+                instance = new PackageInstance (embedding_context, bundleManager, packages_dir);
+                instance._setMainBundle (bundle);
+            }
+
+            if (!instance.open ())
+            {
+                log.error ("Error opening package {}", instance.getMainBundle ());
+            }
 
             // The returned bundle must have an Package service
             // registered, so the status changes can be properly tracked
-            return (context.registerService (Artifact.class, artifact, null));
+            return (context.registerService (Artifact.class, instance, null));
         }
         catch (Exception e)
         {

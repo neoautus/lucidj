@@ -72,9 +72,8 @@ public class PackageInstance implements Artifact
         this.packages_dir = cache_dir;
     }
 
-    public PackageInstance (EmbeddingContext embedding_context, BundleManager bundleManager, String cache_dir, Bundle main_bundle)
+    public void _setMainBundle (Bundle main_bundle)
     {
-        this (embedding_context, bundleManager, cache_dir);
         this.main_bundle = main_bundle;
         String bnd_source = bundleManager.getBundleProperty (main_bundle, BundleManager.BND_SOURCE, null);
 
@@ -296,7 +295,7 @@ public class PackageInstance implements Artifact
         throws Exception
     {
         // Probably we'll need some underlying artifact that can keep track
-        // of overall deployment status, as well as embedded main_bundle status,
+        // of overall deployment status, as well as embedded bundle status,
         // it's deployment status, errors, warnings, configurations and so forth.
 
         // Exceptions are unlikely, but may bubble up
@@ -305,7 +304,16 @@ public class PackageInstance implements Artifact
         // Check whether the bundle is already installed
         if ((main_bundle = bundleManager.getBundleByProperty (BundleManager.BND_SOURCE, location)) != null)
         {
-            // TODO: OPEN IT
+            if (main_bundle.getState () == Bundle.INSTALLED || main_bundle.getState () == Bundle.RESOLVED)
+            {
+                // TODO: BETTER API (START/TRANSIENT OPTION)
+                // By default, install also starts the bundle
+                main_bundle.start (Bundle.START_TRANSIENT);
+            }
+            else
+            {
+                log.warn ("Package {} already installed from {}", main_bundle, location);
+            }
             return (main_bundle);
         }
 
@@ -374,7 +382,7 @@ public class PackageInstance implements Artifact
         //-------------------------------------------------------------------
 
         // Create a base manifest if needed.
-        // We need a manifest in order to become a valid OSGi main_bundle
+        // We need a manifest in order to become a valid OSGi bundle
         if (package_mf == null)
         {
             File meta_inf = new File (runtime_location, "META-INF");
@@ -448,7 +456,7 @@ public class PackageInstance implements Artifact
                     try
                     {
                         Bundle new_bundle = bundleManager.installBundle (bundle_uri, properties);
-                        log.info ("Installing embedded main_bundle {} from {}", new_bundle, bundle_uri);
+                        log.info ("Installing embedded bundle {} from {}", new_bundle, bundle_uri);
                     }
                     catch (Exception e)
                     {
@@ -468,17 +476,15 @@ public class PackageInstance implements Artifact
         {
             try
             {
-                // Here the native OSGi main_bundle install
-                // Notice we install the exploded main_bundle stored on cache, NOT the jar
+                // Here the native OSGi bundle install
+                // Notice we install the exploded bundle stored on cache, NOT the jar
                 String runtime_location_ref = "reference:" + runtime_location.toURI ().toString ();
                 main_bundle = bundleManager.installBundle (runtime_location_ref, properties);
-                log.info ("----------- BUNDLE INSTALL: main_bundle={} state={} context={}",
-                    main_bundle, main_bundle.getState (), main_bundle.getBundleContext ());
                 return (main_bundle);
             }
             catch (Exception e)
             {
-                throw (new Exception ("Exception installing main_bundle: " + location, e));
+                throw (new Exception ("Exception installing bundle: " + location, e));
             }
         }
         throw (new Exception ("Errors found when deploying embedded bundles -- will not install package.", got_errors));
@@ -489,7 +495,11 @@ public class PackageInstance implements Artifact
     {
         synchronized (this)
         {
-            if (getExtState () != Artifact.STATE_EX_ERROR)
+            if (main_bundle.getState () != Bundle.STOPPING
+                && main_bundle.getState () != Bundle.UNINSTALLED
+                && extended_state != Artifact.STATE_EX_CLOSING
+                && extended_state != Artifact.STATE_EX_OPENING
+                && extended_state != Artifact.STATE_EX_OPEN)
             {
                 // Now we are opening
                 extended_state = Artifact.STATE_EX_OPENING;

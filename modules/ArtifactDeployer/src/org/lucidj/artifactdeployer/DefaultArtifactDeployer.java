@@ -129,7 +129,6 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         Artifact new_deploy = deployment_engine.install (location, properties);
         bundle_to_instance.put (new_deploy.getMainBundle (), new_deploy);
         location_to_instance.put (location, new_deploy);
-        log.info ("Installing package {} from {}", new_deploy, location);
 
         // Register the bundle controller
         Dictionary<String, Object> props = new Hashtable<> ();

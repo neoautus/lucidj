@@ -41,12 +41,12 @@ import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 
 // TODO: REFACTOR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-@org.apache.felix.ipojo.annotations.Component (immediate = true)
+@org.apache.felix.ipojo.annotations.Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class HtmlRenderer extends VerticalLayout implements Renderer, EditorInterface
 {
-    private final transient static Logger log = LoggerFactory.getLogger (HtmlRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (HtmlRenderer.class);
 
     private Html source;
     private Label html_output = new Label ();

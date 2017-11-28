@@ -16,12 +16,12 @@
 
 package org.lucidj.renderer;
 
-import org.lucidj.api.Aggregate;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.ServiceContext;
 import org.lucidj.api.vui.ObjectRenderer;
 import org.lucidj.api.vui.Renderer;
 import org.lucidj.api.vui.RendererFactory;
 import org.lucidj.api.vui.RendererProvider;
-import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

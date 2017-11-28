@@ -23,7 +23,7 @@ import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.lucidj.api.EventHelper;
+import org.lucidj.api.core.EventHelper;
 import org.lucidj.api.vui.Renderer;
 
 /* Plotly, what a neat library!

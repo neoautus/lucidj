@@ -156,7 +156,7 @@
         <path refid="classpath.vaadin.server"/>
 
         <!-- The LucidJ API -->
-        <pathelement path="${dist.dir}/libraries_api.jar"/>
+        <pathelement path="${dist.dir}/libraries_API.Core.jar"/>
         <pathelement path="${dist.dir}/libraries_API.VUI.jar"/>
 
     </path>
@@ -1092,7 +1092,7 @@
     <target name="build.modules.store">
         <delete dir="${libraries.class}"/>
         <mkdir dir="${libraries.class}"/>
-        <javac srcdir="${libraries.src.dir}/api" destdir="${libraries.class}"
+        <javac srcdir="${libraries.src.dir}/API.Core" destdir="${libraries.class}"
             debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
             source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
             includeantruntime="false">

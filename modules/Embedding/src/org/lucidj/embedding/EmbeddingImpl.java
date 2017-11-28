@@ -16,7 +16,7 @@
 
 package org.lucidj.embedding;
 
-import org.lucidj.api.Embedding;
+import org.lucidj.api.core.Embedding;
 
 import java.util.LinkedList;
 

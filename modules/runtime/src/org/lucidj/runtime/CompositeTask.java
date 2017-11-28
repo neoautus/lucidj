@@ -16,9 +16,9 @@
 
 package org.lucidj.runtime;
 
-import org.lucidj.api.Aggregate;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
 
 import java.util.ArrayList;
 import java.util.HashMap;

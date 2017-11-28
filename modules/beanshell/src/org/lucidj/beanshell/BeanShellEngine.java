@@ -20,10 +20,10 @@ import bsh.Interpreter;
 import bsh.NameSpace;
 import bsh.UtilEvalError;
 import bsh.Variable;
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngineBase;
-import org.lucidj.api.CodeEngineProvider;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.CodeEngineBase;
+import org.lucidj.api.core.CodeEngineProvider;
+import org.lucidj.api.core.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ import java.util.Map;
 
 public class BeanShellEngine implements CodeEngineBase
 {
-    private final static Logger log = LoggerFactory.getLogger (BeanShellEngineProvider.class);
+    private final static Logger log = LoggerFactory.getLogger (BeanShellEngine.class);
 
     private CodeEngineProvider provider;
     private CodeContext context;

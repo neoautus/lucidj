@@ -17,8 +17,8 @@
 package org.lucidj.console;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
+import org.lucidj.api.core.Stdio;
 import org.lucidj.api.vui.Renderer;
-import org.lucidj.api.Stdio;
 
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.label.ContentMode;

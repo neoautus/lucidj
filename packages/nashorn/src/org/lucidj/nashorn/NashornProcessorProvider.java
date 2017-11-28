@@ -16,17 +16,17 @@
 
 package org.lucidj.nashorn;
 
-import org.lucidj.api.Aggregate;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.CodeEngineManager;
-import org.lucidj.api.ComponentDescriptor;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ComponentManager;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
-import org.lucidj.api.ServiceContext;
-import org.lucidj.api.ServiceObject;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.CodeEngineManager;
+import org.lucidj.api.core.ComponentDescriptor;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ComponentManager;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceObject;
 
 import java.util.HashMap;
 import java.util.Map;

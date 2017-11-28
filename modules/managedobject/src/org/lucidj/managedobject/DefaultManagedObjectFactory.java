@@ -16,10 +16,10 @@
 
 package org.lucidj.managedobject;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectFactory;
+import org.lucidj.api.core.ManagedObjectInstance;
+import org.lucidj.api.core.ManagedObjectProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +51,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class DefaultManagedObjectFactory implements ManagedObjectFactory
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultManagedObjectFactory.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultManagedObjectFactory.class);
 
     private final String PROP_INSTANCES = "@instances";
     private final String PROP_CLASS     = "@class";

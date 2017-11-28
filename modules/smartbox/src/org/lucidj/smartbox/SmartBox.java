@@ -16,14 +16,14 @@
 
 package org.lucidj.smartbox;
 
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ComponentState;
-import org.lucidj.api.DisplayManager;
-import org.lucidj.api.ServiceContext;
-import org.lucidj.api.ServiceObject;
-import org.lucidj.api.Stdio;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ComponentState;
+import org.lucidj.api.core.DisplayManager;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceObject;
+import org.lucidj.api.core.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +31,7 @@ import java.util.HashMap;
 
 public class SmartBox implements ComponentInterface, ComponentState
 {
-    private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
+    private final static Logger log = LoggerFactory.getLogger (SmartBox.class);
 
     private int component_state = ACTIVE;
     private ComponentState.ChangeListener state_listener;

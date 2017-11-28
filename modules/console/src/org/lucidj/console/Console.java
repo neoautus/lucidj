@@ -16,9 +16,9 @@
 
 package org.lucidj.console;
 
-import org.lucidj.api.EventHelper;
+import org.lucidj.api.core.EventHelper;
 import org.lucidj.api.vui.Renderer;  // <------ TODO: REMOVE THIS DEPENDENCY
-import org.lucidj.api.Stdio;
+import org.lucidj.api.core.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +27,7 @@ import java.util.Date;
 
 public class Console implements Stdio, Renderer.Observable
 {
-    private final transient Logger log = LoggerFactory.getLogger (Console.class);
+    private final static Logger log = LoggerFactory.getLogger (Console.class);
 
     private SimpleDateFormat timestamp_format = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss.SSS");
 

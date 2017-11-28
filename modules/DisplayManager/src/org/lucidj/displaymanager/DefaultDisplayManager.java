@@ -16,7 +16,7 @@
 
 package org.lucidj.displaymanager;
 
-import org.lucidj.api.DisplayManager;
+import org.lucidj.api.core.DisplayManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

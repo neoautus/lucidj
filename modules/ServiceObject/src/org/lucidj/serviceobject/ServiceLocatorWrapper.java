@@ -16,8 +16,8 @@
 
 package org.lucidj.serviceobject;
 
-import org.lucidj.api.ServiceLocator;
-import org.lucidj.api.ServiceObjectException;
+import org.lucidj.api.core.ServiceLocator;
+import org.lucidj.api.core.ServiceObjectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

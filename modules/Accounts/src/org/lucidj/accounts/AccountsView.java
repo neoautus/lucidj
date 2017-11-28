@@ -16,8 +16,8 @@
 
 package org.lucidj.accounts;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +30,7 @@ import com.vaadin.ui.VerticalLayout;
 
 public class AccountsView extends VerticalLayout implements ManagedObject, View
 {
-    final Logger log = LoggerFactory.getLogger (AccountsView.class);
+    private final static Logger log = LoggerFactory.getLogger (AccountsView.class);
 
     private void buildView()
     {

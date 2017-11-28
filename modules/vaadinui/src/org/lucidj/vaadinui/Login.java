@@ -33,8 +33,8 @@ import com.vaadin.ui.PasswordField;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.themes.ValoTheme;
-import org.lucidj.api.SecurityEngine;
-import org.lucidj.api.SecuritySubject;
+import org.lucidj.api.core.SecurityEngine;
+import org.lucidj.api.core.SecuritySubject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

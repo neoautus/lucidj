@@ -16,7 +16,7 @@
 
 package org.lucidj.api.vui;
 
-import org.lucidj.api.SearchResult;
+import org.lucidj.api.core.SearchResult;
 
 import java.util.List;
 

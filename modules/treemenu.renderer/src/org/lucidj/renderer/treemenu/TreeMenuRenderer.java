@@ -16,11 +16,11 @@
 
 package org.lucidj.renderer.treemenu;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.MenuEntry;
-import org.lucidj.api.MenuInstance;
 import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
+import org.lucidj.api.core.MenuEntry;
+import org.lucidj.api.core.MenuInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ import java.util.TreeSet;
 
 public class TreeMenuRenderer implements ManagedObject, Renderer, ItemClickEvent.ItemClickListener
 {
-    private final static transient Logger log = LoggerFactory.getLogger (TreeMenuRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (TreeMenuRenderer.class);
 
     private static String CP_ENTRY   = "entry";
     private static String CP_CAPTION = "caption";

@@ -16,9 +16,9 @@
 
 package org.lucidj.containertree;
 
-import org.lucidj.api.Aggregate;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.ServiceContext;
 import org.lucidj.api.vui.Renderer;
-import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

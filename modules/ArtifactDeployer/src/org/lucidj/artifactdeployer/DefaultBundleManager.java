@@ -16,7 +16,7 @@
 
 package org.lucidj.artifactdeployer;
 
-import org.lucidj.api.BundleManager;
+import org.lucidj.api.core.BundleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +75,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides (specifications = BundleManager.class)
 public class DefaultBundleManager implements BundleManager, BundleListener
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultBundleManager.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultBundleManager.class);
 
     private final static String REFERENCE_PREFIX = "reference:";
 

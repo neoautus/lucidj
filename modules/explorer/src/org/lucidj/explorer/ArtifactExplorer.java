@@ -16,8 +16,8 @@
 
 package org.lucidj.explorer;
 
-import org.lucidj.api.Artifact;
-import org.lucidj.api.EmbeddingContext;
+import org.lucidj.api.core.Artifact;
+import org.lucidj.api.core.EmbeddingContext;
 import org.lucidj.api.vui.IconHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

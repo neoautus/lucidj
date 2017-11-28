@@ -19,9 +19,9 @@ package org.lucidj.karafbinding;
 import org.apache.karaf.shell.api.console.Session;
 import org.apache.karaf.shell.api.console.SessionFactory;
 import org.apache.karaf.util.jaas.JaasHelper;
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.ServiceBinding;
-import org.lucidj.api.ServiceBindingsManager;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.ServiceBinding;
+import org.lucidj.api.core.ServiceBindingsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class KarafBinding implements ServiceBinding
 {
-    private final static transient Logger log = LoggerFactory.getLogger (KarafBinding.class);
+    private final static Logger log = LoggerFactory.getLogger (KarafBinding.class);
 
     private String admin_realm = "karaf";
     private Subject admin_subject;

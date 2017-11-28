@@ -45,12 +45,12 @@ import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import org.lucidj.api.ClassManager;
+import org.lucidj.api.core.ClassManager;
+import org.lucidj.api.core.DesktopUI;
+import org.lucidj.api.core.SecurityEngine;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceObject;
 import org.lucidj.api.vui.DesktopInterface;
-import org.lucidj.api.DesktopUI;
-import org.lucidj.api.SecurityEngine;
-import org.lucidj.api.ServiceContext;
-import org.lucidj.api.ServiceObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

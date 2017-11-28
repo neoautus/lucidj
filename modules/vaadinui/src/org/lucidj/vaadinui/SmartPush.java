@@ -29,7 +29,7 @@ import java.util.concurrent.locks.Lock;
 
 public class SmartPush
 {
-    private final static transient Logger log = LoggerFactory.getLogger (BaseVaadinUI.class);
+    private final static Logger log = LoggerFactory.getLogger (BaseVaadinUI.class);
 
     private final static int CHECK_INTERVAL = 25;
     private final static int PUSH_INTERVAL = 200;

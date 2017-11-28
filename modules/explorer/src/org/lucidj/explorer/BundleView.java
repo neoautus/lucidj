@@ -16,12 +16,12 @@
 
 package org.lucidj.explorer;
 
-import org.lucidj.api.Artifact;
-import org.lucidj.api.ArtifactDeployer;
-import org.lucidj.api.BundleManager;
-import org.lucidj.api.Embedding;
-import org.lucidj.api.EmbeddingContext;
-import org.lucidj.api.ServiceContext;
+import org.lucidj.api.core.Artifact;
+import org.lucidj.api.core.ArtifactDeployer;
+import org.lucidj.api.core.BundleManager;
+import org.lucidj.api.core.Embedding;
+import org.lucidj.api.core.EmbeddingContext;
+import org.lucidj.api.core.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

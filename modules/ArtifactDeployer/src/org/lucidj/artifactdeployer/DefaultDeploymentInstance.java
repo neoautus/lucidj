@@ -16,8 +16,8 @@
 
 package org.lucidj.artifactdeployer;
 
-import org.lucidj.api.Artifact;
-import org.lucidj.api.BundleManager;
+import org.lucidj.api.core.Artifact;
+import org.lucidj.api.core.BundleManager;
 
 import java.net.URI;
 import java.nio.file.Path;

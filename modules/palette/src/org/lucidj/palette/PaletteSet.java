@@ -16,9 +16,9 @@
 
 package org.lucidj.palette;
 
-import org.lucidj.api.ComponentDescriptor;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ComponentSet;
+import org.lucidj.api.core.ComponentDescriptor;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ComponentSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ import java.util.Set;
 // ManagedObject?
 public class PaletteSet implements ComponentSet, ComponentInterface.ComponentListener
 {
-    private final transient static Logger log = LoggerFactory.getLogger (Palette.class);
+    private final static Logger log = LoggerFactory.getLogger (PaletteSet.class);
 
     private Set<ComponentDescriptor> components = new HashSet<> ();
     private Set<ComponentInterface.ComponentListener> listeners = new HashSet<> ();

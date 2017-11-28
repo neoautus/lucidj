@@ -16,7 +16,7 @@
 
 package org.lucidj.mappingclassmanager;
 
-import org.lucidj.api.ClassManager;
+import org.lucidj.api.core.ClassManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,12 +33,12 @@ import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides (strategy="SERVICE")
 public class MappingClassManager implements ClassManager
 {
-    private final static transient Logger log = LoggerFactory.getLogger (MappingClassManager.class);
+    private final static Logger log = LoggerFactory.getLogger (MappingClassManager.class);
 
     private List<Bundle> source_bundles = new ArrayList<> ();
     private Map<String, Class> class_cache = new HashMap<> ();

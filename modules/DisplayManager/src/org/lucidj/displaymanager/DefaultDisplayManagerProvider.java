@@ -16,9 +16,9 @@
 
 package org.lucidj.displaymanager;
 
-import org.lucidj.api.DisplayManager;
-import org.lucidj.api.ServiceContext;
-import org.lucidj.api.ServiceObject;
+import org.lucidj.api.core.DisplayManager;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceObject;
 
 import java.util.Map;
 

@@ -35,7 +35,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/gaussui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/vaadinui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/test/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/api/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/API.Core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/DisplayManagerRenderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/runtime/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/search/src" isTestSource="false" />

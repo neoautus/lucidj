@@ -16,10 +16,10 @@
 
 package org.lucidj.newview;
 
+import org.lucidj.api.core.SecurityEngine;
+import org.lucidj.api.core.ServiceContext;
 import org.lucidj.api.vui.NavigatorManager;
 import org.lucidj.api.vui.RendererFactory;
-import org.lucidj.api.SecurityEngine;
-import org.lucidj.api.ServiceContext;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;

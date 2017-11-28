@@ -30,10 +30,10 @@ import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.VerticalLayout;
 
+import org.lucidj.api.core.ServiceContext;
 import org.lucidj.api.vui.EditorInterface;
 import org.lucidj.api.vui.Renderer;
 import org.lucidj.api.vui.RendererFactory;
-import org.lucidj.api.ServiceContext;
 import org.lucidj.smartbox.SmartBox;
 import org.lucidj.aceeditor.AceEditor;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ import org.osgi.framework.BundleContext;
 
 public class SmartBoxRenderer extends VerticalLayout implements Renderer, EditorInterface
 {
-    private static final transient Logger log = LoggerFactory.getLogger (SmartBoxRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (SmartBoxRenderer.class);
 
     private SmartBox source;
 

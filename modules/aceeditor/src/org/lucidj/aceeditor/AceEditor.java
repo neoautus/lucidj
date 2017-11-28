@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -37,7 +37,7 @@ import java.util.HashMap;
 @StyleSheet ("vaadin://~/aceeditor_libraries/aceeditor.css")
 public class AceEditor extends AbstractJavaScriptComponent implements Component.Focusable
 {
-    private final transient Logger log = LoggerFactory.getLogger (AceEditor.class);
+    private final static Logger log = LoggerFactory.getLogger (AceEditor.class);
 
     private transient Gson gson = new Gson ();
     private transient Gson pretty = new GsonBuilder().setPrettyPrinting().create();

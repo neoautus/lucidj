@@ -16,13 +16,13 @@
 
 package org.lucidj.console;
 
-import org.lucidj.api.EventHelper;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
-import org.lucidj.api.ServiceContext;
-import org.lucidj.api.ServiceObject;
-import org.lucidj.api.Stdio;
+import org.lucidj.api.core.EventHelper;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceObject;
+import org.lucidj.api.core.Stdio;
 
 import java.util.Map;
 

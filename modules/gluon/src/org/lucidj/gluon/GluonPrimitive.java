@@ -16,7 +16,7 @@
 
 package org.lucidj.gluon;
 
-import org.lucidj.api.Serializer;
+import org.lucidj.api.core.Serializer;
 
 public interface GluonPrimitive extends Serializer
 {

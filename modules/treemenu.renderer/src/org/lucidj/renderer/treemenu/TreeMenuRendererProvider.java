@@ -16,8 +16,8 @@
 
 package org.lucidj.renderer.treemenu;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.ManagedObjectFactory;
+import org.lucidj.api.core.ManagedObjectInstance;
 import org.lucidj.api.vui.Renderer;
 import org.lucidj.api.vui.RendererProvider;
 

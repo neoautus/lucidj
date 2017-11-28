@@ -16,7 +16,7 @@
 
 package org.lucidj.vaadin;
 
-import org.lucidj.api.DisplayManager;
+import org.lucidj.api.core.DisplayManager;
 
 import com.vaadin.ui.VerticalLayout;
 

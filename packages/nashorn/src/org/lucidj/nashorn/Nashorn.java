@@ -16,7 +16,7 @@
 
 package org.lucidj.nashorn;
 
-import org.lucidj.api.CodeEngineManager;
+import org.lucidj.api.core.CodeEngineManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

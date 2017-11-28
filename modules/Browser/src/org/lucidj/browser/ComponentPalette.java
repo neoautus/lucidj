@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,9 +16,9 @@
 
 package org.lucidj.browser;
 
-import org.lucidj.api.ComponentDescriptor;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ComponentSet;
+import org.lucidj.api.core.ComponentDescriptor;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ComponentSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ import java.util.Map;
 
 public class ComponentPalette extends CssLayout implements LayoutEvents.LayoutClickListener, ComponentInterface.ComponentListener
 {
-    private final transient static Logger log = LoggerFactory.getLogger (ComponentPalette.class);
+    private final static Logger log = LoggerFactory.getLogger (ComponentPalette.class);
     private final ComponentPalette self = this;
     private LayoutEvents.LayoutClickListener layout_click_listener;
 

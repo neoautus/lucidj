@@ -17,10 +17,10 @@
 package org.lucidj.browser;
 
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import org.lucidj.api.Aggregate;
-import org.lucidj.api.ComponentDescriptor;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ComponentState;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.ComponentDescriptor;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ComponentState;
 import org.lucidj.api.vui.EditorInterface;
 import org.lucidj.api.vui.ObjectRenderer;
 import org.lucidj.api.vui.RendererFactory;
@@ -47,9 +47,10 @@ import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.UI;
 
-public abstract class AbstractCell implements DropHandler, LayoutEvents.LayoutClickListener, ComponentState.ChangeListener
+public abstract class AbstractCell implements
+    DropHandler, LayoutEvents.LayoutClickListener, ComponentState.ChangeListener
 {
-    private final transient static Logger log = LoggerFactory.getLogger (AbstractCell.class);
+    private final static Logger log = LoggerFactory.getLogger (AbstractCell.class);
 
     private Object source_object;
     private ObjectRenderer object_renderer;

@@ -25,7 +25,7 @@ package org.lucidj.smartbox;
 // TODO: MAKE A COMPATIBLE CROSS-LANGUAGE EQUIVALENT
 public class show
 {
-//    private final transient static Logger log = LoggerFactory.getLogger (show.class);
+//    private final static Logger log = LoggerFactory.getLogger (show.class);
 //    private static ThreadLocal<DisplayManager> current_om = new InheritableThreadLocal<> ();
 //
 //    public static void setObjectManager (DisplayManager om)

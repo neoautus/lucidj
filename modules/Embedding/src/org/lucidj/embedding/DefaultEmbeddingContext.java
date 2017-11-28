@@ -16,12 +16,12 @@
 
 package org.lucidj.embedding;
 
-import org.lucidj.api.Embedding;
-import org.lucidj.api.EmbeddingContext;
-import org.lucidj.api.EmbeddingHandler;
-import org.lucidj.api.EmbeddingManager;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.Embedding;
+import org.lucidj.api.core.EmbeddingContext;
+import org.lucidj.api.core.EmbeddingHandler;
+import org.lucidj.api.core.EmbeddingManager;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

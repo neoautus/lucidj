@@ -16,7 +16,7 @@
 
 package org.lucidj.palette;
 
-import org.lucidj.api.ComponentDescriptor;
+import org.lucidj.api.core.ComponentDescriptor;
 
 public class Descriptor implements ComponentDescriptor
 {

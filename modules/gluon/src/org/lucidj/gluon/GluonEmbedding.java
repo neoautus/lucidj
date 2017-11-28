@@ -17,10 +17,10 @@
 package org.lucidj.gluon;
 
 import com.google.common.io.Files;
-import org.lucidj.api.EmbeddingHandler;
-import org.lucidj.api.EmbeddingManager;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
+import org.lucidj.api.core.EmbeddingHandler;
+import org.lucidj.api.core.EmbeddingManager;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

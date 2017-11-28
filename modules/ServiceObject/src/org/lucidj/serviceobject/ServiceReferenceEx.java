@@ -16,7 +16,7 @@
 
 package org.lucidj.serviceobject;
 
-import org.lucidj.api.Aggregate;
+import org.lucidj.api.core.Aggregate;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -58,12 +58,6 @@ public class ServiceReferenceEx implements Aggregate, ServiceReference, Map<Stri
     {
         return (elements);
     }
-
-//    @Override // Aggregate
-//    public <T> T adapt (Class<T> type)
-//    {
-//
-//    }
 
     //-----------------------------------------------------------------------------------------------------------------
     // WRAPPED ServiceReference

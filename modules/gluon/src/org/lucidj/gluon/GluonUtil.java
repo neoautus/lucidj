@@ -19,7 +19,6 @@ package org.lucidj.gluon;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class GluonUtil
 {
-    private final static transient Logger log = LoggerFactory.getLogger (GluonUtil.class);
+    private final static Logger log = LoggerFactory.getLogger (GluonUtil.class);
 
     private static void dump_instance (GluonInstance instance, Writer writer, int level)
         throws IOException

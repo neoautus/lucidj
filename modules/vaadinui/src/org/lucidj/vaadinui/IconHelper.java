@@ -52,7 +52,7 @@ public class IconHelper implements org.lucidj.api.vui.IconHelper
     private final static Logger log = LoggerFactory.getLogger (IconHelper.class);
 
     @Requires
-    private org.lucidj.api.ThemeHelper themeHelper;
+    private org.lucidj.api.core.ThemeHelper themeHelper;
 
     @Context
     private BundleContext bundleContext;

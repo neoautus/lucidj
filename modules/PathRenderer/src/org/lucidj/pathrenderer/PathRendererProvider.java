@@ -16,10 +16,10 @@
 
 package org.lucidj.pathrenderer;
 
+import org.lucidj.api.core.ServiceContext;
 import org.lucidj.api.vui.IconHelper;
 import org.lucidj.api.vui.Renderer;
 import org.lucidj.api.vui.RendererProvider;
-import org.lucidj.api.ServiceContext;
 
 import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;

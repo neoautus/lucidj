@@ -16,9 +16,9 @@
 
 package org.lucidj.top;
 
-import org.lucidj.api.MenuInstance;
-import org.lucidj.api.MenuProvider;
-import org.lucidj.api.ServiceContext;
+import org.lucidj.api.core.MenuInstance;
+import org.lucidj.api.core.MenuProvider;
+import org.lucidj.api.core.ServiceContext;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;

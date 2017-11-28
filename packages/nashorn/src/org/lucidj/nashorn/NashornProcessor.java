@@ -16,9 +16,9 @@
 
 package org.lucidj.nashorn;
 
-import org.lucidj.api.Aggregate;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.ComponentInterface;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.ComponentInterface;
 
 public class NashornProcessor implements Aggregate
 {

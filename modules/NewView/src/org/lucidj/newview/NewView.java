@@ -16,11 +16,11 @@
 
 package org.lucidj.newview;
 
+import org.lucidj.api.core.SecurityEngine;
+import org.lucidj.api.core.ServiceContext;
 import org.lucidj.api.vui.NavigatorManager;
 import org.lucidj.api.vui.ObjectRenderer;
 import org.lucidj.api.vui.RendererFactory;
-import org.lucidj.api.SecurityEngine;
-import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

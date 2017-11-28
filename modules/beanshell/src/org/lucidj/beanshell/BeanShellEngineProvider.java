@@ -18,10 +18,10 @@ package org.lucidj.beanshell;
 
 import bsh.Interpreter;
 import bsh.NameSpace;
-import org.lucidj.api.CodeEngineBase;
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngineManager;
-import org.lucidj.api.CodeEngineProvider;
+import org.lucidj.api.core.CodeEngineBase;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.CodeEngineManager;
+import org.lucidj.api.core.CodeEngineProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

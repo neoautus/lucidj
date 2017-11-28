@@ -16,10 +16,10 @@
 
 package org.lucidj.vaadin;
 
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
-import org.lucidj.api.ServiceContext;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
+import org.lucidj.api.core.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class VaadinSerializer implements Serializer
 {
-    private final static transient Logger log = LoggerFactory.getLogger (VaadinSerializer.class);
+    private final static Logger log = LoggerFactory.getLogger (VaadinSerializer.class);
 
     private VaadinComponentFactory vcf = new VaadinComponentFactory ();
 

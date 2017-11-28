@@ -16,7 +16,7 @@
 
 package org.lucidj.api.vui;
 
-import org.lucidj.api.EventHelper;
+import org.lucidj.api.core.EventHelper;
 
 import com.vaadin.ui.Component;
 

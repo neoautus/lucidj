@@ -16,7 +16,7 @@
 
 package org.lucidj.gluon;
 
-import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.core.SerializerInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ import java.util.List;
 
 public class GluonInstance implements SerializerInstance
 {
-    private final static transient Logger log = LoggerFactory.getLogger (GluonInstance.class);
+    private final static Logger log = LoggerFactory.getLogger (GluonInstance.class);
 
     private GluonSerializer serializer;
 

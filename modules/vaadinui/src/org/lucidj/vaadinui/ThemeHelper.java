@@ -23,7 +23,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
-public class ThemeHelper implements org.lucidj.api.ThemeHelper
+public class ThemeHelper implements org.lucidj.api.core.ThemeHelper
 {
     @Override
     public String getDesktopThemeName ()

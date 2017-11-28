@@ -16,8 +16,8 @@
 
 package org.lucidj.vaadin;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
 import org.lucidj.api.vui.Renderer;
 
 import com.vaadin.ui.Component;

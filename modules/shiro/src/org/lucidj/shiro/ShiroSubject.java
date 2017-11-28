@@ -18,7 +18,7 @@ package org.lucidj.shiro;
 
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
-import org.lucidj.api.SecuritySubject;
+import org.lucidj.api.core.SecuritySubject;
 
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;

@@ -18,7 +18,7 @@ package org.lucidj.console;
 
 import org.lucidj.api.vui.Renderer;
 import org.lucidj.api.vui.RendererProvider;
-import org.lucidj.api.ServiceContext;
+import org.lucidj.api.core.ServiceContext;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;

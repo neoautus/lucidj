@@ -16,11 +16,11 @@
 
 package org.lucidj.smartbox;
 
-import org.lucidj.api.CodeEngineManager;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
-import org.lucidj.api.ServiceContext;
+import org.lucidj.api.core.CodeEngineManager;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
+import org.lucidj.api.core.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +39,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class SmartBoxSerializer implements Serializer
 {
-    private final static transient Logger log = LoggerFactory.getLogger (SmartBoxSerializer.class);
+    private final static Logger log = LoggerFactory.getLogger (SmartBoxSerializer.class);
 
     @Context
     private BundleContext context;

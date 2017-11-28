@@ -16,15 +16,15 @@
 
 package org.lucidj.shiro;
 
-import com.vaadin.server.VaadinSession;
+import com.vaadin.server.VaadinSession; // TODO: GET RID OF VaadinSession HERE (VUI)
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
 import org.apache.shiro.util.Factory;
 import org.apache.shiro.config.IniSecurityManagerFactory;
-import org.lucidj.api.SecurityEngine;
-import org.lucidj.api.SecuritySubject;
+import org.lucidj.api.core.SecurityEngine;
+import org.lucidj.api.core.SecuritySubject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

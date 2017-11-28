@@ -16,7 +16,7 @@
 
 package org.lucidj.api.vui;
 
-import org.lucidj.api.Aggregate;
+import org.lucidj.api.core.Aggregate;
 
 import com.vaadin.ui.Component;
 

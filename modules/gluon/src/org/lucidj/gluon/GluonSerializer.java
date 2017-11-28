@@ -16,10 +16,10 @@
 
 package org.lucidj.gluon;
 
-import org.lucidj.api.ClassManager;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.core.ClassManager;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
 import org.lucidj.gluon.serializers.DefaultArraySerializers;
 import org.lucidj.gluon.serializers.DefaultSerializers;
 import org.lucidj.gluon.serializers.GluonObjectSerializer;
@@ -60,7 +60,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class GluonSerializer implements SerializerEngine
 {
-    private final static transient Logger log = LoggerFactory.getLogger (GluonSerializer.class);
+    private final static Logger log = LoggerFactory.getLogger (GluonSerializer.class);
 
     private Map<String, Serializer> serializer_lookup = new ConcurrentHashMap<> ();
 

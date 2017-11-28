@@ -16,9 +16,9 @@
 
 package org.lucidj.artifactdeployer;
 
-import org.lucidj.api.Artifact;
-import org.lucidj.api.BundleManager;
-import org.lucidj.api.DeploymentEngine;
+import org.lucidj.api.core.Artifact;
+import org.lucidj.api.core.BundleManager;
+import org.lucidj.api.core.DeploymentEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

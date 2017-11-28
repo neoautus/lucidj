@@ -16,9 +16,9 @@
 
 package org.lucidj.codeengine.felix;
 
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.ServiceBinding;
-import org.lucidj.api.ServiceBindingsManager;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.ServiceBinding;
+import org.lucidj.api.core.ServiceBindingsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

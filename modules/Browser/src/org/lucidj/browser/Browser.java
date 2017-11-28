@@ -16,14 +16,14 @@
 
 package org.lucidj.browser;
 
-import org.lucidj.api.ArtifactDeployer;
-import org.lucidj.api.BundleManager;
-import org.lucidj.api.ComponentManager;
-import org.lucidj.api.ManagedObjectFactory;
+import org.lucidj.api.core.ArtifactDeployer;
+import org.lucidj.api.core.BundleManager;
+import org.lucidj.api.core.ComponentManager;
+import org.lucidj.api.core.ManagedObjectFactory;
+import org.lucidj.api.core.SecurityEngine;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.ServiceContext;
 import org.lucidj.api.vui.RendererFactory;
-import org.lucidj.api.SecurityEngine;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

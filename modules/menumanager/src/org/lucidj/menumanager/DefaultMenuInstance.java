@@ -16,11 +16,11 @@
 
 package org.lucidj.menumanager;
 
-import org.lucidj.api.EventHelper;
-import org.lucidj.api.MenuEntry;
-import org.lucidj.api.MenuInstance;
-import org.lucidj.api.MenuManager;
-import org.lucidj.api.MenuProvider;
+import org.lucidj.api.core.EventHelper;
+import org.lucidj.api.core.MenuEntry;
+import org.lucidj.api.core.MenuInstance;
+import org.lucidj.api.core.MenuManager;
+import org.lucidj.api.core.MenuProvider;
 import org.lucidj.api.vui.Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import java.util.TreeSet;
 
 public class DefaultMenuInstance implements MenuInstance, Renderer.Observable
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultMenuInstance.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultMenuInstance.class);
 
     private TreeSet<MenuEntry> menu_entry_list = new TreeSet<>();
     private EventHelper event_helper;

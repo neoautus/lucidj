@@ -135,13 +135,13 @@ public class PackageInstance implements Artifact
     public int getState ()
     {
         // TODO: WE NEED open() AND close()
-        return (main_bundle.getState ());
+        return (main_bundle == null? Bundle.INSTALLED: main_bundle.getState ());
     }
 
     @Override // Artifact
     public int getExtState ()
     {
-        return (main_bundle.getState () == Bundle.ACTIVE? extended_state: Artifact.STATE_EX_NONE);
+        return (getState () == Bundle.ACTIVE? extended_state: Artifact.STATE_EX_NONE);
     }
 
     private List<String> list_existing_files (List<String> file_list, Path root_path)
@@ -495,8 +495,8 @@ public class PackageInstance implements Artifact
     {
         synchronized (this)
         {
-            if (main_bundle.getState () != Bundle.STOPPING
-                && main_bundle.getState () != Bundle.UNINSTALLED
+            if (getState () != Bundle.STOPPING
+                && getState () != Bundle.UNINSTALLED
                 && extended_state != Artifact.STATE_EX_CLOSING
                 && extended_state != Artifact.STATE_EX_OPENING
                 && extended_state != Artifact.STATE_EX_OPEN)

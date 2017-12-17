@@ -49,7 +49,13 @@ public class ContainerTreeRenderer extends Tree implements Renderer, ItemClickEv
 
     private void update_components ()
     {
-        // Called on objectLinked() and objectUpdated()
+        Map<String, Object> properties = Aggregate.adapt (Map.class, object);
+
+        if (properties != null && properties.containsKey ("@expandItem"))
+        {
+            log.info ("update_components() @expandItem");
+            expandItem (properties.get ("@expandItem"));
+        }
     }
 
     public static boolean isCompatible (Object object)
@@ -97,11 +103,6 @@ public class ContainerTreeRenderer extends Tree implements Renderer, ItemClickEv
                     setItemIconPropertyId (pid);
                 }
             }
-        }
-
-        if (properties.containsKey ("@expandItem"))
-        {
-            expandItem (properties.get ("@expandItem"));
         }
         update_components ();
     }

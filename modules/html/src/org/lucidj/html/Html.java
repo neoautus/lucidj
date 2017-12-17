@@ -16,7 +16,7 @@
 
 package org.lucidj.html;
 
-import org.lucidj.api.ComponentInterface;
+import org.lucidj.api.core.ComponentInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,12 +28,12 @@ import org.apache.felix.ipojo.annotations.Provides;
 
 // THIS COMPONENT IS INTENDED TO BE AN SIMPLE HTML FORMATTING TOOL
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class Html implements ComponentInterface
 {
-    private final transient Logger log = LoggerFactory.getLogger (Html.class);
+    private final static Logger log = LoggerFactory.getLogger (Html.class);
 
     private String descriptor_id;
     private HashMap<String, Object> properties = new HashMap<>();

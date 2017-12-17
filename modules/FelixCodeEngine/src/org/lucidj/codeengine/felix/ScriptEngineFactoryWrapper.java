@@ -16,9 +16,9 @@
 
 package org.lucidj.codeengine.felix;
 
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngineBase;
-import org.lucidj.api.CodeEngineProvider;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.CodeEngineBase;
+import org.lucidj.api.core.CodeEngineProvider;
 
 import javax.script.ScriptEngineFactory;
 

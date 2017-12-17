@@ -1,0 +1,86 @@
+
+.ui-main-splitpanel > div > .v-splitpanel-first-container {
+    background-color: white;
+}
+
+.valo .ui-treemenu .v-tree-node-focused:after {
+    opacity: 1;
+    border: none;
+    background-color: #e8e8e8;
+    border-radius: 0;
+}
+
+.ui-treemenu .v-tree-node img.v-icon {
+    height: 21px;
+    vertical-align: text-bottom;
+}
+
+.valo .ui-toggle-button.v-button:focus:after {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+}
+
+/*---------------------------*/
+/* THE ACCORDION REPLACEMENT */
+
+/* No box or focus shadow around the button */
+.valo .ui-panel-caption.v-button:focus:after {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border: 1px solid #c5c5c5;
+}
+
+.ui-panel-contents div.v-customcomponent {
+    min-width: 100%;
+}
+
+/* Make the button get a "vaadin accordion" shape */
+.valo .ui-navigation-panel div.ui-panel-caption {
+    border-radius: unset;
+    border-left: none;
+    border-right: none;
+    text-align: inherit;
+
+    /* More Accordion-like looks */
+    background-color: #fafafa;
+    background-image: -webkit-linear-gradient(top, #fafafa 2%, #f6f6f6 98%);
+    background-image: linear-gradient(to bottom,#fafafa 2%, #f6f6f6 98%);
+    /*color: #464646;*/
+    font-weight: 400;
+    font-size: 14px;
+    padding-bottom: 1px;
+}
+
+/* Some cosmetics */
+.valo .ui-navigation-panel .v-slot:first-child div.ui-panel-caption {
+    border-top: none;
+}
+
+/* Create a small caret pointing to left */
+.valo .ui-navigation-panel .v-button-wrap:after {
+    content: '\f0d9';
+    width: 0.5em;
+    text-align: center;
+    font-family: ThemeIcons;
+    font-style: normal;
+    font-weight: normal;
+    -webkit-font-smoothing: antialiased;
+    line-height: 2.6em;
+    float: right;
+    -webkit-transition: all 100ms;
+    -moz-transition: all 100ms;
+    transition: all 100ms;
+}
+
+/* Create an expanded state with the caret pointing downwards */
+.valo .ui-panel-caption-expanded .v-button-wrap:after {
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+    content: "\f0d9";
+    font-family: ThemeIcons;
+}
+
+/*---------------------------*/

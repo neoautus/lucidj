@@ -38,10 +38,6 @@
         <fileset dir="${libcache.dir}" includes="slf4j/**/*.jar"/>
     </path>
 
-    <path id="netty.cp">
-        <fileset dir="${libcache.dir}" includes="netty/jar/**/*.jar"/>
-    </path>
-
     <path id="shiro.cp">
         <fileset dir="${libcache.dir}" includes="shiro/bundle/**/*.jar"/>
     </path>
@@ -50,13 +46,6 @@
         <fileset dir="${libcache.dir}">
             <include name="ipojo/jar/**/*.jar"/>
             <include name="ipojo/bundle/**/*.jar"/>
-        </fileset>
-    </path>
-
-    <path id="tinkerpop.cp">
-        <fileset dir="${libcache.dir}">
-            <include name="tinkerpop/jar/**/*.jar"/>
-            <include name="tinkerpop/bundle/**/*.jar"/>
         </fileset>
     </path>
 
@@ -93,87 +82,25 @@
         <fileset dir="${libcache.dir}" includes="karaf-runtime/bundle/**/*.jar"/>
     </path>
 
-    <path id="karaf-util.cp">
-        <fileset dir="${libcache.dir}" includes="karaf-util/jar/**/*.jar"/>
-    </path>
-
     <path id="javaee-api.cp">
         <fileset dir="${libcache.dir}" includes="javaee-api/jar/javaee-api-*.jar"/>
-    </path>
-
-    <!--path id="bsh.cp">
-        <fileset dir="${libcache.dir}" includes="bsh/jar/**/*.jar"/>
-    </path-->
-
-    <path id="gson.cp">
-        <fileset dir="${libcache.dir}" includes="gson/jar/**/*.jar"/>
     </path>
 
     <path id="guava.cp">
         <fileset dir="${libcache.dir}" includes="guava/bundle/**/*.jar"/>
     </path>
 
-    <path id="markdown.cp">
-        <fileset dir="${libcache.dir}" includes="markdown/jar/**/*.jar"/>
-    </path>
-
     <path id="apache-commons.cp">
         <fileset dir="${libcache.dir}" includes="apache-commons/jar/**/*.jar"/>
     </path>
-
-    <path id="apache-commons-exec.cp">
-        <fileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
-    </path>
-
-    <path id="kryo.cp">
-        <fileset dir="${libcache.dir}" includes="kryo/bundle/kryo-*.jar"/>
-        <fileset dir="${libcache.dir}" includes="kryo/jar/objenesis-*.jar"/>
-    </path>
-
-    <path id="jansi.cp">
-        <fileset dir="${libcache.dir}" includes="jansi/jar/*.jar"/>
-    </path>
-
-    <path id="javassist.cp">
-        <fileset dir="${libcache.dir}" includes="javassist/bundle/*.jar"/>
-    </path>
-
-    <!--path id="vaadin-widgets.cp">
-        <fileset dir="${basedir}" includes="build/widgetset/temp-widgetset.jar"/>
-    </path-->
 
     <path id="classpath.static">
 
         <path refid="bnd.cp"/>
         <path refid="slf4j.cp"/>
-        <path refid="netty.cp"/>
         <path refid="shiro.cp"/>
-        <path refid="gson.cp"/>
         <path refid="guava.cp"/>
-        <!--path refid="bsh.cp"/-->
         <path refid="apache-commons.cp"/>
-        <path refid="kryo.cp"/>
-        <path refid="markdown.cp"/>
-        <path refid="jansi.cp"/>
-        <path refid="javassist.cp"/>
-
-        <!-- jsoup -->
-        <!--fileset dir="${lib.dir}/static/jsoup-1.8.x">
-            <include name="*.jar"/>
-        </fileset-->
-
-        <!-- javassist -->
-        <!--fileset dir="${lib.dir}/static/javassist-3.x">
-            <include name="javassist.jar"/>
-        </fileset-->
-
-        <!-- Logback -->
-        <!--fileset dir="${lib.dir}/static/logback-1.x">
-            <include name="logback-core-1.*.jar"/>
-            <exclude name="logback-core-1.*-sources.jar"/>
-            <include name="logback-classic-1.*.jar"/>
-            <exclude name="logback-classic-1.*-sources.jar"/>
-        </fileset-->
 
     </path>
 
@@ -191,7 +118,6 @@
 
         <!-- Vaadin etc -->
         <path refid="vaadin-sass-compiler.cp"/>
-        <!--path refid="vaadin-widgets.cp"/-->
         <path refid="classpath.vaadin.server"/>
         <path refid="classpath.static"/>
 
@@ -230,7 +156,8 @@
         <path refid="classpath.vaadin.server"/>
 
         <!-- The LucidJ API -->
-        <pathelement path="${dist.dir}/libraries_api.jar"/>
+        <pathelement path="${dist.dir}/libraries_API.Core.jar"/>
+        <pathelement path="${dist.dir}/libraries_API.VUI.jar"/>
 
     </path>
 
@@ -313,6 +240,7 @@
         <if><not><available file="${vaadin.static.jar}"/></not>
             <then>
                 <ant target="zero"/>
+                <ant target="build.launcher"/>
                 <ant target="build.vaadin.static"/>
             </then>
         </if>
@@ -341,7 +269,7 @@
 
     <target name="run">
         <!-- TODO: BUILD STAGE IF NOT AVAILABLE -->
-        <java jar="${stage.dir}/bin/launcher.jar" fork="true" failonerror="true">
+        <java jar="${launcher.bin}/launcher.jar" fork="true" failonerror="true">
             <arg value="start"/>
         </java>
     </target>
@@ -350,8 +278,15 @@
         <ant target="run"/>
     </target>
 
+    <target name="single">
+        <!-- TODO: BUILD STAGE IF NOT AVAILABLE -->
+        <java jar="${launcher.bin}/launcher.jar" fork="true" failonerror="true">
+            <arg value="single"/>
+        </java>
+    </target>
+
     <target name="stop">
-        <java jar="${stage.dir}/bin/launcher.jar" fork="true" failonerror="true">
+        <java jar="${launcher.bin}/launcher.jar" fork="true" failonerror="true">
             <arg value="stop"/>
         </java>
     </target>
@@ -441,13 +376,53 @@
             </classpath>
         </taskdef>
 
+    </target>
+
+    <target name="build.launcher" depends="launch4j">
+
+        <property name="main-class" value="org.lucidj.launcher.Main"/>
+
+        <delete dir="${launcher.dir}"/>
+        <mkdir dir="${launcher.dir}"/>
+
+        <copy todir="${launcher.bin}">
+            <fileset dir="${product.dir}/bin">
+                <include name="**/*"/>
+            </fileset>
+        </copy>
+
+        <property name="launcher.classes.dir" value="${launcher.dir}/classes"/>
+        <delete dir="${launcher.classes.dir}"/>
+        <mkdir dir="${launcher.classes.dir}"/>
+
+        <property name="launcher.src.dir" value="${basedir}/extras/launcher/src"/>
+        <javac srcdir="${launcher.src.dir}" destdir="${launcher.classes.dir}"
+               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+               includeantruntime="false">
+            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <classpath>
+                <fileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
+            </classpath>
+        </javac>
+
+        <!-- Package it to run with 'java -jar' !!!!!!!!!!!!!!!!!!!!! weird place /bin -->
+        <jar destfile="${launcher.bin}/launcher.jar" filesonly="true">
+            <manifest>
+                <attribute name="Main-Class" value="${main-class}"/>
+            </manifest>
+            <fileset dir="${launcher.classes.dir}" includes="**/*"/>
+            <fileset dir="${launcher.src.dir}" excludes="**/*.java"/>
+            <zipgroupfileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
+        </jar>
+
         <!-- Build windows exe -->
         <launch4j>
             <config
                 dontWrapJar="false"
                 headerType="gui"
-                jar="${stage.dir}/bin/launcher.jar"
-                outfile="${stage.dir}/bin/lucidj.exe"
+                jar="${launcher.bin}/launcher.jar"
+                outfile="${launcher.bin}/lucidj.exe"
                 downloadUrl="http://www.azul.com/downloads/zulu"
                 icon="${launcher.src.dir}/org/lucidj/launcher/tangram_64.ico">
                 <jre
@@ -462,39 +437,35 @@
 
         <!-- Strip -x from .exe -->
         <chmod perm="uog-x">
-            <fileset dir="${stage.dir}" includes="bin/*.exe"/>
+            <fileset dir="${launcher.bin}" includes="*.exe"/>
         </chmod>
 
-    </target>
+        <!-- Create a fancy launcher which embeds the Jar within the script and "Works on Mac"(TM) :) -->
+        <property name="fancy-launcher" value="${launcher.bin}/lucidj"/>
+        <echo message="Creating ${fancy-launcher}"/>
+        <copy file="${product.dir}/bin/lucidj" overwrite="true"
+              tofile="${fancy-launcher}" >
+            <filterchain>
+                <replacetokens >
+                    <token key="MAINCLASS" value="${main-class}"/>
+                </replacetokens>
+                <fixcrlf eol="lf" eof="remove" fixlast="true"/>
+            </filterchain>
+        </copy>
+        <concat destfile="${fancy-launcher}" append="yes" binary="true" force="yes">
+            <file name="${launcher.bin}/launcher.jar"/>
+        </concat>
+        <chmod file="${fancy-launcher}" perm="a+x"/>
 
-    <target name="build.launcher">
-
-        <property name="launcher.classes.dir" value="${build.dir}/launcher/classes"/>
-        <property name="launcher.src.dir" value="${basedir}/extras/launcher/src"/>
-        <mkdir dir="${launcher.classes.dir}"/>
-
-        <javac srcdir="${launcher.src.dir}" destdir="${launcher.classes.dir}"
-               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
-               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
-               includeantruntime="false">
-            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
-            <classpath>
-                <path refid="apache-commons-exec.cp"/>
-            </classpath>
-        </javac>
-
-        <!-- Package it to run with 'java -jar' !!!!!!!!!!!!!!!!!!!!! weird place /bin -->
-        <delete file="${stage.dir}/bin/launcher.jar"/>
-        <jar destfile="${stage.dir}/bin/launcher.jar" filesonly="true">
-            <manifest>
-                <attribute name="Main-Class" value="org.lucidj.launcher.Main"/>
-            </manifest>
-            <fileset dir="${launcher.classes.dir}" includes="**/*"/>
-            <fileset dir="${launcher.src.dir}" excludes="**/*.java"/>
-            <zipgroupfileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
-        </jar>
-
-        <ant target="launch4j"/>
+        <!-- Add +x to sh -->
+        <chmod perm="uog+rx">
+            <fileset dir="${launcher.bin}">
+                <include name="*"/>
+                <exclude name="*.exe"/>
+                <exclude name="*.bat"/>
+                <exclude name="*.jar"/>
+            </fileset>
+        </chmod>
 
     </target>
 
@@ -531,6 +502,7 @@
         <build.standandalone.bundle modulename="bootstrap"/>
 
         <property name="bootstrap.mvn.dir" value="${stage.dir}/cache/maven2/org/lucidj/bootstrap"/>
+        <delete dir="${bootstrap.mvn.dir}"/>
         <copy todir="${bootstrap.mvn.dir}/bootstrap-features">
             <fileset dir="${basedir}/extras/bootstrap/features">
                 <include name="**/*"/>
@@ -996,7 +968,13 @@
         <mkdir dir="${applications.dir}"/>
 
 	    <!-- Apache Karaf is unziped first so it can be overwritten if needed -->
-        <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${runtime.dir}"/>
+        <property name="karaf.rt.dir" value="${runtime.dir}/Apache-Karaf/${karaf.release}"/>
+        <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${karaf.rt.dir}"/>
+        <copy todir="${karaf.rt.dir}" overwrite="true">
+            <fileset dir="${basedir}/extras/Apache-Karaf/${karaf.release}"
+                 includes="**/*"/>
+        </copy>
+
 
         <copy todir="${stage.dir}" overwrite="true">
             <fileset dir="${product.dir}" includes="**/*"/>
@@ -1040,13 +1018,16 @@
                 <copy todir="${stage.dir}/cache/maven2">
                     <fileset dir="${maven2.preload.dir}">
                         <include name="**/*"/>
+                        <exclude name="org/lucidj/bootstrap/**"/>
                     </fileset>
                 </copy>
             </then>
         </if>
 
-        <!-- Build platform independent launcher -->
-        <ant target="build.launcher"/>
+        <!-- Copy platform independent launcher -->
+        <copy todir="${stage.dir}/bin" overwrite="true">
+            <fileset dir="${launcher.bin}" includes="**/*"/>
+        </copy>
 
         <!-- Build Karaf deployment bootstrap -->
         <ant target="build.bootstrap"/>
@@ -1074,22 +1055,8 @@
                 <exclude name="vaadin/jar/vaadin-client-compiler-*.jar"/>
                 <include name="vaadin/jar/vaadin-icons-*.jar"/>
 
-                <!-- Netty -->
-                <include name="netty/jar/netty-common-*.jar"/>
-                <include name="netty/jar/netty-buffer-*.jar"/>
-                <include name="netty/jar/netty-transport-*.jar"/>
-                <include name="netty/jar/netty-codec-*.jar"/>
-                <include name="netty/jar/netty-handler-*.jar"/>
-                <include name="netty/jar/netty-codec-http-*.jar"/>
-                <include name="netty/jar/netty-codec-socks-*.jar"/>
-                <include name="netty/jar/netty-transport-sctp-*.jar"/>
-
-                <!-- Kryo -->
-                <include name="kryo/bundle/*.jar"/>
-                <include name="kryo/jar/*.jar"/>
-
                 <!-- Misc -->
-                <include name="bnd/jar/bnd-*.jar"/>
+                <!--include name="bnd/jar/bnd-*.jar"/-->
                 <include name="gson/jar/gson-*.jar"/>
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
@@ -1099,6 +1066,9 @@
                 <!-- iPOJO -->
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.extender-*.jar"/>
+
+                <!-- Hazelcast -->
+                <include name="hazelcast/jar/*.jar"/>
             </fileset>
 
             <!-- Include the non-osgi bastards -->
@@ -1122,10 +1092,22 @@
     <target name="build.modules.store">
         <delete dir="${libraries.class}"/>
         <mkdir dir="${libraries.class}"/>
-        <javac srcdir="${libraries.src.dir}" destdir="${libraries.class}"
+        <javac srcdir="${libraries.src.dir}/API.Core" destdir="${libraries.class}"
             debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
             source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
             includeantruntime="false">
+            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <classpath>
+                <path refid="classpath.build"/>
+                <pathelement path="${libraries.class}"/>
+            </classpath>
+            <exclude name="*/public/**"/>
+        </javac>
+        <!-- Do the same for API.VUI. Ugly but effective :) -->
+        <javac srcdir="${libraries.src.dir}/API.VUI" destdir="${libraries.class}"
+               debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
+               source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
+               includeantruntime="false">
             <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
             <classpath>
                 <path refid="classpath.build"/>
@@ -1150,7 +1132,7 @@
         </ant>
 
         <available file="${bnd.path}" type="dir" property="src.exists"/>
-        <if><isset property="src.exists"/>
+        <if><isset property="src.exists__NO_DO_NOT_RUN_THIS"/>
             <then>
                 <!-- Add library classes to class store -->
                 <javac srcdir="${bnd.path}" destdir="${libraries.class}"
@@ -1165,11 +1147,52 @@
                 </javac>
             </then>
         </if>
+    </target>
+
+    <target name="build.module.withdeps">
+        <local name="bnd.dirname"/>
+        <dirname property="bnd.dirname" file="${bnd.path}"/>
+        <local name="module"/>
+        <basename property="module" file="${bnd.dirname}"/>
+        <echo message="Module: ${module}"/>
+
+        <local name="have.deps"/>
+        <available file="${bnd.dirname}/dependencies.list" property="have.deps"/>
+        <if><isset property="have.deps"/>
+            <then>
+                <loadfile property="dep-list" srcFile="${bnd.dirname}/dependencies.list"/>
+                <for list="${dep-list}" param="dep" trim="true">
+                    <sequential>
+                        <echo message="Dependency: @{dep}"/>
+                        <local name="bnd.path"/>
+                        <property name="bnd.path" value="${libraries.src.dir}/@{dep}/src"/>
+                        <!-- Runtarget is sketchy, but works for now -->
+                        <runtarget target="build.module.withdeps"/>
+                    </sequential>
+                </for>
+            </then>
+        </if>
+
+        <if><not><available file="${deps.dir}/${module}"/></not>
+            <then>
+                <ant target="build.bundle">
+                    <property name="type" value="libraries"/>
+                    <property name="bundle" value="${module}"/>
+                    <property name="bnd.src" value="${bnd.path}"/>
+                    <property name="bnd.root" value="${bnd.dirname}"/>
+                    <property name="classpath" value="${classpath.build.literal}"/>
+                </ant>
+                <touch file="${deps.dir}/${module}"/>
+            </then>
+        </if>
 
     </target>
 
     <target name="build.all.modules" depends="build.modules.store">
-        <foreach target="build.modules.bundle" param="bnd.path" inheritall="true">
+        <delete dir="${deps.dir}"/>
+        <mkdir dir="${deps.dir}"/>
+        <!--foreach target="build.modules.bundle" param="bnd.path" inheritall="true"-->
+        <foreach target="build.module.withdeps" param="bnd.path" inheritall="true">
             <path>
                 <dirset dir="${libraries.src.dir}">
                     <include name="*/src"/>
@@ -1180,6 +1203,50 @@
 
 <!-- ***** COMMON FOR ALL BUNDLES ***************************************** -->
 
+    <!-- Source: https://stackoverflow.com/a/5340557/1078068 -->
+    <scriptdef name="loadmf" language="javascript" loaderRef="sharedbuild-loaderRef">
+        <attribute name="jar" />
+        <attribute name="file" />
+        <attribute name="prefix" />
+        <attribute name="section" />
+        <![CDATA[
+            var jarname = attributes.get("jar");
+            var filename = attributes.get("file");
+            if (jarname != null && filename != null) {
+                self.fail("Only one of jar or file is required");
+            }
+            var prefix = attributes.get("prefix");
+            if (prefix == null) {
+                prefix = "";
+            }
+            var section = attributes.get("section");
+
+            var manifest;
+            if (jarname != null) {
+                var jarfile = new java.util.jar.JarFile(new java.io.File(jarname));
+                manifest = jarfile.getManifest();
+                jarfile.close (); // +++ fix locked jar problem
+            } else if (filename != null) {
+                manifest = new java.util.jar.Manifest(new java.io.FileInputStream(new java.io.File(filename)));
+            } else {
+                self.fail("One of jar or file is required");
+            }
+
+            if (manifest == null) {
+                self.log("No manifest in " + jar);
+            } else {
+                var attributes = (section == null) ? manifest.getMainAttributes() : manifest.getAttributes(section);
+                if (attributes != null) {
+                    var iter = attributes.entrySet().iterator();
+                    while (iter.hasNext()) {
+                        var entry = iter.next();
+                        project.setProperty(prefix + entry.getKey(), entry.getValue());
+                    }
+                }
+            }
+        ]]>
+    </scriptdef>
+
     <target name="build.bundle">
 
         <!-- Parameters: type, bundle, classpath -->
@@ -1189,21 +1256,26 @@
         <delete dir="${bnd.build}"/><!-- Ensures only new .class -->
         <mkdir dir="${bnd.build}"/>
 
-        <!-- Mapeia todas as referências de classpath incorporadas -->
-        <for param="cp.refid">
-            <mappedresources>
-                <fileset dir="${bnd.root}" id="private.cp.set">
-                    <include name="private/*.cp"/>
-                </fileset>
-                <mapper type="flatten"/>
-            </mappedresources>
-            <sequential>
-                <mkdir dir="${bnd.build}/private/@{cp.refid}"/>
-                <copy todir="${bnd.build}/private/@{cp.refid}" overwrite="true">
-                    <path refid="@{cp.refid}"/>
+        <!-- Map all embedded classpath refids  -->
+        <if>
+            <and>
+                <!-- Only if it exists and is not empty (includes the world :) -->
+                <available file="${bnd.root}/ext-libraries.list"/>
+                <length file="${bnd.root}/ext-libraries.list" when="greater" length="0" />
+            </and>
+            <then>
+                <fileset dir="${basedir}" includesfile="${bnd.root}/ext-libraries.list" id="ext-libraries.cp"/>
+                <property name="ext-libraries.cp.literal" refid="ext-libraries.cp"/>
+                <echo message="EXT-LIBRARIES=${ext-libraries.cp.literal}"/>
+                <mkdir dir="${bnd.build}/private"/>
+                <copy todir="${bnd.build}/private" overwrite="true">
+                    <fileset refid="ext-libraries.cp"/>
                 </copy>
-            </sequential>
-        </for>
+            </then>
+            <else>
+                <property name="ext-libraries.cp.literal" value=""/>
+            </else>
+        </if>
 
         <!-- Inclui as bibliotecas privadas, se existirem -->
         <path id="private.cp">
@@ -1215,8 +1287,25 @@
         <!-- Converte para o formato "path1:path2:...:pathN" -->
         <property name="private.cp.literal" refid="private.cp"/>
 
+        <!-- Add extra module dependencies -->
+        <if>
+            <and>
+                <!-- Only if it exists and is not empty (includes the world :) -->
+                <available file="${bnd.root}/ext-classpath.list"/>
+                <length file="${bnd.root}/ext-classpath.list" when="greater" length="0" />
+            </and>
+            <then>
+                <fileset dir="${basedir}" includesfile="${bnd.root}/ext-classpath.list" id="ext-classpath.cp"/>
+                <property name="ext-classpath.cp.literal" refid="ext-classpath.cp"/>
+                <echo message="EXT-CLASSPATH=${ext-classpath.cp.literal}"/>
+            </then>
+            <else>
+                <property name="ext-classpath.cp.literal" value=""/>
+            </else>
+        </if>
+
         <!-- Classpath para compilação do componente -->
-        <property name="bnd.classpath" value="${private.cp.literal}:${bnd.build}:${classpath}"/>
+        <property name="bnd.classpath" value="${private.cp.literal}:${ext-classpath.cp.literal}:${bnd.build}:${classpath}"/>
         <!--echo message="bnd.classpath=${bnd.classpath}"/-->
 
         <available file="${bnd.src}" type="dir" property="src.exists"/>
@@ -1334,7 +1423,7 @@
         <if>
             <and>
                 <isset property="src.exists"/>
-                <not><contains string="${bnd.file.contents}" substring="x-no-ipojo"/></not>
+                <not><contains string="${bnd.file.contents}" substring="X-No-iPOJO"/></not>
             </and>
             <then>
                 <ipojo input="${bnd.jar}">
@@ -1343,6 +1432,11 @@
                         <path refid="ipojo.cp"/>
                     </classpath>
                 </ipojo>
+
+                <!-- dump manifest.mf -->
+                <!--loadmf jar="${bnd.jar}" prefix="IPOJO."/>
+                <echoproperties prefix="IPOJO."/-->
+
             </then>
         </if>
 
@@ -1395,13 +1489,13 @@
 
     <macrodef name="autodeploy">
         <attribute name="bundleFile"/>
-        <attribute name="bundleType"/>
+        <attribute name="bundleTarget"/>
         <sequential>
 
             <local name="bundle.name"/>
             <basename property="bundle.name" file="@{bundleFile}"/>
             <local name="deploy.dir"/>
-            <property name="deploy.dir" value="${runtime.dir}/@{bundleType}"/>
+            <property name="deploy.dir" value="@{bundleTarget}"/>
             <if><available file="${deploy.dir}" type="dir"/>
                 <then>
                     <copy file="@{bundleFile}" todir="${deploy.dir}" overwrite="true" taskname="autodeploy"/>
@@ -1436,7 +1530,8 @@
             <local name="bnd.file"/>
                 <property name="bnd.file" value="${bnd.build.dir}/bundle.bnd"/>
             <local name="bnd.dist.jar"/>
-                <property name="bnd.dist.jar" value="${dist.dir}/${bnd.name}.jar"/>
+                <!-- Introducing Lucidj Extendable Application Package ;) -->
+                <property name="bnd.dist.jar" value="${dist.dir}/${bnd.name}.leap"/>
 
             <!-- Package structure properties -->
             <local name="bundles.dirname"/>
@@ -1629,7 +1724,7 @@
                 </then>
             </if>
 
-            <autodeploy bundleFile="${bnd.dist.jar}" bundleType="applications"/>
+            <autodeploy bundleFile="${bnd.dist.jar}" bundleTarget="${applications.dir}"/>
 
         </sequential>
     </macrodef>
@@ -1656,7 +1751,6 @@
                 <echo message="Make: type=libraries module=${libraries}"/>
                 <ant target="build.modules.bundle">
                     <property name="bnd.path" value="${libraries.src.dir}/${libraries}/src"/>
-                    <property name="auto.deploy" value="true"/>
                 </ant>
             </then>
         </if>

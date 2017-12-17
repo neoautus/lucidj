@@ -58,7 +58,8 @@ public class BrowserLaunchingFactory {
         if (osName.startsWith("Mac OS")) {
             logger.info("Mac OS");
             String mrjVersion = System.getProperty("mrj.version");
-            String majorMRJVersion = mrjVersion.substring(0, 3);
+            // TODO: "10.1" is a crappy hack. Come back someday to make better...
+            String majorMRJVersion = (mrjVersion == null)? "10.1": mrjVersion.substring(0, 3);
             try {
                 double version = Double.valueOf(majorMRJVersion).doubleValue();
                 logger.info("version=" + Double.toString(version));

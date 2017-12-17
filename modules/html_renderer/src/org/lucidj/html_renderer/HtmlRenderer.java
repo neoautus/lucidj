@@ -16,8 +16,8 @@
 
 package org.lucidj.html_renderer;
 
-import org.lucidj.api.EditorInterface;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.EditorInterface;
+import org.lucidj.api.vui.Renderer;
 import org.lucidj.html.Html;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,12 +40,13 @@ import com.vaadin.ui.VerticalLayout;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 
-@org.apache.felix.ipojo.annotations.Component (immediate = true)
+// TODO: REFACTOR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+@org.apache.felix.ipojo.annotations.Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class HtmlRenderer extends VerticalLayout implements Renderer, EditorInterface
 {
-    private final transient static Logger log = LoggerFactory.getLogger (HtmlRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (HtmlRenderer.class);
 
     private Html source;
     private Label html_output = new Label ();
@@ -188,10 +189,9 @@ public class HtmlRenderer extends VerticalLayout implements Renderer, EditorInte
         return (editor_toolbar);
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof Html);
+        return (object instanceof Html);
     }
 
     @Override // Renderer

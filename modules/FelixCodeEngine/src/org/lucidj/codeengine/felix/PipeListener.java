@@ -26,7 +26,7 @@ import java.io.PrintStream;
 
 public class PipeListener extends Thread
 {
-    private final static transient Logger log = LoggerFactory.getLogger (PipeListener.class);
+    private final static Logger log = LoggerFactory.getLogger (PipeListener.class);
 
     private PipedOutputStream pipe_output;
     private PrintStream print_stream;
@@ -44,8 +44,6 @@ public class PipeListener extends Thread
             sink = new PipedInputStream (pipe_output);
         }
         catch (Exception ignore) {};
-
-        log.info ("PipeListener {}: pipe_output={}, sink={}", this, pipe_output, sink);
     }
 
     public PrintStream getPrintStream ()
@@ -61,7 +59,6 @@ public class PipeListener extends Thread
     @Override
     public void run ()
     {
-        log.info ("PipeListener {}: START", this);
         try
         {
             int len;
@@ -69,8 +66,6 @@ public class PipeListener extends Thread
             while ((len = sink.read (buffer, 0, buffer.length)) != -1)
             {
                 String output = new String (buffer, 0, len);
-
-                log.info ("PipeListener {}: OUTPUT [{}]", sink, output.replace ("\n", "\\n"));
 
                 if (listener != null)
                 {
@@ -86,22 +81,21 @@ public class PipeListener extends Thread
         {
             // TODO: CLOSE ALL THAT STUFF
         }
-        log.info ("PipeListener {}: FINISH", this);
     }
 
     class NonBufferedPipedOutputStream extends PipedOutputStream
     {
         @Override
-        public void write(byte[] b, int off, int len)
-                throws IOException
+        public void write (byte[] b, int off, int len)
+            throws IOException
         {
             super.write (b, off, len);
             flush ();
         }
 
         @Override
-        public void write(int b)
-                throws IOException
+        public void write (int b)
+            throws IOException
         {
             super.write (b);
             flush ();

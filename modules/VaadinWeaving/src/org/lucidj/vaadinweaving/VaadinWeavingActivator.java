@@ -29,7 +29,7 @@ import org.osgi.framework.hooks.weaving.WeavingHook;
 
 public class VaadinWeavingActivator implements BundleActivator
 {
-    private final static transient Logger log = LoggerFactory.getLogger (VaadinWeavingActivator.class);
+    private final static Logger log = LoggerFactory.getLogger (VaadinWeavingActivator.class);
 
     private final List<ServiceRegistration<?>> reg_list = new ArrayList<> ();
 

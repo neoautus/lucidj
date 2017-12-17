@@ -42,6 +42,7 @@ outline: 1px solid red;\
 }\
 .ace_search_field {\
 background-color: white;\
+color: black;\
 border-right: 1px solid #cbcbcb;\
 border: 0 none;\
 -webkit-box-sizing: border-box;\
@@ -183,7 +184,7 @@ var SearchBox = function(editor, range, showReplaceForm) {
 (function() {
     this.setEditor = function(editor) {
         editor.searchBox = this;
-        editor.container.appendChild(this.element);
+        editor.renderer.scroller.appendChild(this.element);
         this.editor = editor;
     };
 

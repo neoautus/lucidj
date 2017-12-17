@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,12 +16,12 @@
 
 package org.lucidj.vaadin;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.DisplayManager;
 
 import com.vaadin.ui.VerticalLayout;
 
-public class Vaadin extends VerticalLayout implements ManagedObject
+// TODO: MAKE IT _AUTOSERVICE_-COMPATIBLE -- vaadin.etcEtc()
+public class Vaadin extends VerticalLayout implements DisplayManager.AutoDisplay, DisplayManager.Clearable
 {
     public Vaadin ()
     {
@@ -30,15 +30,9 @@ public class Vaadin extends VerticalLayout implements ManagedObject
     }
 
     @Override
-    public void validate (ManagedObjectInstance instance)
+    public void clear ()
     {
-        // Nop
-    }
-
-    @Override
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        // Nop
+        removeAllComponents ();
     }
 }
 

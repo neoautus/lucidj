@@ -16,13 +16,11 @@
 
 package org.lucidj.quercus;
 
-import org.lucidj.api.Aggregate;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.ComponentInterface;
 
-public class QuercusProcessor implements ManagedObject, Aggregate
+public class QuercusProcessor implements Aggregate
 {
     private ComponentInterface code_container;
     private CodeEngine code_engine;
@@ -43,18 +41,6 @@ public class QuercusProcessor implements ManagedObject, Aggregate
     public Object[] elements ()
     {
         return (new Object[] { this, code_container, code_engine });
-    }
-
-    @Override
-    public void validate (ManagedObjectInstance instance)
-    {
-        // Nop
-    }
-
-    @Override
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        // Nop
     }
 }
 

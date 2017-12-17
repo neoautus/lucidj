@@ -17,11 +17,11 @@
 package org.lucidj.codeengine.felix;
 
 import org.apache.felix.gogo.runtime.threadio.ThreadIOImpl;
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.CodeEngineBase;
-import org.lucidj.api.CodeEngineProvider;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.CodeEngineBase;
+import org.lucidj.api.core.CodeEngineProvider;
+import org.lucidj.api.core.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ import java.io.Reader;
 // TODO: CodeRunner MAY BE RUNNING!!!!
 public class CodeEngineThreading implements CodeEngine
 {
-    private final transient Logger log = LoggerFactory.getLogger (CodeEngineThreading.class);
+    private final Logger log = LoggerFactory.getLogger (CodeEngineThreading.class);
 
     private final CodeEngineBase code_engine;
     private ExecThread exec_thread;

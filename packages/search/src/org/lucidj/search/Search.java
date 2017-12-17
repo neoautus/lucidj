@@ -16,16 +16,17 @@
 
 package org.lucidj.search;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.MenuInstance;
-import org.lucidj.api.MenuProvider;
+import org.lucidj.api.core.ManagedObjectFactory;
+import org.lucidj.api.core.ManagedObjectInstance;
+import org.lucidj.api.core.MenuInstance;
+import org.lucidj.api.core.MenuProvider;
+import org.lucidj.api.vui.IconHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
-import com.vaadin.server.ClassResource;
+//import com.vaadin.server.ClassResource;
 import com.vaadin.server.Resource;
 
 import java.util.Map;
@@ -40,11 +41,14 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Provides
 public class Search implements MenuProvider, ViewProvider
 {
-    private final static transient Logger log = LoggerFactory.getLogger (Search.class);
+    private final static Logger log = LoggerFactory.getLogger (Search.class);
     private final static String V_SEARCH = "search";
 
     @Requires
     private ManagedObjectFactory object_factory;
+
+    @Requires
+    private IconHelper iconHelper;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -56,7 +60,8 @@ public class Search implements MenuProvider, ViewProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
         // The explicit class is used to bind the resource with its source bundle
-        Resource icon = new ClassResource (this.getClass (), "Resources/icons/zoom-seach-icon-16x16.png");
+        //Resource icon = new ClassResource (this.getClass (), "Resources/icons/zoom-seach-icon-16x16.png");
+        Resource icon = iconHelper.getIcon ("apps/plasma-search", 16);
         menu.addMenuEntry (menu.newMenuEntry ("Search", icon, 250, V_SEARCH));
     }
 

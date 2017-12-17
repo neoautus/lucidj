@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,10 +16,10 @@
 
 package org.lucidj.markdown_renderer;
 
-import org.lucidj.api.EditorInterface;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.EditorInterface;
+import org.lucidj.api.vui.Renderer;
 import org.lucidj.markdown.Markdown;
-import org.rationalq.aceeditor.AceEditor;
+import org.lucidj.aceeditor.AceEditor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +45,10 @@ import org.apache.felix.ipojo.annotations.Provides;
 @org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides
+// TODO: REFACTOR
 public class MarkdownRenderer extends VerticalLayout implements Renderer, EditorInterface
 {
-    private final transient static Logger log = LoggerFactory.getLogger (MarkdownRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (MarkdownRenderer.class);
 
     private Markdown source;
     private Label html_output = new Label ();
@@ -195,10 +196,9 @@ public class MarkdownRenderer extends VerticalLayout implements Renderer, Editor
         return (editor_toolbar);
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof Markdown);
+        return (object instanceof Markdown);
     }
 
     @Override // Renderer

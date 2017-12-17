@@ -16,14 +16,14 @@
 
 package org.lucidj.runtime;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
-import org.lucidj.console.Console;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectFactory;
+import org.lucidj.api.core.ManagedObjectInstance;
+import org.lucidj.api.core.ManagedObjectProvider;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
 
 import java.util.List;
 
@@ -33,7 +33,7 @@ import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class CompositeTaskSerializer implements Serializer, ManagedObjectProvider
@@ -48,7 +48,7 @@ public class CompositeTaskSerializer implements Serializer, ManagedObjectProvide
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
         instance.setObjectClass (object.getClass ());
-        for (Object item: (List)object)
+        for (Object item: Aggregate.adapt (List.class, object))
         {
             instance.addObject (item);
         }
@@ -61,9 +61,10 @@ public class CompositeTaskSerializer implements Serializer, ManagedObjectProvide
         ManagedObjectInstance object_instance = objectFactory.newInstance (CompositeTask.class, null);
         CompositeTask composite_task = object_instance.adapt (CompositeTask.class);
 
+        List obj_list = Aggregate.adapt (List.class, composite_task);
         for (Object object: instance.getObjects ())
         {
-            composite_task.add (object);
+            obj_list.add (object);
         }
         return (composite_task);
     }

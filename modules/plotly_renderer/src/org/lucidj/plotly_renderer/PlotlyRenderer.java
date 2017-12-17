@@ -21,7 +21,7 @@ import java.util.List;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.Renderer;
 import org.lucidj.plotly.Plotly;
 import org.lucidj.plotly.Trace;
 import xyz.kuori.timeseries.TimeSeries;
@@ -271,11 +271,9 @@ public class PlotlyRenderer extends AbstractJavaScriptComponent implements Rende
         set_layout (key, value);
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof Plotly ||
-                obj_to_check instanceof Trace);
+        return (object instanceof Plotly || object instanceof Trace);
     }
 
     @Override // Renderer

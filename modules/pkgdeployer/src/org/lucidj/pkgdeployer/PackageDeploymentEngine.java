@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,57 +16,63 @@
 
 package org.lucidj.pkgdeployer;
 
-import org.lucidj.api.BundleManager;
-import org.lucidj.api.DeploymentEngine;
+import org.lucidj.api.core.Artifact;
+import org.lucidj.api.core.BundleManager;
+import org.lucidj.api.core.DeploymentEngine;
+import org.lucidj.api.core.EmbeddingContext;
+import org.lucidj.api.core.EmbeddingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Version;
+import org.osgi.framework.BundleEvent;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.BundleTracker;
+import org.osgi.util.tracker.BundleTrackerCustomizer;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
+import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
-@Provides (specifications = DeploymentEngine.class)
-public class PackageDeploymentEngine implements DeploymentEngine
+@Provides
+public class PackageDeploymentEngine implements
+    DeploymentEngine, BundleTrackerCustomizer<ServiceRegistration<Artifact>>
 {
-    private final static transient Logger log = LoggerFactory.getLogger (PackageDeploymentEngine.class);
+    private final static Logger log = LoggerFactory.getLogger (PackageDeploymentEngine.class);
     private final static int ENGINE_LEVEL = 50;
+
+    public final static String ATTR_PACKAGE = "X-Package";
+    public final static String ATTR_PACKAGE_VERSION = "1.0";
+
+    private String packages_dir;
+    private BundleTracker bundleTracker;
+
+    private Map<String, PackageInstance> source_to_instance = new HashMap<> ();
+
+    @Requires
+    private BundleManager bundleManager;
+
+    @Requires
+    private EmbeddingManager embeddingManager;
 
     @Context
     private BundleContext context;
 
-    @Requires
-    private BundleManager bundle_manager;
-
-    private String packages_dir;
-
     public PackageDeploymentEngine ()
     {
         // TODO: THIS SHOULD BE RECONFIGURABLE
-        packages_dir = System.getProperty ("system.home") + "/cache/" + this.getClass ().getSimpleName ();
+        packages_dir = System.getProperty ("system.home") + "/cache/" + this.getClass ().getPackage ().getName ();
 
         File check_packages_dir = new File (packages_dir);
 
@@ -83,200 +89,139 @@ public class PackageDeploymentEngine implements DeploymentEngine
         }
     }
 
-    @Override
+    @Override // DeploymentEngine
     public String getEngineName ()
     {
         return (getClass ().getCanonicalName () + "(" + ENGINE_LEVEL + ")");
     }
 
-    @Override
+    @Override // DeploymentEngine
     public int compatibleArtifact (String location)
     {
-        Manifest mf;
-        Attributes attrs;
-
-        // Check compatibility looking for X-Package attribute on manifest
-        if ((mf = bundle_manager.getManifest (location)) != null &&
-            (attrs = mf.getMainAttributes ()) != null &&
-            attrs.getValue ("X-Package") != null)
-        {
-            return (ENGINE_LEVEL);
-        }
-
-        // Not compatible
-        return (0);
+        // LEAP requires only the proper package extension
+        File location_file = new File (location);
+        return (location_file.getName ().toLowerCase ().endsWith (".leap")? ENGINE_LEVEL: 0);
     }
 
-    private List<String> list_existing_files (List<String> file_list, Path root_path)
+    @Override // DeploymentEngine
+    public Artifact install (String source, Properties properties)
+        throws Exception
     {
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream (root_path))
-        {
-            for (Path path: stream)
-            {
-                if (path.toFile ().isDirectory ())
-                {
-                    list_existing_files (file_list, path);
-                }
-                else
-                {
-                    file_list.add (path.toAbsolutePath ().toString ());
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            log.error ("Exception listing package files: {}", root_path, e);
-        }
-        return (file_list);
+        EmbeddingContext embedding_context = embeddingManager.newEmbeddingContext ();
+        PackageInstance instance = new PackageInstance (embedding_context, bundleManager, packages_dir);
+        source_to_instance.put (source, instance);
+        instance.install (source, properties);
+        return (instance);
     }
 
-    private List<String> list_existing_files (File root_dir)
+    @Override // BundleTrackerCustomizer<ServiceRegistration<PackageInstance>>
+    public ServiceRegistration<Artifact> addingBundle (Bundle bundle, BundleEvent bundleEvent)
     {
-        return (list_existing_files (new ArrayList<String> (), root_dir.toPath ()));
-    }
-
-    private boolean extract_all (String package_dist, final String dest_package_dir)
-    {
-        File dest_dir = new File (dest_package_dir);
-
-        if (!dest_dir.exists () && !dest_dir.mkdirs ())
-        {
-            log.error ("Unable create directory: {}", dest_package_dir);
-            return (false);
-        }
-
-        // We'll compare what exists with what will be extracted so we can delete excess files later
-        List<String> files_to_remove = list_existing_files (dest_dir);
-
-        try
-        {
-            ZipFile zipFile = new ZipFile (new File (new URI (package_dist)));
-            Enumeration<? extends ZipEntry> entries = zipFile.entries ();
-
-            while (entries.hasMoreElements ())
-            {
-                // Get file or dir from zip entry
-                ZipEntry entry = entries.nextElement();
-                File file_entry = new File (dest_package_dir, entry.getName ());
-
-                if (entry.isDirectory ()) // Ensure the needed dirs are available
-                {
-                    if (!file_entry.exists () && !file_entry.mkdirs ())
-                    {
-                        log.error ("Unable create directory: {}", entry.getName ());
-                        return (false);
-                    }
-                }
-                else // Extract and/or replace changed files
-                {
-                    if (!file_entry.exists () || entry.getTime () != file_entry.lastModified ())
-                    {
-                        InputStream stream = zipFile.getInputStream(entry);
-                        Files.copy (stream, file_entry.toPath (), StandardCopyOption.REPLACE_EXISTING);
-                        stream.close ();
-                        file_entry.setLastModified (entry.getTime());
-                    }
-
-                    // Remove the existing file from the deletion list
-                    files_to_remove.remove (dest_package_dir + "/" + entry.getName ());
-                }
-            }
-
-            // Delete all excess files
-            for (String file: files_to_remove)
-            {
-                if (!new File (file).delete ())
-                {
-                    log.error ("Unable delete file: {}", file);
-                    return (false);
-                }
-            }
-            return (true);
-        }
-        catch (Exception e)
-        {
-            log.error ("Exception extracting package: {}", package_dist, e);
-            return (false);
-        }
-    }
-
-    @Override
-    public Bundle installBundle (String location, Properties properties)
-    {
-        Manifest mf = bundle_manager.getManifest (location);
-
-        if (mf == null)
+        // TODO: USE JUST compatibleArtifact()
+        if (bundle.getHeaders ().get (PackageDeploymentEngine.ATTR_PACKAGE) == null)
         {
             return (null);
         }
 
-        Attributes attrs = mf.getMainAttributes ();
-        String bundle_symbolic_name = attrs.getValue ("Bundle-SymbolicName");
-        Version bundle_version = new Version (attrs.getValue ("Bundle-Version"));
-
-        // TODO: ALLOW MULTIPLE PACKAGES WITH DIFFERENT VERSIONS WHEN CONFIG SET
-        // TODO: AVOID UPDATE BUNDLE __WHILE EXTRACTING__
-        // TODO: DELETE EXTRACTED PACKAGE CONTENTS WHEN UNINSTALLING
-        // TODO: BUILD AN EMBEDDED Bundles/ DIRECTORY FOR SHARED EMBEDDED BUNDLES USED BY MANY PACKAGES
-        String extracted_package_dir = packages_dir + "/" + bundle_symbolic_name + "/" + bundle_version;
-        extract_all (location, extracted_package_dir);
-
-        File[] embedded_bundles = new File (extracted_package_dir, "Bundles/").listFiles ();
-        boolean got_errors = false;
-
-        if (embedded_bundles != null)
+        try
         {
-            for (File bundle_file: embedded_bundles)
+            String source = bundleManager.getBundleProperty (bundle, BundleManager.BND_SOURCE, null);
+
+            if (source == null)
             {
-                if (bundle_file.isFile ())
-                {
-                    String bundle_uri = bundle_file.toURI ().toString ();
-
-                    if (bundle_manager.installBundle (bundle_uri, properties) == null)
-                    {
-                        got_errors = true;
-                    }
-                }
+                log.error ("Source location not found for {}", bundle);
+                return (null);
             }
-        }
 
-        if (!got_errors)
+            PackageInstance instance = source_to_instance.get (source);
+
+            if (instance == null)
+            {
+                EmbeddingContext embedding_context = embeddingManager.newEmbeddingContext ();
+                instance = new PackageInstance (embedding_context, bundleManager, packages_dir);
+                instance._setMainBundle (bundle);
+            }
+
+            if (!instance.open ())
+            {
+                log.error ("Error opening package {}", instance.getMainBundle ());
+            }
+
+            // The returned bundle must have an Package service
+            // registered, so the status changes can be properly tracked
+            return (context.registerService (Artifact.class, instance, null));
+        }
+        catch (Exception e)
         {
-            try
-            {
-                // Here the native OSGi bundle install
-                return (bundle_manager.installBundle (location, properties));
-            }
-            catch (Exception e)
-            {
-                log.error ("Exception installing package: {}", location, e);
-            }
+            log.error ("Exception adding package bundle: {}", bundle, e);
+            return (null);
         }
-
-        log.error ("Errors found when deploying embedded bundles -- will not install package.");
-        return (null);
     }
 
-    @Override
-    public boolean updateBundle (Bundle bnd)
+    @Override // BundleTrackerCustomizer<ServiceRegistration<Artifact>>
+    public void modifiedBundle (Bundle bundle, BundleEvent bundleEvent, ServiceRegistration<Artifact> artifact_sreg)
     {
-        // TODO: HANDLE Bundles/ AND Resources/
-        return (bundle_manager.updateBundle (bnd));
+        log.debug ("#####> modifiedBundle (bundle={}, state={}, bundleEvent={} / {}, artifactsr={}",
+            bundle, get_state_str (bundle), bundleEvent, get_event_str (bundleEvent), artifact_sreg);
     }
 
-    @Override
-    public boolean refreshBundle (Bundle bnd)
+    @Override // BundleTrackerCustomizer<ServiceRegistration<Artifact>>
+    public void removedBundle (Bundle bundle, BundleEvent bundleEvent, ServiceRegistration<Artifact> artifact_sreg)
     {
-        return (false);
-        // TODO: HANDLE Bundles/ AND Resources/
-        //return (bundle_manager.refreshBundle (bnd));
+        log.debug ("#####> removedBundle (bundle={}, state={}, bundleEvent={} / {}, artifactsr={}",
+            bundle, get_state_str (bundle), bundleEvent, get_event_str (bundleEvent), artifact_sreg);
     }
 
-    @Override
-    public boolean uninstallBundle (Bundle bnd)
+    private String get_state_str (Bundle bundle)
     {
-        // TODO: HANDLE Bundles/ AND Resources/
-        return (bundle_manager.uninstallBundle (bnd));
+        switch (bundle.getState ())
+        {
+            case Bundle.INSTALLED:   return ("INSTALLED");
+            case Bundle.RESOLVED:    return ("RESOLVED");
+            case Bundle.STARTING:    return ("STARTING");
+            case Bundle.STOPPING:    return ("STOPPING");
+            case Bundle.ACTIVE:      return ("ACTIVE");
+            case Bundle.UNINSTALLED: return ("UNINSTALLED");
+        }
+        return ("Unknown");
+    }
+
+    private String get_event_str (BundleEvent bundleEvent)
+    {
+        if (bundleEvent == null)
+        {
+            return ("NULL_EVENT");
+        }
+        switch (bundleEvent.getType ())
+        {
+            case BundleEvent.INSTALLED:       return ("INSTALLED");
+            case BundleEvent.LAZY_ACTIVATION: return ("LAZY_ACTIVATION");
+            case BundleEvent.RESOLVED:        return ("RESOLVED");
+            case BundleEvent.STARTED:         return ("STARTED");
+            case BundleEvent.STARTING:        return ("STARTING");
+            case BundleEvent.STOPPED:         return ("STOPPED");
+            case BundleEvent.STOPPING:        return ("STOPPING");
+            case BundleEvent.UNINSTALLED:     return ("UNINSTALLED");
+            case BundleEvent.UNRESOLVED:      return ("UNRESOLVED");
+            case BundleEvent.UPDATED:         return ("UPDATED");
+        }
+        return ("Unknown");
+    }
+
+    @Validate
+    private void validate ()
+    {
+        bundleTracker = new BundleTracker<> (context, Bundle.ACTIVE, this);
+        bundleTracker.open();
+        log.info (getClass ().getSimpleName () + " started");
+    }
+
+    @Invalidate
+    private void invalidate ()
+    {
+        bundleTracker.close ();
+        bundleTracker = null;
+        log.info (getClass ().getSimpleName () + " stopped");
     }
 }
 

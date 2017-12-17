@@ -23,8 +23,8 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.html.HtmlRenderer;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ import org.apache.felix.ipojo.handlers.event.Subscriber;
 
 public class SearchView extends VerticalLayout implements ManagedObject, View
 {
-    private final static transient Logger log = LoggerFactory.getLogger (SearchView.class);
+    private final static Logger log = LoggerFactory.getLogger (SearchView.class);
     private SearchView self = this;
 
     private Parser parser;

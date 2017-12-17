@@ -17,7 +17,7 @@
 package org.lucidj.gluon.serializers;
 
 import org.apache.commons.lang3.StringEscapeUtils;
-import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.core.SerializerInstance;
 import org.lucidj.gluon.GluonConstants;
 import org.lucidj.gluon.GluonPrimitive;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,24 +16,18 @@
 
 package org.lucidj.console;
 
-import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import org.lucidj.api.EventHelper;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.core.EventHelper;
+import org.lucidj.api.vui.Renderer;  // <------ TODO: REMOVE THIS DEPENDENCY
+import org.lucidj.api.core.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Console implements ManagedObject, Renderer.Observable
+public class Console implements Stdio, Renderer.Observable
 {
-    private final transient Logger log = LoggerFactory.getLogger (Console.class);
+    private final static Logger log = LoggerFactory.getLogger (Console.class);
 
     private SimpleDateFormat timestamp_format = new SimpleDateFormat ("yyyy-MM-dd HH:mm:ss.SSS");
 
@@ -51,6 +45,7 @@ public class Console implements ManagedObject, Renderer.Observable
     }
 
     // TODO: AUTODISCOVERY DATA STRUCTURE FROM TEXT (EX. CSV, TABLE, SERIES, ETC)
+    @Override // Stdio
     public void output (String tag, String text)
     {
         if (text.isEmpty ())
@@ -139,6 +134,25 @@ public class Console implements ManagedObject, Renderer.Observable
         event_helper.publish (this);
     }
 
+    @Override // Stdio
+    public void stdout (String output)
+    {
+        output (STDOUT, output);
+    }
+
+    @Override // Stdio
+    public void stderr (String output)
+    {
+        output (STDERR, output);
+    }
+
+    @Override // Stdio
+    public void stdhtml (String output)
+    {
+        output (HTML, output);
+    }
+
+    @Override // DisplayManager.Clearable
     public void clear ()
     {
         contents = null;
@@ -147,71 +161,16 @@ public class Console implements ManagedObject, Renderer.Observable
         event_helper.publish (this);
     }
 
-    public String getValue ()
+    @Override // Stdio
+    public String getRawBuffer ()
     {
         return (contents == null? "": contents.toString ());
     }
 
-    public void setValue (String value)
+    @Override // Stdio
+    public void setRawBuffer (String value)
     {
         contents = new StringBuilder (value);
-    }
-
-    public String getHtmlContent ()
-    {
-        BufferedReader full_content = new BufferedReader (new StringReader (getValue ()));
-        ByteArrayOutputStream parsed_content = new ByteArrayOutputStream ();
-        // TODO: REQUEST FEATURE CHANGE ON jansi FOR OPTIONAL HTML FILTERING
-        AnsiHtmlOutputStream html_content = new AnsiHtmlOutputStream (parsed_content);
-        PrintStream content_out = new PrintStream (html_content);
-        String line;
-
-        try
-        {
-            while ((line = full_content.readLine()) != null )
-            {
-                int tag_pos = line.indexOf ('|');
-                int text_pos = line.indexOf ('|', tag_pos + 1);
-
-                if (tag_pos == -1 || text_pos == -1)
-                {
-                    // Alien format is grey :)
-                    content_out.append ("<font color='grey'>");
-                    content_out.append (SafeHtmlUtils.htmlEscape (line));
-                    content_out.append ("<br/></font>");
-                }
-                else
-                {
-                    // Native format, strip timestamp and color stderr accordingly
-                    String tag = line.substring (tag_pos + 1, text_pos).trim ();
-                    int skip_format_space = line.charAt (text_pos + 1) == ' '? 1 : 0;
-                    String text = line.substring (text_pos + 1 + skip_format_space);
-                    String safe_text = SafeHtmlUtils.htmlEscape (text).replace ("\\n", "<br/>");
-
-                    if (tag.equals ("ERR"))
-                    {
-                        content_out.append ("<font color='red'>");
-                    }
-
-                    if (tag.equals ("HTML"))
-                    {
-                        content_out.append (text);
-                    }
-                    else
-                    {
-                        content_out.append (safe_text);
-                    }
-
-                    if (tag.equals ("ERR"))
-                    {
-                        content_out.append ("</font>");
-                    }
-                }
-            }
-        }
-        catch (Exception ignore) {};
-
-        return (parsed_content.toString ());
     }
 
     @Override // Renderer.Observable
@@ -224,18 +183,6 @@ public class Console implements ManagedObject, Renderer.Observable
     public void deleteObserver (EventHelper.Subscriber observer)
     {
         event_helper.unsubscribe (observer);
-    }
-
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
-    {
-        // Nop
-    }
-
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
-    {
-        // Nop
     }
 }
 

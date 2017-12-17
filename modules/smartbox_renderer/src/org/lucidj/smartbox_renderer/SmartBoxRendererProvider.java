@@ -16,26 +16,29 @@
 
 package org.lucidj.smartbox_renderer;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererFactory;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.vui.RendererFactory;
+import org.lucidj.api.vui.RendererProvider;
 
+import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class SmartBoxRendererProvider implements RendererProvider
 {
-    private SmartBoxRenderer smartbox_filter = new SmartBoxRenderer (null);
+    @Context
+    private BundleContext bundleContext;
 
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     @Requires
     private RendererFactory rendererFactory;
@@ -43,13 +46,18 @@ public class SmartBoxRendererProvider implements RendererProvider
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
-        if (smartbox_filter.compatibleObject (object))
+        if (SmartBoxRenderer.isCompatible (object))
         {
-            SmartBoxRenderer renderer = new SmartBoxRenderer (rendererFactory);
-            ManagedObjectInstance object_instance = objectFactory.wrapObject (renderer);
-            return (object_instance.adapt (SmartBoxRenderer.class));
+            return (serviceContext.newServiceObject (SmartBoxRenderer.class));
         }
         return (null);
+    }
+
+    @Validate
+    private void validate ()
+    {
+        serviceContext.putService (bundleContext, RendererFactory.class, rendererFactory);
+        serviceContext.register (SmartBoxRenderer.class);
     }
 }
 

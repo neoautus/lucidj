@@ -16,18 +16,18 @@
 
 package org.lucidj.managedobject;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectFactory;
+import org.lucidj.api.core.ManagedObjectInstance;
+import org.lucidj.api.core.ManagedObjectProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Dictionary;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,13 +36,14 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.BundleTracker;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
@@ -50,38 +51,71 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class DefaultManagedObjectFactory implements ManagedObjectFactory
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultManagedObjectFactory.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultManagedObjectFactory.class);
+
+    private final String PROP_INSTANCES = "@instances";
+    private final String PROP_CLASS     = "@class";
+    private final String PROP_PROVIDER  = "@provider";
 
     private BundleTracker bundle_cleaner;
-
-    private final Map<String, Set<ManagedObjectProvider>> class_to_provider = new HashMap<> ();
-    private final Map<Bundle, Set<WeakReference<ManagedObjectInstance>>> bundle_to_set = new HashMap<> ();
 
     @Context
     BundleContext ctx;
 
+    private Set<WeakReference<ManagedObjectInstance>> get_instance_set (long bundle_id)
+    {
+        String filter = "(service.bundleid=" + bundle_id + ")";
+        Set<WeakReference<ManagedObjectInstance>> instance_set = null;
+
+        try
+        {
+            ServiceReference[] ref = ctx.getServiceReferences (Set.class.getName (), filter);
+
+            if (ref != null)
+            {
+                instance_set = (Set<WeakReference<ManagedObjectInstance>>)ref [0].getProperty (PROP_INSTANCES);
+
+                if (ref.length != 1)
+                {
+                    log.error ("Internal error: More than 1 instance tracker found: {}", ref);
+                }
+            }
+        }
+        catch (InvalidSyntaxException ignore) {};
+
+        if (instance_set == null)
+        {
+            // No instance set, create on demand
+            instance_set = new HashSet<> ();
+            Dictionary<String, Object> instance_props = new Hashtable<> ();
+            instance_props.put (PROP_INSTANCES, instance_set);
+            Bundle base_bundle = ctx.getBundle (bundle_id);
+            BundleContext base_bundle_context = base_bundle.getBundleContext ();
+            base_bundle_context.registerService (Set.class.getName (), instance_set, instance_props);
+        }
+        return (instance_set);
+    }
+
+    private Set<WeakReference<ManagedObjectInstance>> get_instance_set (Bundle bundle)
+    {
+        return (get_instance_set (bundle.getBundleId ()));
+    }
+
     @Override
     public ManagedObjectInstance register (String clazz, ManagedObjectProvider provider, Map<String, Object> properties)
     {
-        synchronized (class_to_provider)
-        {
-            log.info ("register: Adding {} for {}", provider, clazz);
+        log.info ("register: Adding {} for {}", provider, clazz);
 
-            if (!class_to_provider.containsKey (clazz))
-            {
-                class_to_provider.put (clazz, new HashSet<ManagedObjectProvider> ());
-            }
+        // Retrieve the provider bundle context, where the service will be attached
+        Bundle provider_bundle = FrameworkUtil.getBundle (provider.getClass ());
+        BundleContext provider_context = provider_bundle.getBundleContext ();
 
-            Set<ManagedObjectProvider> provider_set = class_to_provider.get (clazz);
-            provider_set.add (provider);
-
-            Bundle provider_bundle = FrameworkUtil.getBundle (provider.getClass ());
-
-            if (!bundle_to_set.containsKey (provider_bundle))
-            {
-                bundle_to_set.put (provider_bundle, new HashSet<WeakReference<ManagedObjectInstance>> ());
-            }
-        }
+        // Attach the service to the bundle
+        Dictionary<String, Object> props = new Hashtable<> ();
+        props.put (PROP_PROVIDER, provider);
+        props.put (PROP_INSTANCES, get_instance_set (provider_bundle));
+        props.put (PROP_CLASS, clazz);
+        provider_context.registerService (ManagedObjectProvider.class.getName (), provider, props);
 
         ManagedObjectInstance ref = new DefaultManagedObjectInstance (null);
         ref.setProperty (ManagedObjectInstance.PROVIDER, provider);
@@ -99,7 +133,18 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
     public ManagedObjectInstance[] getManagedObjects (String clazz, String filter)
     {
         List<ManagedObjectInstance> found_objects = new ArrayList<> ();
-        Set<ManagedObjectProvider> provider_list = class_to_provider.get (clazz);
+        String cf = "(" + PROP_CLASS + "=" + clazz + ")";
+        String fp = filter == null? cf: "&" + cf + filter;
+        ServiceReference[] provider_list;
+
+        try
+        {
+            provider_list = ctx.getServiceReferences (ManagedObjectProvider.class.getName (), fp);
+        }
+        catch (InvalidSyntaxException e)
+        {
+            provider_list = null;
+        }
 
         log.info ("getManagedObjects clazz={}", clazz);
         log.info ("provider_list = {}", provider_list);
@@ -109,17 +154,14 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
             return (new ManagedObjectInstance[0]);
         }
 
-        for (ManagedObjectProvider provider: provider_list)
+        for (ServiceReference provider_ref: provider_list)
         {
-            // TODO: USE org.osgi.framework.Filter (https://osgi.org/javadoc/r5/core/index.html)
-            if (filter == null || filter.contains ("bugabuga"))
-            {
-                ManagedObjectInstance ref = new DefaultManagedObjectInstance (null);
-                ref.setProperty (ManagedObjectInstance.PROVIDER, provider);
-                ref.setProperty (ManagedObjectInstance.CLASS, clazz);
-                found_objects.add (ref);
-                log.info ("add ref={}", ref);
-            }
+            ManagedObjectProvider provider = (ManagedObjectProvider)provider_ref.getProperty (PROP_PROVIDER);
+            ManagedObjectInstance ref = new DefaultManagedObjectInstance (null);
+            ref.setProperty (ManagedObjectInstance.PROVIDER, provider);
+            ref.setProperty (ManagedObjectInstance.CLASS, clazz);
+            found_objects.add (ref);
+            log.info ("add ref={}", ref);
         }
 
         return (found_objects.toArray (new ManagedObjectInstance[0]));
@@ -144,9 +186,8 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
         new_instance._setManagedObject (managed_object);
 
         // ...and register it within the class instance set
-        Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (new_instance.getBundle ());
+        Set<WeakReference<ManagedObjectInstance>> instance_set = get_instance_set (new_instance.getBundle ());
 
-        // TODO: CREATE instance_set ON DEMAND
         if (instance_set != null)
         {
             instance_set.add (new WeakReference<> ((ManagedObjectInstance)new_instance));
@@ -195,7 +236,7 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
             new_instance._setManagedObject (new_object);
 
             // ...and register it within the class instance set
-            Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (provider_bundle);
+            Set<WeakReference<ManagedObjectInstance>> instance_set = get_instance_set (provider_bundle);
 
             if (instance_set != null)
             {
@@ -237,66 +278,63 @@ public class DefaultManagedObjectFactory implements ManagedObjectFactory
 
     private void clear_components_by_bundle (Bundle provider_bundle)
     {
-        log.info ("clear_components_by_bundle");
-
-        synchronized (class_to_provider)
-        {
-            // Remove all providers/classes originated from provider_bundle
-            // TODO: MAKE IT THREAD SAFE
-            for (Map.Entry<String, Set<ManagedObjectProvider>> clazz: class_to_provider.entrySet ())
-            {
-                log.info ("Scanning: {}", clazz.getKey ());
-
-                Set<ManagedObjectProvider> providers = clazz.getValue ();
-                Iterator<ManagedObjectProvider> it = providers.iterator ();
-
-                // Remove all providers originated from provider_bundle
-                while (it.hasNext ())
-                {
-                    ManagedObjectProvider provider = it.next ();
-                    log.info ("Verifying {}: {}", clazz, provider);
-
-                    if (FrameworkUtil.getBundle (provider.getClass ()) == provider_bundle)
-                    {
-                        log.info ("Removing provider: {} for {}", provider, provider_bundle);
-                        it.remove ();
-                    }
-                }
-
-                // Check whether the set is empty
-                if (providers.isEmpty ())
-                {
-                    // We don't have any providers for the class
-                    class_to_provider.remove (clazz.getKey ());
-                    log.info ("Removed class registration: {}", clazz.getKey ());
-                }
-            }
-        }
-
-        Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (provider_bundle);
-
-        // Invalidate all orphaned instances
-        if (instance_set != null)
-        {
-            log.info ("unbindManagedObjectProvider: Cleaning {} instances from {}", instance_set.size (), provider_bundle);
-
-            for (WeakReference<ManagedObjectInstance> instance_ref: instance_set)
-            {
-                ManagedObjectInstance instance = instance_ref.get ();
-
-                if (instance != null && instance instanceof DefaultManagedObjectInstance)
-                {
-                    ManagedObject dying_object = instance.adapt (ManagedObject.class);
-
-                    if (dying_object != null)
-                    {
-                        dying_object.invalidate (instance);
-                    }
-                }
-            }
-
-            bundle_to_set.remove (provider_bundle);
-        }
+//        synchronized (class_to_provider)
+//        {
+//            // Remove all providers/classes originated from provider_bundle
+//            Iterator<Map.Entry<String, Set<ManagedObjectProvider>>> class_it = class_to_provider.entrySet ().iterator ();
+//
+//            while (class_it.hasNext ())
+//            {
+//                Map.Entry<String, Set<ManagedObjectProvider>> class_entry = class_it.next ();
+//                Set<ManagedObjectProvider> providers = class_entry.getValue ();
+//                Iterator<ManagedObjectProvider> it = providers.iterator ();
+//
+//                // Remove all providers originated from provider_bundle
+//                while (it.hasNext ())
+//                {
+//                    ManagedObjectProvider provider = it.next ();
+//
+//                    if (FrameworkUtil.getBundle (provider.getClass ()) == provider_bundle)
+//                    {
+//                        log.info ("Removing provider: {} for {}", provider, provider_bundle);
+//                        it.remove ();
+//                    }
+//                }
+//
+//                // Check whether the set is empty
+//                if (providers.isEmpty ())
+//                {
+//                    // We don't have any providers for the class
+//                    class_it.remove ();
+//                    log.info ("Removed class registration: {}", class_entry.getKey ());
+//                }
+//            }
+//        }
+//
+//        Set<WeakReference<ManagedObjectInstance>> instance_set = bundle_to_set.get (provider_bundle);
+//
+//        // Invalidate all orphaned instances
+//        if (instance_set != null)
+//        {
+//            log.info ("Cleaning {} instances from {}", instance_set.size (), provider_bundle);
+//
+//            for (WeakReference<ManagedObjectInstance> instance_ref: instance_set)
+//            {
+//                ManagedObjectInstance instance = instance_ref.get ();
+//
+//                if (instance != null && instance instanceof DefaultManagedObjectInstance)
+//                {
+//                    ManagedObject dying_object = instance.adapt (ManagedObject.class);
+//
+//                    if (dying_object != null)
+//                    {
+//                        dying_object.invalidate (instance);
+//                    }
+//                }
+//            }
+//
+//            bundle_to_set.remove (provider_bundle);
+//        }
     }
 
     @Validate

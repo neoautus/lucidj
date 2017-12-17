@@ -16,23 +16,25 @@
 
 package org.lucidj.renderer;
 
-import org.lucidj.api.EventHelper;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ObjectRenderer;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.EventHelper;
+import org.lucidj.api.vui.ObjectRenderer;
+import org.lucidj.api.vui.Renderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.server.VaadinSession;
+import com.vaadin.server.Sizeable;
 import com.vaadin.ui.Component;
-import com.vaadin.ui.ComponentContainer;
+import com.vaadin.ui.CustomComponent;
+import com.vaadin.ui.HasComponents;
 import com.vaadin.ui.Label;
 
-public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, EventHelper.Subscriber
+// TODO: ADD RENDERING CONTEXT, LIKE: PREVIEW, READONLY, EDIT, VIEW, ETC
+public class DefaultObjectRenderer extends CustomComponent implements Aggregate, ObjectRenderer, EventHelper.Subscriber
 {
-    private final transient static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
 
+    private Object current_object;
     private Renderer current_renderer;
     private Component current_component;
     private Label default_component;
@@ -48,43 +50,40 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         default_component.setSizeUndefined ();
     }
 
+    @Override // Aggregate
+    public <A> A adapt (Class<A> type)
+    {
+        if (isRendered ())
+        {
+            return (Aggregate.adapt (type, current_renderer));
+        }
+        else if (type.isAssignableFrom (this.getClass ()))
+        {
+            return (type.cast (this));
+        }
+        return (null);
+    }
+
     @Override // ObjectRenderer
     public boolean isRendered ()
     {
         return (current_component != null && current_renderer != null);
     }
 
-    @Override // ObjectRenderer
-    public Component renderingComponent ()
-    {
-        return (current_component);
-    }
-
     // TODO: ADD LINK/UNLINK NOTIFICATIONS
-    @Override // ObjectRenderer
-    public <A> A adapt (Class<A> type)
-    {
-        if (isRendered () &&
-            current_renderer.getClass ().isAssignableFrom (type))
-        {
-            return ((A)current_renderer);
-        }
-
-        return (null);
-    }
-
     private void apply_renderer (Object obj)
     {
         Component new_component = null;
 
         log.info ("apply_renderer: obj={}", obj);
+        current_object = obj;
 
         if (obj == null)
         {
             // Will use the default component to display 'null'
             current_renderer = null;
         }
-        else if ((current_renderer = renderer_factory.getCompatibleRenderer (obj)) != null)
+        else if ((current_renderer = renderer_factory.locateAndBindRenderer (this, obj)) != null)
         {
             // Issue initial update
             current_renderer.objectUpdated ();
@@ -103,51 +102,24 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
             // Copy current component dimensions
             new_component.setWidth (current_component.getWidth (), current_component.getWidthUnits ());
             new_component.setHeight (current_component.getHeight (), current_component.getHeightUnits ());
-
-            // Replace the rendered component with default_component
-            if (current_component.getParent () instanceof ComponentContainer)
-            {
-                ComponentContainer container = (ComponentContainer)current_component.getParent ();
-                container.replaceComponent (current_component, new_component);
-                current_component = new_component;
-            }
         }
 
         current_component = new_component;
+        setCompositionRoot (new_component);
 
         log.info ("apply_renderer: current_renderer={} current_component={}", current_renderer, current_component);
     }
 
-    private void safe_apply_renderer (Object obj)
+    public void refreshRenderer ()
     {
-        VaadinSession current_session = VaadinSession.getCurrent ();
-
-        if (current_session != null)
-        {
-            log.info ("===>>> RENDERER LOCK");
-            current_session.lock ();
-        }
-
-        try
-        {
-            // TODO: HANDLE RACING CONDITION WHEN A SESSION STARTS AT THIS POINT
-            apply_renderer (obj);
-        }
-        finally
-        {
-            if (current_session != null)
-            {
-                log.info ("<<<=== RENDERER UNLOCK");
-                current_session.unlock ();
-            }
-        }
+        apply_renderer (current_object);
     }
 
     @Override // ObjectRenderer
-    public Component link (Object object)
+    public void link (Object object)
     {
         // TODO: WHEN OBJECT IS UNKNOWN, PUBLISH "BINARY" RENDERER AND WAIT FOR RENDERER ACTIVATION
-        safe_apply_renderer (object);
+        apply_renderer (object);
 
         if (object instanceof Renderer.Observable)
         {
@@ -158,67 +130,28 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         // TODO: ADD CALLBACK custom_renderer.objectLinked ()
 
         log.info ("link: returning {}", current_component);
-        return (current_component);
     }
 
     @Override // ObjectRenderer
     public void unlink ()
     {
-        safe_apply_renderer (null);     // TODO: safe_apply_renderer??
+        apply_renderer (null);
 
         // No more source
         if (current_renderer != null)
         {
-            VaadinSession current_session = VaadinSession.getCurrent ();
-
-            if (current_session != null)
-            {
-                log.info ("===>>> RENDERER LOCK");
-                current_session.lock ();
-            }
-
-            try
-            {
-                // The component was unlinked from UI
-                current_renderer.objectUnlinked ();
-            }
-            finally
-            {
-                if (current_session != null)
-                {
-                    log.info ("<<<=== RENDERER UNLOCK");
-                    current_session.unlock ();
-                }
-            }
+            // The component was unlinked from UI
+            current_renderer.objectUnlinked ();
         }
     }
 
     @Override // ObjectRenderer
     public void updateComponent ()
     {
+        // This tells the component to update it's contents using data object
         if (current_renderer != null)
         {
-            VaadinSession current_session = VaadinSession.getCurrent ();
-
-            if (current_session != null)
-            {
-                log.info ("===>>> RENDERER LOCK");
-                current_session.lock ();
-            }
-
-            try
-            {
-                // This tells the component to update it's contents using data object
-                current_renderer.objectUpdated ();
-            }
-            finally
-            {
-                if (current_session != null)
-                {
-                    log.info ("<<<=== RENDERER UNLOCK");
-                    current_session.unlock ();
-                }
-            }
+            current_renderer.objectUpdated ();
         }
     }
 
@@ -228,16 +161,77 @@ public class DefaultObjectRenderer implements ManagedObject, ObjectRenderer, Eve
         updateComponent ();
     }
 
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
+    @Override // CustomComponent
+    protected void setCompositionRoot (Component compositionRoot)
     {
-        // Nop
+        if (compositionRoot == null) // Sanity please
+        {
+            return;
+        }
+
+        // Avoid the greedy CustomComponent problem
+        HasComponents old_parent = compositionRoot.getParent();
+
+        if (old_parent instanceof DefaultObjectRenderer)
+        {
+            DefaultObjectRenderer greedy_parent = (DefaultObjectRenderer)old_parent;
+
+            if (greedy_parent.getCompositionRoot () == compositionRoot)
+            {
+                // Makes the greedy CustomComponent drop the compositionRoot we need to
+                // assign to another CustomComponent, otherwise we get
+                // IllegalArgumentException: Content is already attached to another parent
+                compositionRoot.setParent (null);
+            }
+        }
+
+        // We'll catch events sent by the renderer
+        compositionRoot.addListener (new Listener ()
+        {
+            @Override
+            public void componentEvent (Event event)
+            {
+                // Bypass all events, so the listeners can be hooked here on the
+                // renderer proxy, while the renderer can be plugged in and out
+                fireEvent (event);
+            }
+        });
+
+        // Proceed as intended
+        super.setCompositionRoot (compositionRoot);
     }
 
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
+    @Override // CustomComponent
+    public void setWidth (float width, Sizeable.Unit unit)
     {
-        // Nop
+        super.setWidth (width, unit);
+
+        if (current_component != null)
+        {
+            current_component.setWidth (width, unit);
+        }
+    }
+
+    @Override // CustomComponent
+    public void setWidth (String width)
+    {
+        super.setWidth (width);
+
+        if (current_component != null)
+        {
+            current_component.setWidth (width);
+        }
+    }
+
+    @Override // CustomComponent
+    public void setWidthUndefined ()
+    {
+        super.setWidthUndefined ();
+
+        if (current_component != null)
+        {
+            current_component.setWidthUndefined ();
+        }
     }
 }
 

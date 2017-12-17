@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -22,6 +22,12 @@ import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteResultHandler;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -36,16 +42,24 @@ public class Launcher implements ExecuteResultHandler
 
     private String main_class = "org.apache.karaf.main.Main";
     private boolean daemon_mode = true;
+    private static boolean verbose = false;
 
     static String system_home;
     static String jdk_home;
     static String java_exe;
 
+    static PropertiesEx karaf_properties = new PropertiesEx ();
+
     private LauncherWatchdog watchdog;
+
+    public static void setVerbose (boolean flag)
+    {
+        verbose = flag;
+    }
 
     private static String find_apache_karaf (String runtime_dir)
     {
-        File[] file_array = new File (runtime_dir).listFiles();
+        File[] file_array = new File (runtime_dir + "/Apache-Karaf").listFiles ();
 
         if (file_array == null)
         {
@@ -59,10 +73,10 @@ public class Launcher implements ExecuteResultHandler
 
         for (File file: file_list)
         {
-            if (file.isDirectory() && file.getName ().startsWith ("apache-karaf-"))
+            if (file.isDirectory())
             {
                 // Embedded jdk_home
-                return (file.getName ());
+                return (file.getPath ());
             }
         }
 
@@ -70,42 +84,38 @@ public class Launcher implements ExecuteResultHandler
     }
 
 
-    public static void configure (String app_home_path, String jdk_home_path)
+    public static void configure (String app_home_path, String jdk_home_path, Path user_config)
     {
         system_home = app_home_path;
         jdk_home = jdk_home_path;
 
-        // TODO: CHECK NULL
-        String karaf_dirname = find_apache_karaf (system_home + "/runtime");
-
-        // Init Karaf dirs
-        String karaf_home = system_home + "/runtime/" + karaf_dirname;
-        String karaf_data = system_home + "/cache/" + karaf_dirname;
-
-        System.out.println ("Karaf Home: '" + karaf_home + "'");
-
+        // Setup base properties
         System.setProperty ("system.home", system_home);
         System.setProperty ("system.conf", system_home + "/conf");
         System.setProperty ("system.bootstrap", system_home + "/runtime/bootstrap");
-        System.setProperty ("system.deploy", system_home + "/runtime/application-dev");
-        System.setProperty ("java.endorsed.dirs",
-            jdk_home + "/jre/lib/endorsed" + path_separator +
-            jdk_home + "/lib/endorsed" + path_separator +
-            karaf_home + "/lib/endorsed");
-        System.setProperty ("java.ext.dirs",
-            jdk_home + "/jre/lib/ext" + path_separator +
-            jdk_home + "/lib/ext" + path_separator +
-            karaf_home + "/lib/ext");
-        System.setProperty ("karaf.instances", karaf_home + "/instances");
-        System.setProperty ("karaf.home", karaf_home);
-        System.setProperty ("karaf.base", karaf_home);
-        System.setProperty ("karaf.data", karaf_data);
-        System.setProperty ("karaf.etc", system_home + "/conf/" + karaf_dirname);
-        System.setProperty ("java.io.tmpdir", karaf_data + "/tmp");
-        System.setProperty ("java.util.logging.config.file",
-                karaf_home + "/etc/java.util.logging.properties");
-        System.setProperty ("karaf.startLocalConsole", "false");
-        System.setProperty ("karaf.startRemoteShell", "true");
+        System.setProperty ("jdk.home", jdk_home);
+//        System.out.println ("===> java.home = '" + System.getProperty ("java.home") + "'");
+//        System.out.println ("===> jdk.home = '" + System.getProperty ("jdk.home") + "'");
+
+        // TODO: CHECK NULL
+        String karaf_home = find_apache_karaf (system_home + "/runtime");
+        System.out.println ("Karaf Runtime: '" + karaf_home + "'");
+
+        File karaf_config_file = new File (karaf_home, "config.properties");
+        try (FileInputStream karaf_config = new FileInputStream (karaf_config_file))
+        {
+            karaf_properties.setProperty (".basedir", karaf_home);
+            karaf_properties.load (karaf_config);
+        }
+        catch (IOException e)
+        {
+            System.err.println ("Warning: Missing " + karaf_config_file.toString ());
+        }
+
+        if (user_config != null)
+        {
+            System.setProperty ("user.conf", user_config.toString ());
+        }
 
         // Java executable
         java_exe = jdk_home + bin_dir + "java" + exe_suffix;
@@ -121,12 +131,29 @@ public class Launcher implements ExecuteResultHandler
     }
 
     //=================================================================================================================
+    // LOGIN TOKEN
+    //=================================================================================================================
+
+    public String getLoginToken ()
+    {
+        try
+        {
+            Path token_file = Paths.get (system_home, "cache/login-token.txt");
+            return (new String (Files.readAllBytes (token_file), StandardCharsets.UTF_8));
+        }
+        catch (IOException e)
+        {
+            return (null);
+        }
+    }
+
+    //=================================================================================================================
     // PROCESS LAUNCHER
     //=================================================================================================================
 
     private void addArgument (CommandLine cmdline, String name, String value)
     {
-        cmdline.addArgument ("-D" + name + "=" + value);
+        cmdline.addArgument ("-D" + name + "=" + value, false);
     }
 
     public static String string_join (String delim, String[] elements)
@@ -199,7 +226,10 @@ public class Launcher implements ExecuteResultHandler
 
         CommandLine cmdline = new CommandLine (java_exe);
 
+        //----------
         // JVM args
+        //----------
+
         cmdline.addArgument ("-server");
         cmdline.addArgument ("-Xms128M");
         cmdline.addArgument ("-Xmx1024M");
@@ -208,64 +238,59 @@ public class Launcher implements ExecuteResultHandler
         cmdline.addArgument ("-Djava.awt.headless=true");
         cmdline.addArgument ("-Dcom.sun.management.jmxremote");
 
-        // Get all Karaf boot files
-        File[] file_list = new File (System.getProperty ("karaf.home") + "/lib/boot").listFiles ();
+        //-----------
+        // Classpath
+        //-----------
+
         List<String> path_elements = new ArrayList<> ();
 
-        // And add to classpath if found
-        if (file_list != null)
+        String classpath_extra = karaf_properties.getProperty (".classpath.extra");
+
+        if (classpath_extra != null)
         {
-            for (int i = 0; i < file_list.length; i++)
+            // TODO: HANDLE COMPOUND classpath_extra; HANDLE MULTIPLE .classpath.*
+            // Get all exported classpath files
+            File[] file_list = new File (classpath_extra).listFiles ();
+
+            // And add to classpath if found
+            if (file_list != null)
             {
-                if (file_list [i].isFile () &&
-                    file_list [i].getName ().toLowerCase ().endsWith (".jar"))
+                for (int i = 0; i < file_list.length; i++)
                 {
-                    path_elements.add (file_list [i].getAbsolutePath ());
+                    if (file_list [i].isFile () &&
+                            file_list [i].getName ().toLowerCase ().endsWith (".jar"))
+                    {
+                        path_elements.add (file_list [i].getAbsolutePath ());
+                    }
                 }
             }
-
-            cmdline.addArgument ("-classpath");
-            cmdline.addArgument (string_join (path_separator, path_elements), true);
         }
 
-        // Container args
+        cmdline.addArgument ("-classpath");
+        cmdline.addArgument (string_join (path_separator, path_elements), false);
+
+        //-------------
+        // LucidJ args
+        //-------------
+
         addArgument (cmdline, "system.home", System.getProperty ("system.home"));
         addArgument (cmdline, "system.conf", System.getProperty ("system.conf"));
         addArgument (cmdline, "system.bootstrap", System.getProperty ("system.bootstrap"));
         addArgument (cmdline, "system.deploy", System.getProperty ("system.deploy"));
-        addArgument (cmdline, "java.endorsed.dirs", System.getProperty ("java.endorsed.dirs"));
-        addArgument (cmdline, "java.ext.dirs", System.getProperty ("java.ext.dirs"));
-        addArgument (cmdline, "karaf.instances", System.getProperty ("karaf.instances"));
-        addArgument (cmdline, "karaf.home", System.getProperty ("karaf.home"));
-        addArgument (cmdline, "karaf.base", System.getProperty ("karaf.base"));
-        addArgument (cmdline, "karaf.data", System.getProperty ("karaf.data"));
-        addArgument (cmdline, "karaf.etc", System.getProperty ("karaf.etc"));
-        addArgument (cmdline, "java.io.tmpdir", System.getProperty ("java.io.tmpdir"));
-        addArgument (cmdline, "java.util.logging.config.file", System.getProperty ("java.util.logging.config.file"));
 
-        // Feature repositories
-        String[] features_repositories =
+        // Copy the parsed properties to command line
+        for (String key: karaf_properties.stringPropertyNames ())
         {
-            "mvn:org.apache.shiro/shiro-features/1.2.4/xml/features",
-            "mvn:org.lucidj.bootstrap/bootstrap-features/1.0.0/xml/features",
-            "mvn:org.apache.felix/org.apache.felix.ipojo.features/1.12.1/xml"
-        };
+            if (!key.startsWith ("."))
+            {
+                addArgument (cmdline, key, karaf_properties.getProperty (key));
+            }
+        }
 
-        addArgument (cmdline, "featuresRepositoriesExtra", string_join (",", features_repositories));
-
-        String[] features_boot =
+        if (System.getProperty ("user.conf") != null)
         {
-            "bootstrap-core",
-            "http",
-            "http-whiteboard",
-            "ipojo",
-            "ipojo-all",
-            "ipojo-command",
-            "ipojo-webconsole",
-            "shiro-core"
-        };
-
-        addArgument (cmdline, "featuresBootExtra", string_join (",", features_boot));
+            addArgument (cmdline, "user.conf", System.getProperty ("user.conf"));
+        }
 
         // Class to exec
         cmdline.addArgument (main_class);
@@ -276,6 +301,20 @@ public class Launcher implements ExecuteResultHandler
             for (String arg: args)
             {
                 cmdline.addArgument (arg);
+            }
+        }
+
+        //------------------
+        // Ready to launch!
+        //------------------
+
+        if (verbose)
+        {
+            String[] argv = cmdline.toStrings ();
+
+            for (int i = 0; i < argv.length; i++)
+            {
+                System.out.println ("argv[" + i + "] = '" + argv [i] + "'");
             }
         }
 
@@ -296,21 +335,21 @@ public class Launcher implements ExecuteResultHandler
 
     public void start (String[] args)
     {
-        main_class = "org.apache.karaf.main.Main";
+        main_class = karaf_properties.getProperty (".main.class.start");
         daemon_mode = true;
         launch (args);
     }
 
     public void stop (String[] args)
     {
-        main_class = "org.apache.karaf.main.Stop";
+        main_class = karaf_properties.getProperty (".main.class.stop");
         daemon_mode = false;
         launch (args);
     }
 
     public void status (String[] args)
     {
-        main_class = "org.apache.karaf.main.Status";
+        main_class = karaf_properties.getProperty (".main.class.status");
         daemon_mode = false;
         launch (args);
     }

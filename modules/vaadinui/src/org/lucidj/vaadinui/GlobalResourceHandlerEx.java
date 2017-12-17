@@ -55,10 +55,8 @@ public class GlobalResourceHandlerEx extends GlobalResourceHandler
                 stream.writeResponse (request, response);
                 return (true);
             }
-
             // Fall back if not found here
         }
-
         return (super.handleRequest (session, request, response));
     }
 
@@ -120,6 +118,20 @@ public class GlobalResourceHandlerEx extends GlobalResourceHandler
     // UGLY STUFF. DON'T LOOK :)
     //---------------------------
 
+    public boolean hook (VaadinSession session)
+    {
+        // We need this ugly hack to be able to override the default global resource handler,
+        // so we can put an osgi-aware in place.
+        // TODO: FIND OUT WHY GlobalResourceHandler IS SET OUTSIDE VaadinService.createRequestHandlers()
+        if (set_field (session, "globalResourceHandler", this))
+        {
+            // Step needed as VaadinSession.getGlobalResourceHandler() shows
+            session.addRequestHandler (this);
+            return (true);
+        }
+        return (false);
+    }
+
     // http://stackoverflow.com/questions/12485351/java-reflection-field-value-in-extends-class
     private Field find_underlying (Class<?> root_class, String fieldName)
     {
@@ -147,6 +159,23 @@ public class GlobalResourceHandlerEx extends GlobalResourceHandler
         }
         catch (Exception ignore) {};
         return (null);
+    }
+
+    private boolean set_field (Object target, String field_name, Object field_value)
+    {
+        try
+        {
+            Field field = find_underlying (target.getClass(), field_name);
+
+            if (field != null)
+            {
+                field.setAccessible (true);
+                field.set (target, field_value);
+            }
+            return (true);
+        }
+        catch (Exception ignore) {};
+        return (false);
     }
 }
 

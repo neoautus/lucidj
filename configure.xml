@@ -97,7 +97,7 @@
             <ivy:dependency org="org.apache.tinkerpop" name="tinkergraph-gremlin" rev="3.0.2-incubating"/>
         </pathdep>
 
-        <property name="vaadin.rev" value="7.7.7"/>
+        <property name="vaadin.rev" value="7.7.10"/>
         <pathdep group="vaadin">
             <ivy:dependency org="com.vaadin"       name="vaadin-server"          rev="${vaadin.rev}"/>
             <ivy:dependency org="com.vaadin"       name="vaadin-client"          rev="${vaadin.rev}"/>
@@ -151,15 +151,9 @@
             <ivy:dependency org="javax" name="javaee-api" rev="7.0" />
         </pathdep>
 
-        <!--property name="beanshell.rev" value="2.0b4"/>
-        <pathdep group="bsh">
-            <ivy:dependency org="org.beanshell" name="bsh-util"      rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-reflect"   rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-core"      rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-commands"  rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-classgen"  rev="${beanshell.rev}"/>
-            <ivy:dependency org="org.beanshell" name="bsh-classpath" rev="${beanshell.rev}"/>
-        </pathdep-->
+        <pathdep group="hazelcast">
+            <ivy:dependency org="com.hazelcast" name="hazelcast" rev="3.7.2" transitive="false"/>
+        </pathdep>
 
         <pathdep group="gson">
             <ivy:dependency org="com.google.code.gson" name="gson" rev="2.4"/>
@@ -238,7 +232,7 @@
                     Bundle-Name: wrapped-${bsn}
                     Bundle-Version: ${version}
                     Import-Package: *;resolution:=optional
-                    Export-Package: *;version=${version}
+                    Export-Package: !javax.*,*;version=${version}
                 </echo>
                 <bnd files="${output.bnd}" output="${output.jar}"
                      eclipse="false" failok="false" exceptions="true">
@@ -254,7 +248,7 @@
         </macrodef>
 
         <!-- And action! -->
-        <wrapjar src="${libcache.dir}/vaadin/jar/gwt-user-2.7.0.vaadin4.jar"
+        <wrapjar src="${libcache.dir}/vaadin/jar/gwt-user-2.7.0.vaadin5.jar"
             dest="${wrapped-jars.dir}"/>
 
 	<echo>

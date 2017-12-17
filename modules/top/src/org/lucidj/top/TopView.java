@@ -16,8 +16,13 @@
 
 package org.lucidj.top;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.CodeEngineManager;
+import org.lucidj.api.core.DesktopUI;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceLocator;
+import org.lucidj.api.core.ServiceObject;
+import org.lucidj.api.core.ServiceObjectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,20 +32,42 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.ui.*;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class TopView extends VerticalLayout implements ManagedObject, View
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+
+public class TopView extends VerticalLayout implements View
 {
-    final Logger log = LoggerFactory.getLogger (TopView.class);
+    private final static Logger log = LoggerFactory.getLogger (TopView.class);
 
     private IndexedContainer container;
     private Grid grid;
     private Timer update_timer = new Timer ();
     private TimerTask update_task = null;
+
+    @ServiceObject.Context
+    private ServiceContext injected_ctx;
+
+    private ServiceContext ctx;
+
+    public TopView (BundleContext bctx, ServiceContext ctx, Map<String, Object> props)
+    {
+        log.info ("TopView constructor ctx={} bctx={}", ctx, bctx);
+        this.ctx = ctx;
+    }
+
+    public TopView ()
+    {
+//        this.ctx = ctx;
+    }
 
     private void updateView ()
     {
@@ -97,29 +124,60 @@ public class TopView extends VerticalLayout implements ManagedObject, View
         log.info ("Top started");
     }
 
+    Set<String> testEngines ()
+    {
+        log.info ("### CONTEXT injected_ctx={} ctx={}", injected_ctx, ctx);
+        try (ServiceLocator locator = ctx.newServiceLocator ())
+        {
+            return (locator.getService (CodeEngineManager.class).getEngines ());
+        }
+        catch (ServiceObjectException e)
+        {
+            return (Collections.EMPTY_SET);
+        }
+    }
+
     private void buildView()
     {
         setMargin (true);
-        setHeight (100, Unit.PERCENTAGE);
+//        setHeight (100, Unit.PERCENTAGE);
+//
+//        // Create a container of some type
+//        container = new IndexedContainer ();
+//
+//        // Initialize the container as required by the container type
+//        container.addContainerProperty("context_id", String.class, "none");
+//        container.addContainerProperty("components", String.class, "none");
+//
+//        grid = new Grid (container);
+//        grid.addStyleName ("top-grid");
+//        grid.setWidth (100, Unit.PERCENTAGE);
+//        grid.setHeight (100, Unit.PERCENTAGE);
+//
+//        updateView ();
+//
+//        //grid.setColumnOrder("name", "born");
+//        addComponent(grid);
+//
+//        setup_timer (3000);
 
-        // Create a container of some type
-        container = new IndexedContainer ();
+        addComponent (new Label (new Date ().toString ()));
 
-        // Initialize the container as required by the container type
-        container.addContainerProperty("context_id", String.class, "none");
-        container.addContainerProperty("components", String.class, "none");
+        Object result = testEngines ();
 
-        grid = new Grid (container);
-        grid.addStyleName ("top-grid");
-        grid.setWidth (100, Unit.PERCENTAGE);
-        grid.setHeight (100, Unit.PERCENTAGE);
+        addComponent (new Label (result == null? "null": result.toString ()));
 
-        updateView ();
+        DesktopUI dui = Aggregate.adapt (DesktopUI.class, getUI ());
 
-        //grid.setColumnOrder("name", "born");
-        addComponent(grid);
-
-        setup_timer (3000);
+        dui.addListener ("search", new DesktopUI.Listener ()
+        {
+            @Override
+            public void event (String topic, Object eventObject)
+            {
+                log.info ("DesktopUI.Listener event(): topic={} eventObject={}", topic, eventObject);
+                TopView.this.addComponent (new Label ((String)eventObject));
+            }
+        });
     }
 
     @Override
@@ -132,16 +190,18 @@ public class TopView extends VerticalLayout implements ManagedObject, View
         }
     }
 
-    @Override
-    public void validate (ManagedObjectInstance instance)
+    @ServiceObject.Validate
+    public void validate ()
     {
         // Nothing
+        log.info ("validate()");
     }
 
-    @Override
-    public void invalidate (ManagedObjectInstance instance)
+    @ServiceObject.Invalidate
+    public void invalidate ()
     {
         // Nothing
+        log.info ("invalidate()");
     }
 }
 

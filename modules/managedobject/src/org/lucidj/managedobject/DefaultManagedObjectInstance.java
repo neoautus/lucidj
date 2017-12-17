@@ -16,8 +16,8 @@
 
 package org.lucidj.managedobject;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -27,7 +27,7 @@ import java.util.List;
 
 public class GluonReader
 {
-    private final transient static Logger log = LoggerFactory.getLogger (GluonReader.class);
+    private final static Logger log = LoggerFactory.getLogger (GluonReader.class);
 
     private Reader reader;
     private BufferedReader rd;
@@ -257,8 +257,8 @@ public class GluonReader
             }
         }
 
-        // Premature EOF
-        return (false);
+        // Blank file is valid
+        return (true);
     }
 
     private boolean read_boundary ()
@@ -297,7 +297,7 @@ public class GluonReader
     public boolean readRepresentation (GluonInstance instance)
         throws IOException
     {
-        String lf = System.getProperty("line.separator");
+        String lf = System.getProperty ("line.separator");
 
         // Root properties
         if (!read_properties_section (instance))
@@ -308,7 +308,18 @@ public class GluonReader
         // File boundary
         if (!read_boundary ())
         {
-            return (false);
+            // Is it an invalid boundary?
+            if (boundary != null)
+            {
+                // TODO: BETTER HANDLING OF INVALID BOUNDARIES
+                return (false);
+            }
+
+            // TODO: USE SERVICE INSTEAD OF DECLARED OBJECT
+
+            // Handle the condition of a blank file, without any properties
+            instance._setPropertyRepresentation (GluonConstants.OBJECT_CLASS, "org.lucidj.runtime.CompositeTask");
+            return (true);
         }
 
         // Handle the condition of a blank file (properties only).

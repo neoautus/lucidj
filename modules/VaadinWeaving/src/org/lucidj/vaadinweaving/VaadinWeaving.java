@@ -35,18 +35,18 @@ import org.osgi.framework.wiring.BundleWiring;
 
 public class VaadinWeaving implements WeavingHook
 {
-    private final static transient Logger log = LoggerFactory.getLogger (VaadinWeaving.class);
+    private final static Logger log = LoggerFactory.getLogger (VaadinWeaving.class);
 
     private final static String VAADIN_TRY_FINALLY_AUTO_LOCK =
         "{" +
         "    java.util.concurrent.locks.Lock __v_lock = null;" +
         "    try " +
         "    {" +
-        "        com.vaadin.server.VaadinSession session = " +
+        "        com.vaadin.server.VaadinSession __v_session = " +
         "            com.vaadin.server.VaadinSession.getCurrent (); " +
-        "        if (session != null)" +
+        "        if (__v_session != null)" +
         "        {" +
-        "            __v_lock = session.getLockInstance (); " +
+        "            __v_lock = __v_session.getLockInstance (); " +
         "            __v_lock.lock ();" +
         "        }" +
         "        $_ = $proceed ($$);" +

@@ -1,0 +1,12 @@
+
+.valo .x-pathrenderer .v-tree-node-focused:after {
+    opacity: 1;
+    border: none;
+    background-color: #e8e8e8;
+    border-radius: 0;
+}
+
+.x-pathrenderer .v-tree-node img.v-icon {
+    height: 21px;
+    vertical-align: text-bottom;
+}

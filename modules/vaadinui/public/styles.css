@@ -33,7 +33,7 @@
 .ui-header-logo {
     height: 56px;
     /*padding: 0 8px;*/
-    background: url(/VAADIN/~/vaadinui_libraries/lucidj-logo.png) no-repeat 18px center;
+    background: url(/VAADIN/~/system/default-logo.png) no-repeat 18px center;
 }
 
 .ui-header-search {
@@ -85,4 +85,20 @@
     font-weight: bold;
     border: 1px solid #c00;
     color: #c00;
+}
+
+/* Remove the focus halo from search tool */
+.valo .invisible-focus.v-button:focus:after,
+.valo .invisible-focus.v-filterselect input:focus {
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    border: 1px solid #c5c5c5;
+}
+
+.v-widget.login-wallpaper {
+    background: url(/VAADIN/~/system/login-wallpaper.jpg) no-repeat center center fixed;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
 }

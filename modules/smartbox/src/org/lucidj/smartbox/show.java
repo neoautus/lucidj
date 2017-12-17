@@ -16,36 +16,37 @@
 
 package org.lucidj.smartbox;
 
-import bsh.CallStack;
-import bsh.Interpreter;
-import org.lucidj.api.ObjectManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import bsh.CallStack;
+//import bsh.Interpreter;
+//import org.lucidj.api.DisplayManager;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 
+// TODO: MAKE A COMPATIBLE CROSS-LANGUAGE EQUIVALENT
 public class show
 {
-    private final transient static Logger log = LoggerFactory.getLogger (show.class);
-    private static ThreadLocal<ObjectManager> current_om = new InheritableThreadLocal<> ();
-
-    public static void setObjectManager (ObjectManager om)
-    {
-        current_om.set (om);
-    }
-
-    public static String usage()
-    {
-        return ("Usage: show (object)\n");
-    }
-
-    public static void invoke (Interpreter env, CallStack callstack, Object obj)
-    {
-        current_om.get ().showObject (obj);
-    }
-
-    public static void invoke (Interpreter env, CallStack callstack)
-    {
-        // just show()
-    }
+//    private final static Logger log = LoggerFactory.getLogger (show.class);
+//    private static ThreadLocal<DisplayManager> current_om = new InheritableThreadLocal<> ();
+//
+//    public static void setObjectManager (DisplayManager om)
+//    {
+//        current_om.set (om);
+//    }
+//
+//    public static String usage()
+//    {
+//        return ("Usage: show (object)\n");
+//    }
+//
+//    public static void invoke (Interpreter env, CallStack callstack, Object obj)
+//    {
+//        current_om.get ().showObject (obj);
+//    }
+//
+//    public static void invoke (Interpreter env, CallStack callstack)
+//    {
+//        // just show()
+//    }
 }
 
 // EOF

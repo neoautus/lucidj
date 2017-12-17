@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,35 +16,59 @@
 
 package org.lucidj.explorer;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.MenuInstance;
-import org.lucidj.api.MenuProvider;
-import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.core.ArtifactDeployer;
+import org.lucidj.api.core.BundleManager;
+import org.lucidj.api.core.MenuInstance;
+import org.lucidj.api.core.MenuProvider;
+import org.lucidj.api.core.SecurityEngine;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.vui.IconHelper;
+import org.lucidj.api.vui.NavigatorManager;
+import org.lucidj.api.vui.RendererFactory;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
-import com.vaadin.server.FontAwesome;
+import com.vaadin.server.Resource;
 
 import java.util.Map;
+import java.util.regex.Matcher;
 
+import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
+import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
-@Component
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class Explorer implements MenuProvider, ViewProvider
 {
-    private final static String NAVID = "home";
+    @Context
+    private BundleContext context;
 
     @Requires
     private SecurityEngine security;
 
     @Requires
-    private ManagedObjectFactory object_factory;
+    private ServiceContext serviceContext;
+
+    @Requires
+    private ArtifactDeployer artifactDeployer;
+
+    @Requires
+    private BundleManager bundleManager;
+
+    @Requires
+    private RendererFactory rendererFactory;
+
+    @Requires
+    private IconHelper iconHelper;
+
+    @Requires
+    private NavigatorManager navigatorManager;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -55,28 +79,61 @@ public class Explorer implements MenuProvider, ViewProvider
     @Override // MenuProvider
     public void buildMenuEntries (MenuInstance menu, Map<String, Object> properties)
     {
-        menu.addMenuEntry (menu.newMenuEntry ("Explorer", FontAwesome.FOLDER_OPEN_O, 100, NAVID));
+        Resource icon = iconHelper.getIcon ("places/folder", 32);
+        menu.addMenuEntry (menu.newMenuEntry ("Explorer", icon, 100, ExplorerView.NAVID));
     }
 
     @Override // ViewProvider
-    public String getViewName (String s)
+    public String getViewName (String navigationState)
     {
-        if (NAVID.equals (s))
+        Matcher m;
+
+        if (ExplorerView.NAVID.equals (navigationState))
         {
-            return (NAVID);
+            return (ExplorerView.NAVID);
         }
-        return null;
+        else if (navigationState.startsWith (OpenView.NAVID + "/"))  // The '/' is used since 'open' requires args
+        {
+            return (navigationState); // For now, every open is a separate View
+        }
+        else if ((m = BundleView.NAV_PATTERN.matcher (navigationState)).find ())
+        {
+            return (m.group ());
+        }
+        return (null);
     }
 
     @Override // ViewProvider
-    public View getView (String s)
+    public View getView (String viewName)
     {
-        if (NAVID.equals (s))
+        if (ExplorerView.NAVID.equals (viewName))
         {
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new ExplorerView (security));
-            return (view_instance.adapt (View.class));
+            return (serviceContext.newServiceObject (ExplorerView.class));
         }
-        return null;
+        else if (viewName.startsWith (OpenView.NAVID + "/"))
+        {
+            return (serviceContext.newServiceObject (OpenView.class));
+        }
+        else if (BundleView.NAV_PATTERN.matcher (viewName).matches ())
+        {
+            return (serviceContext.newServiceObject (BundleView.class));
+        }
+        return (null);
+    }
+
+    @Validate
+    private void validate ()
+    {
+        serviceContext.publishUrl (context, "/public/styles.css");
+        serviceContext.putService (context, SecurityEngine.class, security);
+        serviceContext.putService (context, ArtifactDeployer.class, artifactDeployer);
+        serviceContext.putService (context, BundleManager.class, bundleManager);
+        serviceContext.putService (context, RendererFactory.class, rendererFactory);
+        serviceContext.putService (context, IconHelper.class, iconHelper);
+        serviceContext.putService (context, NavigatorManager.class, navigatorManager);
+        serviceContext.register (ExplorerView.class);
+        serviceContext.register (OpenView.class);
+        serviceContext.register (BundleView.class);
     }
 }
 

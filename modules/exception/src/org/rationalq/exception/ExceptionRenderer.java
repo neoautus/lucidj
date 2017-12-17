@@ -16,8 +16,7 @@
 
 package org.rationalq.exception;
 
-import com.google.common.base.Throwables;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.Renderer;
 
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.label.ContentMode;
@@ -28,6 +27,7 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 
+// TODO: REFACTOR THIS!!!!!!!!!!!!!!!!!!!!!!!!!!!
 @Component (immediate = true)
 @Instantiate
 @Provides
@@ -43,10 +43,9 @@ public class ExceptionRenderer implements Renderer
         exception_description.setHeightUndefined ();
     }
 
-    @Override
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof Throwable);
+        return (object instanceof Throwable);
     }
 
     @Override

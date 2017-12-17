@@ -1,0 +1,79 @@
+X-Serialization-Engine: org.lucidj.gluon.GluonSerializer; version="1.0"
+X-Object: org.lucidj.runtime.CompositeTask
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.beanshell.BeanShellProcessor
+output: org.lucidj.console.Console@1, org.lucidj.vaadin.Vaadin@2
+
+for (int i = 0; i < 5; i++)
+{
+    Console.println ("Hello world! i=" + i);
+    Console.flush ();
+    Thread.sleep (500);
+}
+Vaadin.addComponent (new Button ("Hello world!"));
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.beanshell.BeanShellProcessor
+output: org.lucidj.vaadin.Vaadin@4
+
+new Image (null, new ExternalResource ("https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"));
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.nashorn.NashornProcessor
+output: org.lucidj.console.Console@6
+
+var hello = 'Hello world!';
+print (hello);
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.quercus.QuercusProcessor
+output: org.lucidj.console.Console@8
+
+<?php
+$w = "world";
+echo "Hello $w!";
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.console.Console@1; embedded
+
+2017-05-19 17:53:52.742 | OUT | Hello world! i=0\n
+2017-05-19 17:53:53.291 | OUT | Hello world! i=1\n
+2017-05-19 17:53:53.792 | OUT | Hello world! i=2\n
+2017-05-19 17:53:54.293 | OUT | Hello world! i=3\n
+2017-05-19 17:53:54.793 | OUT | Hello world! i=4\n
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.vaadin.Vaadin@2; embedded
+
+<!doctype html>
+<html>
+    <head>
+        <meta name="package-mapping" content="org_lucidj_vaadin:org.lucidj.vaadin">
+    </head>
+    <body>
+        <org_lucidj_vaadin-vaadin>
+            <vaadin-button plain-text>
+                Hello world!
+            </vaadin-button>
+        </org_lucidj_vaadin-vaadin>
+    </body>
+</html>
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.vaadin.Vaadin@4; embedded
+
+<!doctype html>
+<html>
+    <head></head>
+    <body>
+        <vaadin-image source="https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png"></vaadin-image>
+    </body>
+</html>
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.console.Console@6; embedded
+
+2017-05-08 11:20:45.687 | OUT | Hello world!\n
+
+-------THINK_BIG_BE_BOLD-------
+X-Object: org.lucidj.console.Console@8; embedded
+
+2017-05-08 11:20:54.020 | OUT | Hello world!
+-------THINK_BIG_BE_BOLD-------//

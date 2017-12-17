@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,10 +16,10 @@
 
 package org.lucidj.menumanager;
 
-import org.lucidj.api.EventHelper;
-import org.lucidj.api.MenuInstance;
-import org.lucidj.api.MenuManager;
-import org.lucidj.api.MenuProvider;
+import org.lucidj.api.core.EventHelper;
+import org.lucidj.api.core.MenuInstance;
+import org.lucidj.api.core.MenuManager;
+import org.lucidj.api.core.MenuProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides (specifications = MenuManager.class)
 public class DefaultMenuManager implements MenuManager
 {
-    private final static transient Logger log = LoggerFactory.getLogger (MenuManager.class);
+    private final static Logger log = LoggerFactory.getLogger (MenuManager.class);
 
     private List<MenuProvider> menu_provider_list = new ArrayList<> ();
     private List<WeakReference<MenuInstance>> menu_instance_listeners = new ArrayList<> ();

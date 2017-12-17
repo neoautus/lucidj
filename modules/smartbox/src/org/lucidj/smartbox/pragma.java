@@ -16,56 +16,56 @@
 
 package org.lucidj.smartbox;
 
-import bsh.CallStack;
-import bsh.Interpreter;
+//import bsh.CallStack;
+//import bsh.Interpreter;
 
 // TODO: REFACTOR ALL OF THIS INTO A CLASS THAT CAN BE USED ON BEANSHELL OR SCALA OR WHATEVER
 public class pragma
 {
-    private static String PRAGMAS = "Pragmas";
-    private static ThreadLocal<SmartBox> current_sb = new InheritableThreadLocal<> ();
-
-    public static void setSmartBox (SmartBox sb)
-    {
-        current_sb.set (sb);
-    }
-
-    public static String usage()
-    {
-        return ("Usage: pragma (\"directive\" [, \"value\" ] )\n");
-    }
-
-    public static void pragma (String directive)
-    {
-        String current_directives = (String)current_sb.get ().getProperty (PRAGMAS);
-
-        if (current_directives == null)
-        {
-            current_directives = directive;
-        }
-        else
-        {
-            String cdr = "," + current_directives.replace (" ", "") + ",";
-
-            if (!cdr.contains ("," + directive + ","))
-            {
-                current_directives += ", " + directive;
-            }
-        }
-
-        // TODO: CLEAR PRAGMAS ON LOAD, AVOID KEEP UNWANTED PRAGMAS ALIVE
-        current_sb.get ().setProperty ("Pragmas", current_directives);
-    }
-
-    public static void invoke (Interpreter env, CallStack callstack, String directive)
-    {
-        pragma (directive);
-    }
-
-    public static String invoke (Interpreter env, CallStack callstack)
-    {
-        return ((String)current_sb.get ().getProperty (PRAGMAS));
-    }
+//    private static String PRAGMAS = "Pragmas";
+//    private static ThreadLocal<SmartBox> current_sb = new InheritableThreadLocal<> ();
+//
+//    public static void setSmartBox (SmartBox sb)
+//    {
+//        current_sb.set (sb);
+//    }
+//
+//    public static String usage()
+//    {
+//        return ("Usage: pragma (\"directive\" [, \"value\" ] )\n");
+//    }
+//
+//    public static void pragma (String directive)
+//    {
+//        String current_directives = (String)current_sb.get ().getProperty (PRAGMAS);
+//
+//        if (current_directives == null)
+//        {
+//            current_directives = directive;
+//        }
+//        else
+//        {
+//            String cdr = "," + current_directives.replace (" ", "") + ",";
+//
+//            if (!cdr.contains ("," + directive + ","))
+//            {
+//                current_directives += ", " + directive;
+//            }
+//        }
+//
+//        // TODO: CLEAR PRAGMAS ON LOAD, AVOID KEEP UNWANTED PRAGMAS ALIVE
+//        current_sb.get ().setProperty ("Pragmas", current_directives);
+//    }
+//
+//    public static void invoke (Interpreter env, CallStack callstack, String directive)
+//    {
+//        pragma (directive);
+//    }
+//
+//    public static String invoke (Interpreter env, CallStack callstack)
+//    {
+//        return ((String)current_sb.get ().getProperty (PRAGMAS));
+//    }
 }
 
 // EOF

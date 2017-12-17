@@ -16,10 +16,10 @@
 
 package org.lucidj.palette;
 
-import org.lucidj.api.ComponentDescriptor;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ComponentManager;
-import org.lucidj.api.ComponentSet;
+import org.lucidj.api.core.ComponentDescriptor;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ComponentManager;
+import org.lucidj.api.core.ComponentSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +46,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class Palette implements ComponentManager
 {
-    private final transient static Logger log = LoggerFactory.getLogger (Palette.class);
+    private final static Logger log = LoggerFactory.getLogger (Palette.class);
 
     private BundleTracker bundle_cleaner;
     private Set<ComponentSet> listeners = new HashSet<> ();

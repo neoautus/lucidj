@@ -16,11 +16,11 @@
 
 package org.lucidj.beanshell;
 
-import org.lucidj.api.Aggregate;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
 
 public class BeanShellProcessor implements ManagedObject, Aggregate
 {

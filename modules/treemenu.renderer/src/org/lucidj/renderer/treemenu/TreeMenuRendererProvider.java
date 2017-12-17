@@ -16,10 +16,10 @@
 
 package org.lucidj.renderer.treemenu;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.core.ManagedObjectFactory;
+import org.lucidj.api.core.ManagedObjectInstance;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.vui.RendererProvider;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -31,15 +31,13 @@ import org.apache.felix.ipojo.annotations.Requires;
 @Provides
 public class TreeMenuRendererProvider implements RendererProvider
 {
-    private TreeMenuRenderer treemenu_filter = new TreeMenuRenderer ();
-
     @Requires
     private ManagedObjectFactory objectFactory;
 
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
-        if (treemenu_filter.compatibleObject (object))
+        if (TreeMenuRenderer.isCompatible (object))
         {
             ManagedObjectInstance object_instance = objectFactory.wrapObject (new TreeMenuRenderer ());
             return (object_instance.adapt (TreeMenuRenderer.class));

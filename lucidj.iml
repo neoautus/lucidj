@@ -11,7 +11,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/timeseries/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/uiaccess/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/aceeditor/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/formulas/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/Browser/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/librarian/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/beanshell/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/console/src" isTestSource="false" />
@@ -27,7 +27,7 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/test_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/test_component/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/smartbox_renderer/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/objectmanager/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/DisplayManager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/html_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/markdown_renderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/plotly/src" isTestSource="false" />
@@ -35,8 +35,8 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/gaussui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/vaadinui/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/test/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/api/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/modules/layoutmanager/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/API.Core/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/DisplayManagerRenderer/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/runtime/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/packages/search/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/menumanager/src" isTestSource="false" />
@@ -56,6 +56,15 @@
       <sourceFolder url="file://$MODULE_DIR$/modules/KarafBinding/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/VaadinWeaving/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/modules/Accounts/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/Embedding/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/ArtifactDeployer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/ServiceObject/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/IconListRenderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/NewView/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/PathRenderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/ContainerTreeRenderer/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/API.VUI/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/modules/NavTool/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/stage" />
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
@@ -76,5 +85,6 @@
     <orderEntry type="library" name="javaee-api-7.0" level="project" />
     <orderEntry type="library" name="commons-exec-1.x" level="project" />
     <orderEntry type="library" name="bouncycastle-1.5x" level="project" />
+    <orderEntry type="library" name="hazelcast-3.x" level="project" />
   </component>
 </module>

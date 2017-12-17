@@ -16,14 +16,11 @@
 
 package org.lucidj.smartbox;
 
-import org.lucidj.api.CodeEngineManager;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.core.CodeEngineManager;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
+import org.lucidj.api.core.ServiceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,15 +37,15 @@ import org.apache.felix.ipojo.annotations.Validate;
 @org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides
-public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
+public class SmartBoxSerializer implements Serializer
 {
-    private final static transient Logger log = LoggerFactory.getLogger (SmartBoxSerializer.class);
+    private final static Logger log = LoggerFactory.getLogger (SmartBoxSerializer.class);
 
     @Context
     private BundleContext context;
 
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     @Requires
     private SerializerEngine serializer;
@@ -59,7 +56,8 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
     @Validate
     private void validate ()
     {
-        objectFactory.register (SmartBox.class, this, null);
+        // TODO: PROMOTE SmartBox TO A SYSTEM COMPONENT (REFER QuercusProcessorProvider EXAMPLE)
+        serviceContext.register (SmartBox.class);
         serializer.register (SmartBox.class, this);
     }
 
@@ -79,15 +77,14 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
         instance.setValue ((String)smartbox.getValue ());
 
         // Runtime properties
-        instance.setProperty ("output", smartbox.getObjectManager ().getObjects ());
+        instance.setProperty ("output", smartbox._getDisplayManager ().getObjects ());
         return (true);
     }
 
     @Override // Serializer
     public Object deserializeObject (SerializerInstance instance)
     {
-        ManagedObjectInstance smartbox_instance = objectFactory.newInstance (SmartBox.class, null);
-        SmartBox smartbox = smartbox_instance.adapt (SmartBox.class);
+        SmartBox smartbox = serviceContext.newServiceObject (SmartBox.class);
         HashMap<String, Object> properties = smartbox.getProperties ();
 
         for (String key: instance.getPropertyKeys ())
@@ -106,17 +103,11 @@ public class SmartBoxSerializer implements Serializer, ManagedObjectProvider
                 log.info ("*** output = {}", object);
                 if (object != null)
                 {
-                    smartbox.getObjectManager ().showObject (object);
+                    smartbox._getDisplayManager ().showObject (object);
                 }
             }
         }
         return (smartbox);
-    }
-
-    @Override
-    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
-    {
-        return (new SmartBox (objectFactory));
     }
 }
 

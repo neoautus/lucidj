@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -27,9 +27,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -47,8 +44,8 @@ public class LauncherUI extends JFrame
     private String logger_text;
     private boolean prepend_timestamp;
 
-    private final String app_title = "LucidJ Launcher";
-    private final String app_version = "version 1.0.0";
+    private final String app_title = "LucidJ Launcher"; // It will become LucidJ Monitor :)
+    private final String app_version = "version 1.1.0";
     private Image app_icon = Toolkit.getDefaultToolkit ().getImage (getClass().getResource("tangram-32.png"));
 
     private final int STATUS_UNKNOWN = 0;
@@ -231,7 +228,7 @@ public class LauncherUI extends JFrame
 
     private void fix_startstop_button_size ()
     {
-        jButton1.setText ("XStartX");
+        jButton1.setText ("Checking...");
         Dimension size = jButton1.getPreferredSize ();
         jButton1.setSize (size);
         jButton1.setMinimumSize (size);
@@ -264,15 +261,15 @@ public class LauncherUI extends JFrame
                        " version " + System.getProperty ("java.version") + "</td></tr>";
         logger_text += "<tr><td><b>Vendor:&nbsp;</b></td><td>" + System.getProperty ("java.vendor") +
                        " " + System.getProperty ("java.vendor.url") + "</td></tr>";
-        logger_text += "<tr><td><b>Runtime:&nbsp;</b></td><td>" + System.getProperty ("java.runtime.name") +
-                       " (build " + System.getProperty ("java.runtime.version") + ")" + "</td></tr>";
+//        logger_text += "<tr><td><b>Runtime:&nbsp;</b></td><td>" + System.getProperty ("java.runtime.name") +
+//                       " (build " + System.getProperty ("java.runtime.version") + ")" + "</td></tr>";
         logger_text += "<tr><td><b>JVM:&nbsp;</b></td><td>" + java_vm_name +
                        "(build " + System.getProperty ("java.vm.version") +
                        ", " + System.getProperty ("java.vm.info") + ")" + "</td></tr>";
+        logger_text += "<tr><td><b>JDK home:&nbsp;</b></td><td>" + System.getProperty ("java.home") + "</td></tr>";
         logger_text += "<tr><td><b>Host:&nbsp;</b></td><td>" + hostname +
                        " (" + System.getProperty ("os.name") + " " + System.getProperty ("os.version") +
                        " " + System.getProperty ("os.arch") + ")</td></tr>";
-        logger_text += "<tr><td><b>JDK home:&nbsp;</b></td><td>" + System.getProperty ("java.home") + "</td></tr>";
         logger_text += "<tr><td><b>Sys home:&nbsp;</b></td><td>" + System.getProperty ("system.home") + "</td></tr>";
         logger_text += "</table>";
         jTextPane1.setText (logger_text);
@@ -453,7 +450,7 @@ public class LauncherUI extends JFrame
                 if (jButton1.getText ().equalsIgnoreCase ("start"))
                 {
                     print ("Starting Karaf... ");
-                    Launcher.newLauncher ().start (null);
+                    Launcher.newLauncher ().start (new String[] { "single" });
                     show_status (current_status = STATUS_STARTING);
                 }
                 else
@@ -520,82 +517,23 @@ public class LauncherUI extends JFrame
         {
             final BrowserLauncher launcher = new BrowserLauncher (null, err_handler);
 
-            //System.out.println ("Browser List: " + launcher.getBrowserList ());
-
             Thread thread = new Thread()
             {
                 public void run()
                 {
+                    String login_token = new Launcher ().getLoginToken ();
+                    String launch_url = (login_token == null)? url: url + "?token=" + login_token;
+
                     println ("Launching browser: <a href='" + url + "'>" + url + "</a>");
-                    launcher.openURLinBrowser (url);
+                    launcher.openURLinBrowser (launch_url);
                 }
             };
-
             thread.start();
         }
         catch (Exception e)
         {
             e.printStackTrace ();
         }
-    }
-
-    public static boolean isKarafRunning ()
-    {
-        int shutdown_port = 0;
-
-        String port_file = System.getProperty ("karaf.data") + "/port";
-
-        try
-        {
-            shutdown_port = getPortFromShutdownPortFile (port_file);
-        }
-        catch (FileNotFoundException fnfe)
-        {
-            return (false);
-        }
-        catch (IOException ioe)
-        {
-            return (false);
-        }
-
-        if (shutdown_port > 0)
-        {
-            Socket s = null;
-
-            try
-            {
-                s = new Socket(InetAddress.getLoopbackAddress (), shutdown_port);
-                return (s.isBound());
-            }
-            catch (Exception uhoh)
-            {
-                return (false);
-            }
-            finally
-            {
-                if (s != null)
-                {
-                    try
-                    {
-                        s.close();
-                    }
-                    catch (Exception ignore) {};
-                }
-            }
-        }
-
-        return (false);
-    }
-
-    private static int getPortFromShutdownPortFile(String portFile)
-        throws FileNotFoundException, IOException
-    {
-        int port;
-        BufferedReader r = new BufferedReader (new InputStreamReader (new FileInputStream (portFile)));
-        String portStr = r.readLine();
-        port = Integer.parseInt(portStr);
-        r.close();
-        return port;
     }
 
     public boolean isHttpRunning ()
@@ -654,6 +592,7 @@ public class LauncherUI extends JFrame
 
     public boolean isBootstrapFinished ()
     {
+        // TODO: MAKE PORT/HOST/ETC RECONFIGURABLE
         String status = http_request ("http://localhost:8181/bootstrap");
         return (status.contains ("bootstrap_finished=true"));
     }
@@ -673,35 +612,31 @@ public class LauncherUI extends JFrame
 
                     // When running, test http first to avoid "Invalid command '' received"
                     boolean http_running = isHttpRunning ();
-                    boolean karaf_running = http_running || isKarafRunning ();
 
                     // If Karaf http is available, check our bootstrap
                     if (current_status == STATUS_STARTING)
                     {
-                        if (karaf_running)
+                        if (http_running)
                         {
-                            if (!http_running && system_start_time == 0)
+                            if (system_start_time == 0)
                             {
                                 system_start_time = System.currentTimeMillis ();
                                 println ("Karaf ready");
                                 print ("Starting system components... ");
                             }
-                        }
 
-                        if (http_running && isBootstrapFinished ())
-                        {
-                            println ("System ready");
-                            new_status = STATUS_RUNNING;
+                            if (isBootstrapFinished ())
+                            {
+                                println ("System ready");
+                                new_status = STATUS_RUNNING;
+                            }
                         }
                     }
                     else if (current_status == STATUS_UNKNOWN)
                     {
-                        if (karaf_running)
+                        if (http_running && isBootstrapFinished ())
                         {
-                            if (http_running && isBootstrapFinished ())
-                            {
-                                new_status = STATUS_RUNNING;
-                            }
+                            new_status = STATUS_RUNNING;
                         }
                         else
                         {
@@ -710,20 +645,20 @@ public class LauncherUI extends JFrame
                     }
                     else
                     {
-                        if (!karaf_running)
+                        if (http_running)
+                        {
+                            if (current_status != STATUS_STOPPING)
+                            {
+                                new_status = STATUS_RUNNING;
+                            }
+                        }
+                        else
                         {
                             if (current_status == STATUS_STOPPING)
                             {
                                 println ("stopped");
                             }
                             new_status = STATUS_STOPPED;
-                        }
-                        else if (http_running)
-                        {
-                            if (current_status != STATUS_STOPPING)
-                            {
-                                new_status = STATUS_RUNNING;
-                            }
                         }
                     }
 

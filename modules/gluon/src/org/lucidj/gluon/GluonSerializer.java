@@ -16,10 +16,10 @@
 
 package org.lucidj.gluon;
 
-import org.lucidj.api.ClassManager;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.core.ClassManager;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
 import org.lucidj.gluon.serializers.DefaultArraySerializers;
 import org.lucidj.gluon.serializers.DefaultSerializers;
 import org.lucidj.gluon.serializers.GluonObjectSerializer;
@@ -33,9 +33,14 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Dictionary;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -55,9 +60,9 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class GluonSerializer implements SerializerEngine
 {
-    private final static transient Logger log = LoggerFactory.getLogger (GluonSerializer.class);
+    private final static Logger log = LoggerFactory.getLogger (GluonSerializer.class);
 
-    private HashMap<String, Serializer> serializer_lookup = new HashMap<> ();
+    private Map<String, Serializer> serializer_lookup = new ConcurrentHashMap<> ();
 
     @Context
     private BundleContext context;
@@ -281,6 +286,86 @@ public class GluonSerializer implements SerializerEngine
     }
 
     @Override
+    public Map<String, Object> getProperties (Reader reader)
+    {
+        GluonInstance instance = new GluonInstance (this);
+
+        try
+        {
+            GluonReader greader = new GluonReader (reader);
+
+            if (!greader.readRepresentation (instance))
+            {
+                return (null);
+            }
+        }
+        catch (IOException e)
+        {
+            log.error ("Exception reading {}", reader, e);
+        }
+
+        GluonUtil.dumpRepresentation (instance, "deserialize_properties.txt");
+
+        Map<String, Object> properties = new HashMap<> ();
+
+        for (String key: instance.getPropertyKeys ())
+        {
+            properties.put (key, instance.getProperty (key));
+        }
+
+        // List of all direct references to embedded object types
+        Set<String> embedded_types = new HashSet<> ();
+
+        // Always add the supertype as embedded object
+        GluonObject object_ref = (GluonObject)instance._getProperty (GluonConstants.OBJECT_CLASS);
+        embedded_types.add (object_ref.getClassName ());
+
+        // Add all embedded object types
+        for (GluonInstance entry: instance.getObjectEntries ())
+        {
+            if (instance.containsKey (GluonConstants.OBJECT_CLASS))
+            {
+                object_ref = (GluonObject)entry._getProperty (GluonConstants.OBJECT_CLASS);
+                embedded_types.add (object_ref.getClassName ());
+            }
+        }
+
+        // Store the embedded types extracted from serialization info
+        properties.put (SerializerEngine.EMBEDDED_TYPES,
+            embedded_types.toArray (new String [embedded_types.size ()]));
+        return (properties);
+    }
+
+    @Override
+    public Map<String, Object> getProperties (Path path)
+    {
+        Charset cs = Charset.forName ("UTF-8");
+        Reader reader = null;
+
+        try
+        {
+            reader = Files.newBufferedReader (path, cs);
+            return (getProperties (reader));
+        }
+        catch (Exception e)
+        {
+            log.info ("Exception on deserialization", e);
+            return (null);
+        }
+        finally
+        {
+            try
+            {
+                if (reader != null)
+                {
+                    reader.close();
+                }
+            }
+            catch (Exception ignore) {};
+        }
+    }
+
+    @Override
     public Object deserializeObject (Reader reader)
     {
         // TODO: HANDLE NULL HERE?
@@ -342,12 +427,28 @@ public class GluonSerializer implements SerializerEngine
     // Serializers registry
     //------------------------------------------------------------------------------------------------------
 
-    @Override
-    public boolean register (String type, Serializer serializer)
+    private boolean _register (String type, Serializer serializer)
     {
         log.debug ("{} register: {} => {}", this, type, serializer);
         serializer_lookup.put (type, serializer);
         return (true);
+    }
+
+    private boolean _register (Class type, Serializer serializer)
+    {
+        return (_register (type.getName (), serializer));
+    }
+
+    @Override
+    public boolean register (String type, Serializer serializer)
+    {
+
+        Bundle service_bundle = FrameworkUtil.getBundle (serializer.getClass ());
+        BundleContext service_context = service_bundle.getBundleContext ();
+        Dictionary<String, Object> props = new Hashtable<> ();
+        props.put ("@type", type);
+        service_context.registerService (Serializer.class.getName (), serializer, props);
+        return (_register (type, serializer));
     }
 
     @Override
@@ -422,23 +523,23 @@ public class GluonSerializer implements SerializerEngine
 //        register (Calendar.class, CalendarSerializer.class);
 //        register (Locale.class, LocaleSerializer.class);
 
-        register (GluonObject.class, new GluonObjectSerializer ());
-        register (NullType.class, new DefaultSerializers.NullSerializer ());
-        register (int.class, new DefaultSerializers.IntSerializer ());
-        register (Integer.class, new DefaultSerializers.IntSerializer ());
-        register (String.class, new DefaultSerializers.StringSerializer ());
-        register (float.class, new DefaultSerializers.FloatSerializer ());
-        register (Float.class, new DefaultSerializers.FloatSerializer ());
-        register (boolean.class, new DefaultSerializers.BooleanSerializer ());
-        register (Boolean.class, new DefaultSerializers.BooleanSerializer ());
-        register (byte.class, new DefaultSerializers.ByteSerializer ());
-        register (char.class, new DefaultSerializers.CharSerializer ());
-        register (short.class, new DefaultSerializers.ShortSerializer ());
-        register (long.class, new DefaultSerializers.LongSerializer ());
-        register (Long.class, new DefaultSerializers.LongSerializer ());
-        register (double.class, new DefaultSerializers.DoubleSerializer ());
-        register (Double.class, new DefaultSerializers.DoubleSerializer ());
-        register (Object[].class, new DefaultArraySerializers.ObjectArraySerializer ());
+        _register (GluonObject.class, new GluonObjectSerializer ());
+        _register (NullType.class, new DefaultSerializers.NullSerializer ());
+        _register (int.class, new DefaultSerializers.IntSerializer ());
+        _register (Integer.class, new DefaultSerializers.IntSerializer ());
+        _register (String.class, new DefaultSerializers.StringSerializer ());
+        _register (float.class, new DefaultSerializers.FloatSerializer ());
+        _register (Float.class, new DefaultSerializers.FloatSerializer ());
+        _register (boolean.class, new DefaultSerializers.BooleanSerializer ());
+        _register (Boolean.class, new DefaultSerializers.BooleanSerializer ());
+        _register (byte.class, new DefaultSerializers.ByteSerializer ());
+        _register (char.class, new DefaultSerializers.CharSerializer ());
+        _register (short.class, new DefaultSerializers.ShortSerializer ());
+        _register (long.class, new DefaultSerializers.LongSerializer ());
+        _register (Long.class, new DefaultSerializers.LongSerializer ());
+        _register (double.class, new DefaultSerializers.DoubleSerializer ());
+        _register (Double.class, new DefaultSerializers.DoubleSerializer ());
+        _register (Object[].class, new DefaultArraySerializers.ObjectArraySerializer ());
         log.info ("ObjectSerializer started");
     }
 

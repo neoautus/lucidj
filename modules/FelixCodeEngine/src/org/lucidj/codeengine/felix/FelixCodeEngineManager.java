@@ -16,20 +16,20 @@
 
 package org.lucidj.codeengine.felix;
 
-import org.lucidj.api.ClassManager;
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.CodeEngineBase;
-import org.lucidj.api.CodeEngineManager;
-import org.lucidj.api.CodeEngineProvider;
-import org.lucidj.api.ServiceBindingsManager;
+import org.lucidj.api.core.ClassManager;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.CodeEngineBase;
+import org.lucidj.api.core.CodeEngineManager;
+import org.lucidj.api.core.CodeEngineProvider;
+import org.lucidj.api.core.ServiceBindingsManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngineFactory;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -49,7 +49,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Provides
 public class FelixCodeEngineManager implements CodeEngineManager
 {
-    private final static transient Logger log = LoggerFactory.getLogger (FelixCodeEngineManager.class);
+    private final static Logger log = LoggerFactory.getLogger (FelixCodeEngineManager.class);
 
     private BundleTracker bundle_cleaner;
 
@@ -111,10 +111,9 @@ public class FelixCodeEngineManager implements CodeEngineManager
     }
 
     @Override
-    public List<String> getEngines ()
+    public Set<String> getEngines ()
     {
-        // TODO: Name+version
-        return null;
+        return (name_to_provider.keySet ());
     }
 
     @Override

@@ -867,8 +867,10 @@ define("ace/test/mockrenderer",["require","exports","module"], function(require,
 "use strict";
 
 var MockRenderer = exports.MockRenderer = function(visibleRowCount) {
-    this.container = document.createElement("div");
-    this.scroller = document.createElement("div");
+    if (typeof document == "object") {
+        this.container = document.createElement("div");
+        this.scroller = document.createElement("div");
+    }
     this.visibleRowCount = visibleRowCount || 20;
 
     this.layerConfig = {
@@ -1274,6 +1276,7 @@ var supportedModes = {
     Assembly_x86:["asm|a"],
     AutoHotKey:  ["ahk"],
     BatchFile:   ["bat|cmd"],
+    Bro:         ["bro"],
     C_Cpp:       ["cpp|c|cc|cxx|h|hh|hpp|ino"],
     C9Search:    ["c9search_results"],
     Cirru:       ["cirru|cr"],
@@ -1306,18 +1309,21 @@ var supportedModes = {
     Glsl:        ["glsl|frag|vert"],
     Gobstones:   ["gbs"],
     golang:      ["go"],
+    GraphQLSchema: ["gql"],
     Groovy:      ["groovy"],
     HAML:        ["haml"],
     Handlebars:  ["hbs|handlebars|tpl|mustache"],
     Haskell:     ["hs"],
+    Haskell_Cabal:     ["cabal"],
     haXe:        ["hx"],
+    Hjson:       ["hjson"],
     HTML:        ["html|htm|xhtml"],
     HTML_Elixir: ["eex|html.eex"],
     HTML_Ruby:   ["erb|rhtml|html.erb"],
     INI:         ["ini|conf|cfg|prefs"],
     Io:          ["io"],
     Jack:        ["jack"],
-    Jade:        ["jade"],
+    Jade:        ["jade|pug"],
     Java:        ["java"],
     JavaScript:  ["js|jsm|jsx"],
     JSON:        ["json"],
@@ -1325,8 +1331,8 @@ var supportedModes = {
     JSP:         ["jsp"],
     JSX:         ["jsx"],
     Julia:       ["jl"],
+    Kotlin:      ["kt|kts"],
     LaTeX:       ["tex|latex|ltx|bib"],
-    Lean:        ["lean|hlean"],
     LESS:        ["less"],
     Liquid:      ["liquid"],
     Lisp:        ["lisp"],
@@ -1352,6 +1358,7 @@ var supportedModes = {
     Perl:        ["pl|pm"],
     pgSQL:       ["pgsql"],
     PHP:         ["php|phtml|shtml|php3|php4|php5|phps|phpt|aw|ctp|module"],
+    Pig:         ["pig"],
     Powershell:  ["ps1"],
     Praat:       ["praat|praatscript|psc|proc"],
     Prolog:      ["plg|prolog"],
@@ -1359,7 +1366,7 @@ var supportedModes = {
     Protobuf:    ["proto"],
     Python:      ["py"],
     R:           ["r"],
-    Razor:       ["cshtml"],
+    Razor:       ["cshtml|asp"],
     RDoc:        ["Rd"],
     RHTML:       ["Rhtml"],
     RST:         ["rst"],
@@ -1386,9 +1393,9 @@ var supportedModes = {
     Text:        ["txt"],
     Textile:     ["textile"],
     Toml:        ["toml"],
+    TSX:         ["tsx"],
     Twig:        ["twig|swig"],
     Typescript:  ["ts|typescript|str"],
-    TSX:         ["tsx"],
     Vala:        ["vala"],
     VBScript:    ["vbs|vb"],
     Velocity:    ["vm"],
@@ -1997,6 +2004,7 @@ var themeData = [
     ["Clouds Midnight"      ,"clouds_midnight"         ,  "dark"],
     ["Cobalt"               ,"cobalt"                  ,  "dark"],
     ["Gruvbox"              ,"gruvbox"                 ,  "dark"],
+    ["Green on Black"       ,"gob"                     ,  "dark"],
     ["idle Fingers"         ,"idle_fingers"            ,  "dark"],
     ["krTheme"              ,"kr_theme"                ,  "dark"],
     ["Merbivore"            ,"merbivore"               ,  "dark"],
@@ -3735,17 +3743,15 @@ define("ace/keyboard/vim",["require","exports","module","ace/range","ace/lib/eve
     return this.ace.inVirtualSelectionMode && this.ace.selection.index;
   };
   this.onChange = function(delta) {
-    if (delta.action[0] == 'i') {
-      var change = { text: delta.lines };
-      var curOp = this.curOp = this.curOp || {};
-      if (!curOp.changeHandlers)
-        curOp.changeHandlers = this._eventRegistry["change"] && this._eventRegistry["change"].slice();
-      if (this.virtualSelectionMode()) return;
-      if (!curOp.lastChange) {
-        curOp.lastChange = curOp.change = change;
-      } else {
-        curOp.lastChange.next = curOp.lastChange = change;
-      }
+    var change = { text: delta.action[0] == 'i' ? delta.lines : [] };
+    var curOp = this.curOp = this.curOp || {};
+    if (!curOp.changeHandlers)
+      curOp.changeHandlers = this._eventRegistry["change"] && this._eventRegistry["change"].slice();
+    if (this.virtualSelectionMode()) return;
+    if (!curOp.lastChange) {
+      curOp.lastChange = curOp.change = change;
+    } else {
+      curOp.lastChange.next = curOp.lastChange = change;
     }
     this.$updateMarkers(delta);
   };
@@ -5071,8 +5077,12 @@ dom.importCssString(".normal-mode .ace_cursor{\
 
           if (lastInsertModeKeyTimer) { window.clearTimeout(lastInsertModeKeyTimer); }
           if (keysAreChars) {
-            var here = cm.getCursor();
-            cm.replaceRange('', offsetCursor(here, 0, -(keys.length - 1)), here, '+input');
+            var selections = cm.listSelections();
+            for (var i = 0; i < selections.length; i++) {
+              var here = selections[i].head;
+              cm.replaceRange('', offsetCursor(here, 0, -(keys.length - 1)), here, '+input');
+            }
+            vimGlobalState.macroModeState.lastInsertModeChanges.changes.pop();
           }
           clearInputState(cm);
           return match.command;
@@ -5344,7 +5354,9 @@ dom.importCssString(".normal-mode .ace_cursor{\
           }
         }
         if (bestMatch.keys.slice(-11) == '<character>') {
-          inputState.selectedCharacter = lastChar(keys);
+          var character = lastChar(keys);
+          if (/<C-.>/.test(character)) return {type: 'none'};
+          inputState.selectedCharacter = character;
         }
         return {type: 'full', command: bestMatch};
       },
@@ -8104,7 +8116,6 @@ dom.importCssString(".normal-mode .ace_cursor{\
             }
           }
         }
-        throw Error('No such mapping.');
       }
     };
 
@@ -8603,6 +8614,8 @@ dom.importCssString(".normal-mode .ace_cursor{\
       cm.setCursor(cm.getCursor().line, cm.getCursor().ch-1);
       cm.setOption('keyMap', 'vim');
       cm.setOption('disableInput', true);
+      
+      lastChange.overwrite = cm.state.overwrite;
       cm.toggleOverwrite(false); // exit replace mode if we were in it.
       insertModeChangeRegister.setText(lastChange.changes.join(''));
       CodeMirror.signal(cm, "vim-mode-change", {mode: "normal"});
@@ -8715,6 +8728,10 @@ dom.importCssString(".normal-mode .ace_cursor{\
           if (changeObj.origin == '+input' || changeObj.origin == 'paste'
               || changeObj.origin === undefined /* only in testing */) {
             var text = changeObj.text.join('\n');
+            if (lastChange.maybeReset) {
+              lastChange.changes = [];
+              lastChange.maybeReset = false;
+            }
             lastChange.changes.push(text);
           }
           changeObj = changeObj.next;
@@ -8730,7 +8747,7 @@ dom.importCssString(".normal-mode .ace_cursor{\
         if (lastChange.expectCursorActivityForChange) {
           lastChange.expectCursorActivityForChange = false;
         } else {
-          lastChange.changes = [];
+          lastChange.maybeReset = true;
         }
       } else if (!cm.curOp.isVimOp) {
         handleExternalSelection(cm, vim);
@@ -8782,6 +8799,10 @@ dom.importCssString(".normal-mode .ace_cursor{\
       var keyName = CodeMirror.keyName(e);
       if (!keyName) { return; }
       function onKeyFound() {
+        if (lastChange.maybeReset) {
+          lastChange.changes = [];
+          lastChange.maybeReset = false;
+        }
         lastChange.changes.push(new InsertModeKey(keyName));
         return true;
       }
@@ -8805,7 +8826,7 @@ dom.importCssString(".normal-mode .ace_cursor{\
         if (macroModeState.lastInsertModeChanges.changes.length > 0) {
           repeat = !vim.lastEditActionCommand ? 1 : repeat;
           var changeObject = macroModeState.lastInsertModeChanges;
-          repeatInsertModeChanges(cm, changeObject.changes, repeat);
+          repeatInsertModeChanges(cm, changeObject.changes, repeat, changeObject.overwrite);
         }
       }
       vim.inputState = vim.lastEditInputState;
@@ -8827,7 +8848,7 @@ dom.importCssString(".normal-mode .ace_cursor{\
       macroModeState.isPlaying = false;
     }
 
-    function repeatInsertModeChanges(cm, changes, repeat) {
+    function repeatInsertModeChanges(cm, changes, repeat, overwrite) {
       function keyHandler(binding) {
         if (typeof binding == 'string') {
           CodeMirror.commands[binding](cm);
@@ -8856,7 +8877,11 @@ dom.importCssString(".normal-mode .ace_cursor{\
             CodeMirror.lookupKey(change.keyName, 'vim-insert', keyHandler);
           } else {
             var cur = cm.getCursor();
-            cm.replaceRange(change, cur, cur);
+            var end = cur;
+            if (overwrite && !/\n/.test(change)) {
+              end = offsetCursor(cur, 0, change.length);
+            }
+            cm.replaceRange(change, cur, end);
           }
         }
       }
@@ -9492,6 +9517,7 @@ var SnippetManager = function() {
         if (cursor.column < indentString.length)
             indentString = indentString.slice(0, cursor.column);
 
+        snippetText = snippetText.replace(/\r/g, "");
         var tokens = this.tokenizeTmSnippet(snippetText);
         tokens = this.resolveVariables(tokens, editor);
         tokens = tokens.map(function(x) {
@@ -9569,9 +9595,10 @@ var SnippetManager = function() {
         var text = "";
         tokens.forEach(function(t) {
             if (typeof t === "string") {
-                if (t[0] === "\n"){
-                    column = t.length - 1;
-                    row ++;
+                var lines = t.split("\n");
+                if (lines.length > 1){
+                    column = lines[lines.length - 1].length;
+                    row += lines.length - 1;
                 } else
                     column += t.length;
                 text += t;
@@ -10153,7 +10180,7 @@ var Editor = require("./editor").Editor;
 
 });
 
-define("ace/ext/emmet",["require","exports","module","ace/keyboard/hash_handler","ace/editor","ace/snippets","ace/range","resources","resources","range","tabStops","resources","utils","actions","ace/config","ace/config"], function(require, exports, module) {
+define("ace/ext/emmet",["require","exports","module","ace/keyboard/hash_handler","ace/editor","ace/snippets","ace/range","resources","resources","tabStops","resources","utils","actions","ace/config","ace/config"], function(require, exports, module) {
 "use strict";
 var HashHandler = require("ace/keyboard/hash_handler").HashHandler;
 var Editor = require("ace/editor").Editor;
@@ -10168,7 +10195,8 @@ AceEmmetEditor.prototype = {
         this.indentation = editor.session.getTabString();
         if (!emmet)
             emmet = window.emmet;
-        emmet.require("resources").setVariable("indentation", this.indentation);
+        var resources = emmet.resources || emmet.require("resources");
+        resources.setVariable("indentation", this.indentation);
         this.$syntax = null;
         this.$syntax = this.getSyntax();
     },
@@ -10248,13 +10276,14 @@ AceEmmetEditor.prototype = {
         return syntax;
     },
     getProfileName: function() {
+        var resources = emmet.resources || emmet.require("resources");
         switch (this.getSyntax()) {
           case "css": return "css";
           case "xml":
           case "xsl":
             return "xml";
           case "html":
-            var profile = emmet.require("resources").getVariable("profile");
+            var profile = resources.getVariable("profile");
             if (!profile)
                 profile = this.ace.session.getLines(0,2).join("").search(/<!DOCTYPE[^>]+XHTML/i) != -1 ? "xhtml": "html";
             return profile;
@@ -10276,9 +10305,9 @@ AceEmmetEditor.prototype = {
         var base = 1000;
         var zeroBase = 0;
         var lastZero = null;
-        var range = emmet.require('range');
-        var ts = emmet.require('tabStops');
-        var settings = emmet.require('resources').getVocabulary("user");
+        var ts = emmet.tabStops || emmet.require('tabStops');
+        var resources = emmet.resources || emmet.require("resources");
+        var settings = resources.getVocabulary("user");
         var tabstopOptions = {
             tabstop: function(data) {
                 var group = parseInt(data.group, 10);
@@ -10296,7 +10325,7 @@ AceEmmetEditor.prototype = {
                 var result = '${' + group + (placeholder ? ':' + placeholder : '') + '}';
 
                 if (isZero) {
-                    lastZero = range.create(data.start, result);
+                    lastZero = [data.start, result];
                 }
 
                 return result;
@@ -10313,7 +10342,8 @@ AceEmmetEditor.prototype = {
         if (settings.variables['insert_final_tabstop'] && !/\$\{0\}$/.test(value)) {
             value += '${0}';
         } else if (lastZero) {
-            value = emmet.require('utils').replaceSubstring(value, '${0}', lastZero);
+            var common = emmet.utils ? emmet.utils.common : emmet.require('utils');
+            value = common.replaceSubstring(value, '${0}', lastZero[0], lastZero[1]);
         }
         
         return value;
@@ -10352,7 +10382,7 @@ exports.commands = new HashHandler();
 exports.runEmmetCommand = function runEmmetCommand(editor) {
     try {
         editorProxy.setupContext(editor);
-        var actions = emmet.require("actions");
+        var actions = emmet.actions || emmet.require("actions");
     
         if (this.action == "expand_abbreviation_with_tab") {
             if (!editor.selection.isEmpty())
@@ -10948,7 +10978,7 @@ var Autocomplete = function() {
     this.blurListener = function(e) {
         var el = document.activeElement;
         var text = this.editor.textInput.getElement();
-        var fromTooltip = e.relatedTarget && e.relatedTarget == this.tooltipNode;
+        var fromTooltip = e.relatedTarget && this.tooltipNode.contains(e.relatedTarget);
         var container = this.popup && this.popup.container;
         if (el != text && el.parentNode != container && !fromTooltip
             && el != this.tooltipNode && e.relatedTarget != text
@@ -11029,7 +11059,6 @@ var Autocomplete = function() {
         var session = editor.getSession();
         var pos = editor.getCursorPosition();
 
-        var line = session.getLine(pos.row);
         var prefix = util.getCompletionPrefix(editor);
 
         this.base = session.doc.createAnchor(pos.row, pos.column - prefix.length);
@@ -11041,10 +11070,8 @@ var Autocomplete = function() {
             completer.getCompletions(editor, session, pos, prefix, function(err, results) {
                 if (!err && results)
                     matches = matches.concat(results);
-                var pos = editor.getCursorPosition();
-                var line = session.getLine(pos.row);
                 callback(null, {
-                    prefix: prefix,
+                    prefix: util.getCompletionPrefix(editor),
                     matches: matches,
                     finished: (--total === 0)
                 });
@@ -11157,6 +11184,7 @@ var Autocomplete = function() {
             this.tooltipNode.style.pointerEvents = "auto";
             this.tooltipNode.tabIndex = -1;
             this.tooltipNode.onblur = this.blurListener.bind(this);
+            this.tooltipNode.onclick = this.onTooltipClick.bind(this);
         }
 
         var tooltipNode = this.tooltipNode;
@@ -11193,6 +11221,18 @@ var Autocomplete = function() {
         if (el.parentNode)
             el.parentNode.removeChild(el);
     };
+    
+    this.onTooltipClick = function(e) {
+        var a = e.target;
+        while (a && a != this.tooltipNode) {
+            if (a.nodeName == "A" && a.href) {
+                a.rel = "noreferrer";
+                a.target = "_blank";
+                break;
+            }
+            a = a.parentNode;
+        }
+    }
 
 }).call(Autocomplete.prototype);
 
@@ -12080,6 +12120,7 @@ var showHScrollEl = document.getElementById("show_hscroll");
 var showVScrollEl = document.getElementById("show_vscroll");
 var animateScrollEl = document.getElementById("animate_scroll");
 var softTabEl = document.getElementById("soft_tab");
+var navigateWithinSoftTabEl = document.getElementById("navigate_within_soft_tab");
 var behavioursEl = document.getElementById("enable_behaviours");
 
 fillDropdown(docEl, doclist.all);
@@ -12149,6 +12190,7 @@ function updateUIEditorOptions() {
     saveOption(showHScrollEl, editor.renderer.getHScrollBarAlwaysVisible());
     saveOption(animateScrollEl, editor.getAnimatedScroll());
     saveOption(softTabEl, session.getUseSoftTabs());
+    saveOption(navigateWithinSoftTabEl, session.getNavigateWithinSoftTabs());
     saveOption(behavioursEl, editor.getBehavioursEnabled());
 }
 
@@ -12241,6 +12283,10 @@ bindCheckbox("animate_scroll", function(checked) {
 
 bindCheckbox("soft_tab", function(checked) {
     env.editor.session.setUseSoftTabs(checked);
+});
+
+bindCheckbox("navigate_within_soft_tab", function(checked) {
+    env.editor.session.setNavigateWithinSoftTabs(checked);
 });
 
 bindCheckbox("enable_behaviours", function(checked) {

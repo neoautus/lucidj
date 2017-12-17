@@ -16,7 +16,7 @@
 
 package org.lucidj.eventhelper;
 
-import org.lucidj.api.EventHelper;
+import org.lucidj.api.core.EventHelper;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;

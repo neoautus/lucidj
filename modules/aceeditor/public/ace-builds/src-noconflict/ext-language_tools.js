@@ -243,6 +243,7 @@ var SnippetManager = function() {
         if (cursor.column < indentString.length)
             indentString = indentString.slice(0, cursor.column);
 
+        snippetText = snippetText.replace(/\r/g, "");
         var tokens = this.tokenizeTmSnippet(snippetText);
         tokens = this.resolveVariables(tokens, editor);
         tokens = tokens.map(function(x) {
@@ -320,9 +321,10 @@ var SnippetManager = function() {
         var text = "";
         tokens.forEach(function(t) {
             if (typeof t === "string") {
-                if (t[0] === "\n"){
-                    column = t.length - 1;
-                    row ++;
+                var lines = t.split("\n");
+                if (lines.length > 1){
+                    column = lines[lines.length - 1].length;
+                    row += lines.length - 1;
                 } else
                     column += t.length;
                 text += t;
@@ -1390,7 +1392,7 @@ var Autocomplete = function() {
     this.blurListener = function(e) {
         var el = document.activeElement;
         var text = this.editor.textInput.getElement();
-        var fromTooltip = e.relatedTarget && e.relatedTarget == this.tooltipNode;
+        var fromTooltip = e.relatedTarget && this.tooltipNode.contains(e.relatedTarget);
         var container = this.popup && this.popup.container;
         if (el != text && el.parentNode != container && !fromTooltip
             && el != this.tooltipNode && e.relatedTarget != text
@@ -1471,7 +1473,6 @@ var Autocomplete = function() {
         var session = editor.getSession();
         var pos = editor.getCursorPosition();
 
-        var line = session.getLine(pos.row);
         var prefix = util.getCompletionPrefix(editor);
 
         this.base = session.doc.createAnchor(pos.row, pos.column - prefix.length);
@@ -1483,10 +1484,8 @@ var Autocomplete = function() {
             completer.getCompletions(editor, session, pos, prefix, function(err, results) {
                 if (!err && results)
                     matches = matches.concat(results);
-                var pos = editor.getCursorPosition();
-                var line = session.getLine(pos.row);
                 callback(null, {
-                    prefix: prefix,
+                    prefix: util.getCompletionPrefix(editor),
                     matches: matches,
                     finished: (--total === 0)
                 });
@@ -1599,6 +1598,7 @@ var Autocomplete = function() {
             this.tooltipNode.style.pointerEvents = "auto";
             this.tooltipNode.tabIndex = -1;
             this.tooltipNode.onblur = this.blurListener.bind(this);
+            this.tooltipNode.onclick = this.onTooltipClick.bind(this);
         }
 
         var tooltipNode = this.tooltipNode;
@@ -1635,6 +1635,18 @@ var Autocomplete = function() {
         if (el.parentNode)
             el.parentNode.removeChild(el);
     };
+    
+    this.onTooltipClick = function(e) {
+        var a = e.target;
+        while (a && a != this.tooltipNode) {
+            if (a.nodeName == "A" && a.href) {
+                a.rel = "noreferrer";
+                a.target = "_blank";
+                break;
+            }
+            a = a.parentNode;
+        }
+    }
 
 }).call(Autocomplete.prototype);
 

@@ -16,73 +16,58 @@
 
 package org.lucidj.smartbox;
 
-import org.lucidj.api.CodeContext;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ComponentState;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ObjectManager;
-import org.lucidj.api.ObjectManagerProperty;
-import org.lucidj.console.Console;
+import org.lucidj.api.core.CodeContext;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ComponentState;
+import org.lucidj.api.core.DisplayManager;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceObject;
+import org.lucidj.api.core.Stdio;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.ui.AbstractComponent;
-
 import java.util.HashMap;
 
-public class SmartBox implements ManagedObject, ComponentInterface, ObjectManagerProperty, ComponentState
+public class SmartBox implements ComponentInterface, ComponentState
 {
-    private final static transient Logger log = LoggerFactory.getLogger (SmartBox.class);
-
-    private final SmartBox self = this;
+    private final static Logger log = LoggerFactory.getLogger (SmartBox.class);
 
     private int component_state = ACTIVE;
     private ComponentState.ChangeListener state_listener;
 
     private HashMap<String, Object> properties = new HashMap<>();
 
-    private ObjectManager om;
+    private DisplayManager displayManager;
 
     private String code = "";
 
-    // TODO: GET RID OF THESE DEPENDENCIES!!!
-    private Console console;
+    private Stdio console;
 
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
     private CodeEngine code_engine;
     private CodeContext code_context;
 
-    public SmartBox ()
+    public SmartBox (ServiceContext serviceContext)
     {
-//        init ();
-    }
+        this.serviceContext = serviceContext;
 
-    public SmartBox (ManagedObjectFactory objectFactory)
-    {
-        this.objectFactory = objectFactory;
-        log.info ("objectFactory = {}", objectFactory);
-
-        // Create our own ObjectManager
-        ManagedObjectInstance om_instance = objectFactory.newInstance (ObjectManager.class, null);
-        om = om_instance.adapt (ObjectManager.class);
+        // Create our own DisplayManager
+        displayManager = serviceContext.newServiceObject (DisplayManager.class);
     }
 
     // TODO: DECOUPLE THESE OBJECTS INTO PLUGGABLE STRUCTURES
-    private Console get_console (boolean show)
+    private Stdio get_console (boolean show)
     {
         if (console == null)
         {
-            ManagedObjectInstance console_instance = objectFactory.newInstance (Console.class, null);
-            console = console_instance.adapt (Console.class);
+            console = serviceContext.newServiceObject (Stdio.class);
         }
 
-        if (show && om.getObject (Console.class.getCanonicalName ()) == null)
+        if (show && displayManager.getObject (Stdio.class.getCanonicalName ()) == null)
         {
-            om.showObject (console);
-            om.setObjectTag (console, Console.class.getCanonicalName ());
+            displayManager.showObject (console);
+            displayManager.setObjectTag (console, Stdio.class.getCanonicalName ());
         }
 
         return (console);
@@ -102,13 +87,13 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
             @Override
             public void stdoutPrint (String str)
             {
-                get_console (true).output ("OUT", str);
+                get_console (true).stdout (str);
             }
 
             @Override
             public void stderrPrint (String str)
             {
-                get_console (true).output ("ERR", str);
+                get_console (true).stderr (str);
             }
 
             @Override
@@ -118,30 +103,25 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
 
                 // When the returned object is a visual component,
                 // it is added automatically on the object output
-                if (svcObject instanceof AbstractComponent)
+                if (displayManager.getObject (svcName) == null && displayManager.showAutoDisplay (svcObject))
                 {
-                    if (om.getObject (svcName) == null)
-                    {
-                        log.info ("fetchService: will show");
-                        om.showObject (svcObject);
-                        om.setObjectTag (svcObject, svcName);
-                    }
+                    displayManager.setObjectTag (svcObject, svcName);
                 }
             }
 
             @Override
             public void outputObject (Object obj)
             {
-                om.showObject (obj);
+                displayManager.showObject (obj);
             }
 
             @Override
             public void started ()
             {
-                // Set proper ObjectManager and SmartBox _inside_ the new running thread
-                show.setObjectManager (om);
+                // Set proper DisplayManager and SmartBox _inside_ the new running thread
+//                show.setObjectManager (displayManager);
 //                    Pipe.setComponentContext (self);          ---
-                pragma.setSmartBox (self);
+//                pragma.setSmartBox (self);
                 setState (RUNNING);
             }
 
@@ -154,7 +134,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
                 {
                     Object obj = code_context.getOutput ();
 
-                    om.showObject (obj);
+                    displayManager.showObject (obj);
 
                     if (obj instanceof Throwable)
                     {
@@ -171,7 +151,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
                 }
 
                 // Release screen update if not already done
-                om.release ();
+                displayManager.release ();
 
                 // TODO: ADD LATER SOME AUTO UPDATE
                 //update_pragmas ();
@@ -182,10 +162,8 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     private void eventhandler_run ()
     {
         log.info (">>> RUN {}", code);
-        get_console (false).clear ();
-//        get_vaadin (false).removeAllComponents ();
-        om.restrain ();
-        om.clearObjects ();
+        displayManager.restrain ();
+        displayManager.clearObjects ();
         code_engine.exec (code, null);
     }
 
@@ -234,7 +212,7 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
     {
 //        if (Pipe.PIPE_PROPERTY_NAME.equals (name))        // ---
 //        {
-//            return (om);
+//            return (displayManager);
 //        }
         return (properties.get (name));
     }
@@ -256,10 +234,9 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         return (code);
     }
 
-    @Override // ObjectManagerProperty
-    public ObjectManager getObjectManager ()
+    public DisplayManager _getDisplayManager ()
     {
-        return (om);
+        return (displayManager);
     }
 
     @Override
@@ -310,14 +287,14 @@ public class SmartBox implements ManagedObject, ComponentInterface, ObjectManage
         state_listener = listener;
     }
 
-    @Override // ManagedObject
-    public void validate (ManagedObjectInstance instance)
+    @ServiceObject.Validate
+    public void validate ()
     {
         // Nothing for now
     }
 
-    @Override // ManagedObject
-    public void invalidate (ManagedObjectInstance instance)
+    @ServiceObject.Invalidate
+    public void invalidate ()
     {
         // Nothing for now
     }

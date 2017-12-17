@@ -16,7 +16,7 @@
 
 package org.lucidj.gluon.serializers;
 
-import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.core.SerializerInstance;
 import org.lucidj.gluon.GluonObject;
 import org.lucidj.gluon.GluonPrimitive;
 

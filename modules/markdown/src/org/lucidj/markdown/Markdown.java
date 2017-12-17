@@ -21,7 +21,7 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.html.HtmlRenderer;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
-import org.lucidj.api.ComponentInterface;
+import org.lucidj.api.core.ComponentInterface;
 
 import java.util.Arrays;
 import java.util.HashMap;

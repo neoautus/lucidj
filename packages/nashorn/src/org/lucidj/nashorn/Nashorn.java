@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,7 +16,7 @@
 
 package org.lucidj.nashorn;
 
-import org.lucidj.api.CodeEngineManager;
+import org.lucidj.api.core.CodeEngineManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ import org.apache.felix.ipojo.annotations.Validate;
 @Instantiate
 public class Nashorn
 {
-    private final static transient Logger log = LoggerFactory.getLogger (Nashorn.class);
+    private final static Logger log = LoggerFactory.getLogger (Nashorn.class);
 
     @Requires
     private CodeEngineManager engineManager;

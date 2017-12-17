@@ -16,28 +16,25 @@
 
 package org.lucidj.renderer;
 
-import org.lucidj.api.Aggregate;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ObjectRenderer;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererFactory;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.vui.ObjectRenderer;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.vui.RendererFactory;
+import org.lucidj.api.vui.RendererProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Label;
+import com.vaadin.ui.UI;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 import org.apache.felix.ipojo.annotations.Bind;
+import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
@@ -46,92 +43,75 @@ import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@org.apache.felix.ipojo.annotations.Component (immediate = true, publicFactory = false)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class DefaultRendererFactory implements RendererFactory
 {
-    private final transient static Logger log = LoggerFactory.getLogger (DefaultObjectRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (DefaultRendererFactory.class);
 
-    private Object source;
-    private ServiceReference<Renderer> current_service;
-    private Renderer current_renderer;
-    private Component current_component;
-    private Label default_component;
-
-    private HashMap<String, RendererProvider> renderer_providers = new HashMap<> ();
-    private HashMap<ManagedObjectInstance, Renderer> renderer_instances = new HashMap<> ();
+    private List<RendererProvider> renderer_providers = new ArrayList<> ();
+    private Map<DefaultObjectRenderer, RendererProvider> renderer_mapping = new HashMap<> ();
 
     @Context
     private BundleContext ctx;
 
     @Requires
-    private ManagedObjectFactory object_factory;
-
-//    @Override // ServiceTrackerCustomizer
-//    public Renderer addingService (ServiceReference<Renderer> serviceReference)
-//    {
-//        Renderer renderer = ctx.getService (serviceReference);
-//        renderer_map.put (serviceReference, renderer);
-//
-//        log.info ("addingService: {}: {}", serviceReference, renderer);
-//
-//        if (source != null && renderer.compatibleObject (source))
-//        {
-//            safe_apply_renderer (serviceReference, source);
-//        }
-//
-//        // We need to return the object in order to track it
-//        return (renderer);
-//    }
-//
-//    @Override // ServiceTrackerCustomizer
-//    public void modifiedService (ServiceReference<Renderer> serviceReference, Renderer renderer)
-//    {
-//        log.info ("modifiedService: {}: {}", serviceReference, renderer);
-//        renderer_map.put (serviceReference, renderer);
-//        // TODO: REPLACE OLD RENDERER
-//    }
-//
-//    @Override // ServiceTrackerCustomizer
-//    public void removedService (ServiceReference<Renderer> serviceReference, Renderer renderer)
-//    {
-//        // TODO: CLEAR OBSERVERS
-//        ctx.ungetService (serviceReference);
-//        renderer_map.remove (serviceReference);
-//
-//        if (source != null && renderer.compatibleObject (source))
-//        {
-//            safe_apply_renderer (null, source);
-//        }
-//
-//        log.info ("removedService: {}: {}", serviceReference, renderer);
-//    }
+    private ServiceContext serviceContext;
 
     @Override // RendererFactory
     public ObjectRenderer newRenderer ()
     {
-        ManagedObjectInstance view_instance = object_factory.wrapObject (new DefaultObjectRenderer (this));
-        return (view_instance.adapt (ObjectRenderer.class));
+        return (newRenderer (null));
     }
 
     @Override // RendererFactory
-    public Renderer getCompatibleRenderer (Object object)
+    public ObjectRenderer newRenderer (Object object)
+    {
+        ObjectRenderer new_renderer = serviceContext.wrapObject (ObjectRenderer.class, new DefaultObjectRenderer (this));
+
+        if (object != null)
+        {
+            new_renderer.link (object);
+        }
+        return (new_renderer);
+    }
+
+    public Renderer locateAndBindRenderer (DefaultObjectRenderer mapper, Object object)
     {
         log.info ("getCompatibleRenderer ({})", object);
 
-        for (Map.Entry<String, RendererProvider> provider: renderer_providers.entrySet ())
+        if (object instanceof UI)
         {
-            for (Object aspect: Aggregate.get (object))
-            {
-                Renderer renderer = provider.getValue ().getCompatibleRenderer (aspect);
+            // Never render Vaadin UI. Replace with something interesting.
+            return (null);
+        }
 
-                if (renderer != null)
+        for (RendererProvider provider: renderer_providers)
+        {
+            Renderer renderer = null;
+            Object source = object;
+
+            // First check if the renderer support aggregated objects
+            if ((renderer = provider.getCompatibleRenderer (object)) == null)
+            {
+                // Or look for a suitable renderer for each aggregate object
+                for (Object element: Aggregate.elements (object))
                 {
-                    // Link the aspect to the renderer
-                    renderer.objectLinked (aspect);
-                    return (renderer);
+                    if ((renderer = provider.getCompatibleRenderer (element)) != null)
+                    {
+                        source = element;
+                        break;
+                    }
                 }
+            }
+
+            if (renderer != null)
+            {
+                // Link the element to the renderer
+                renderer_mapping.put (mapper, provider);
+                renderer.objectLinked (source);
+                return (renderer);
             }
         }
         return (null);
@@ -140,24 +120,18 @@ public class DefaultRendererFactory implements RendererFactory
     @Bind (aggregate=true, optional=true, specification = RendererProvider.class)
     private void bindRenderer (RendererProvider provider)
     {
-        log.info ("Adding renderer: {}", provider);
-        renderer_providers.put (provider.toString (), provider);
-    }
+        log.info ("===> Adding renderer provider: {}", provider);
+        renderer_providers.add (provider);
 
-    private void clear_renderer_provider_by_bundle (Bundle bnd)
-    {
-        Iterator<Map.Entry<String, RendererProvider>> it = renderer_providers.entrySet ().iterator ();
+        DefaultObjectRenderer[] active_renderers =
+            renderer_mapping.keySet ().toArray (new DefaultObjectRenderer [0]);
 
-        while (it.hasNext ())
+        for (DefaultObjectRenderer renderer: active_renderers)
         {
-            Map.Entry<String, RendererProvider> entry = it.next ();
-
-            if (FrameworkUtil.getBundle (entry.getValue ().getClass ()) == bnd)
+            if (renderer_mapping.get (renderer) == null)
             {
-                // TODO: UPDATE ALL RENDERERS
-
-                log.info ("Removing renderer provider: {} for {}", entry.getValue (), entry.getKey ());
-                it.remove ();
+                log.info ("===> refreshing {}", renderer);
+                renderer.refreshRenderer ();
             }
         }
     }
@@ -165,14 +139,28 @@ public class DefaultRendererFactory implements RendererFactory
     @Unbind
     private void unbindRenderer (RendererProvider provider)
     {
-        clear_renderer_provider_by_bundle (FrameworkUtil.getBundle (provider.getClass ()));
-        log.info ("Removed renderer provider: {}", provider);
+        log.info ("===> Removing renderer provider: {}", provider);
+        renderer_providers.remove (provider);
+
+        DefaultObjectRenderer[] active_renderers =
+                renderer_mapping.keySet ().toArray (new DefaultObjectRenderer [0]);
+
+        for (DefaultObjectRenderer renderer: active_renderers)
+        {
+            if (renderer_mapping.get (renderer) == provider)
+            {
+                log.info ("===> refreshing {} / {}", renderer, renderer_mapping.get (renderer));
+                renderer_mapping.replace (renderer, null);
+                renderer.refreshRenderer ();
+            }
+        }
     }
 
     @Validate
     private void validate ()
     {
         log.info ("ObjectRenderer started");
+        serviceContext.register (DefaultObjectRenderer.class);
     }
 
     @Invalidate

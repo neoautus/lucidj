@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,10 +16,9 @@
 
 package org.lucidj.top;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.MenuInstance;
-import org.lucidj.api.MenuProvider;
+import org.lucidj.api.core.MenuInstance;
+import org.lucidj.api.core.MenuProvider;
+import org.lucidj.api.core.ServiceContext;
 
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
@@ -31,8 +30,9 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
-@Component
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class Top implements MenuProvider, ViewProvider
@@ -40,7 +40,7 @@ public class Top implements MenuProvider, ViewProvider
     private final static String NAVID = "top";
 
     @Requires
-    private ManagedObjectFactory object_factory;
+    private ServiceContext serviceContext;
 
     @Override // MenuProvider
     public Map<String, Object> getProperties ()
@@ -69,10 +69,15 @@ public class Top implements MenuProvider, ViewProvider
     {
         if (NAVID.equals (s))
         {
-            ManagedObjectInstance view_instance = object_factory.wrapObject (new TopView ());
-            return (view_instance.adapt (View.class));
+            return (serviceContext.newServiceObject (TopView.class));
         }
         return null;
+    }
+
+    @Validate
+    private void validate ()
+    {
+        serviceContext.register (TopView.class);
     }
 }
 

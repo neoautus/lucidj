@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,11 +16,11 @@
 
 package org.lucidj.renderer.treemenu;
 
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.MenuEntry;
-import org.lucidj.api.MenuInstance;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.core.ManagedObject;
+import org.lucidj.api.core.ManagedObjectInstance;
+import org.lucidj.api.core.MenuEntry;
+import org.lucidj.api.core.MenuInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,7 @@ import java.util.TreeSet;
 
 public class TreeMenuRenderer implements ManagedObject, Renderer, ItemClickEvent.ItemClickListener
 {
-    private final static transient Logger log = LoggerFactory.getLogger (TreeMenuRenderer.class);
+    private final static Logger log = LoggerFactory.getLogger (TreeMenuRenderer.class);
 
     private static String CP_ENTRY   = "entry";
     private static String CP_CAPTION = "caption";
@@ -50,6 +50,7 @@ public class TreeMenuRenderer implements ManagedObject, Renderer, ItemClickEvent
     public TreeMenuRenderer ()
     {
         tree_menu = new Tree ();
+        tree_menu.addStyleName ("ui-treemenu");
 
         tree_menu.addContainerProperty (CP_ENTRY, MenuEntry.class, null);
         tree_menu.addContainerProperty (CP_CAPTION, String.class, null);
@@ -123,10 +124,9 @@ public class TreeMenuRenderer implements ManagedObject, Renderer, ItemClickEvent
         log.debug ("render_tree_menu: updateUI rendering finished");
     }
 
-    @Override // Renderer
-    public boolean compatibleObject (Object obj_to_check)
+    public static boolean isCompatible (Object object)
     {
-        return (obj_to_check instanceof MenuInstance);
+        return (object instanceof MenuInstance);
     }
 
     @Override // Renderer

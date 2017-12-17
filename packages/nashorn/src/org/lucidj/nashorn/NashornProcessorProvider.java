@@ -16,20 +16,17 @@
 
 package org.lucidj.nashorn;
 
-import org.lucidj.api.Aggregate;
-import org.lucidj.api.BundleRegistry;
-import org.lucidj.api.CodeEngine;
-import org.lucidj.api.CodeEngineManager;
-import org.lucidj.api.ComponentDescriptor;
-import org.lucidj.api.ComponentInterface;
-import org.lucidj.api.ComponentManager;
-import org.lucidj.api.ManagedObject;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.ManagedObjectProvider;
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerEngine;
-import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.core.CodeEngine;
+import org.lucidj.api.core.CodeEngineManager;
+import org.lucidj.api.core.ComponentDescriptor;
+import org.lucidj.api.core.ComponentInterface;
+import org.lucidj.api.core.ComponentManager;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerEngine;
+import org.lucidj.api.core.SerializerInstance;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceObject;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,8 +41,8 @@ import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
-@Provides
-public class NashornProcessorProvider implements ManagedObjectProvider, Serializer
+@Provides (specifications = Serializer.class)
+public class NashornProcessorProvider implements ServiceObject.Provider, Serializer
 {
     private ComponentDescriptor descriptor;
 
@@ -53,10 +50,7 @@ public class NashornProcessorProvider implements ManagedObjectProvider, Serializ
     private BundleContext context;
 
     @Requires
-    private ManagedObjectFactory objectFactory;
-
-    @Requires
-    private BundleRegistry bundleRegistry;
+    private ServiceContext serviceContext;
 
     @Requires
     private CodeEngineManager engineManager;
@@ -76,23 +70,21 @@ public class NashornProcessorProvider implements ManagedObjectProvider, Serializ
         componentManager.register (context, descriptor);
     }
 
-    @Override
-    public ManagedObject newObject (String clazz, ManagedObjectInstance instance)
+    @Override // ServiceObject.Provider
+    public Object newObject (String objectClassName, Map<String, Object> properties)
     {
-        // TODO: CodeEngineManager CAN HAVE AN ObjectFactory ASPECT
         CodeEngine code_engine = engineManager.getEngineByName ("nashorn");
         ComponentInterface code_container;
 
-        if (instance.containsKey (ComponentInterface.class.getName ()))
+        if (properties.containsKey (ComponentInterface.class.getName ()))
         {
             // Use the provided code container
-            code_container = (ComponentInterface)instance.getProperty (ComponentInterface.class.getName ());
+            code_container = (ComponentInterface)properties.get (ComponentInterface.class.getName ());
         }
         else
         {
             // Provide a brand new code container
-            ManagedObjectInstance new_instance = objectFactory.newInstance ("org.lucidj.smartbox.SmartBox", null);
-            code_container = new_instance.adapt (ComponentInterface.class);
+            code_container = (ComponentInterface)serviceContext.newServiceObject ("org.lucidj.smartbox.SmartBox");
         }
 
         // Add the UI descriptor
@@ -103,13 +95,13 @@ public class NashornProcessorProvider implements ManagedObjectProvider, Serializ
         return (new NashornProcessor (code_container, code_engine));
     }
 
-    @Override
+    @Override // Serializer
     public boolean serializeObject (SerializerInstance instance, Object object)
     {
         return (instance.serializeAs (Aggregate.identity (object), NashornProcessor.class.getName ()));
     }
 
-    @Override
+    @Override // Serializer
     public Object deserializeObject (SerializerInstance instance)
     {
         // Use another deserializer to build our object
@@ -118,14 +110,13 @@ public class NashornProcessorProvider implements ManagedObjectProvider, Serializ
         // Create the new processor providing the code_container
         Map<String, Object> props = new HashMap<> ();
         props.put (ComponentInterface.class.getName (), code_container);
-        ManagedObjectInstance new_instance = objectFactory.newInstance (NashornProcessor.class, props);
-        return (new_instance.adapt (NashornProcessor.class));
+        return (serviceContext.newServiceObject (NashornProcessor.class, props));
     }
 
     @Validate
     private void validate ()
     {
-        objectFactory.register (NashornProcessor.class, this, null);
+        serviceContext.register (NashornProcessor.class, this);
         serializerEngine.register (NashornProcessor.class, this);
         register_component_descriptor ();
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,15 +16,18 @@
 
 package org.lucidj.navigatormanager;
 
-import org.lucidj.api.NavigatorManager;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.vui.NavigatorManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vaadin.navigator.Navigator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewProvider;
+import com.vaadin.server.VaadinSession;
+import com.vaadin.ui.AbstractComponent;
+import com.vaadin.ui.UI;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,23 +36,117 @@ import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
+import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
-@Component (immediate = true)
+@Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides (specifications = NavigatorManager.class)
-class DefaultNavigatorManager implements NavigatorManager, ViewProvider
+class DefaultNavigatorManager implements NavigatorManager
 {
-    private final static transient Logger log = LoggerFactory.getLogger (DefaultNavigatorManager.class);
+    private static final Logger log = LoggerFactory.getLogger (DefaultNavigatorManager.class);
+
+    private static final String ATTR_VIEW_PROVIDER = NavigatorManager.class.getName () + ".view-provider";
 
     private Map<String, ViewProvider> view_providers;
-    private Map<String, String> view_name_to_provider;
+
+    @Requires
+    private ServiceContext serviceContext;
 
     public DefaultNavigatorManager ()
     {
         view_providers = new ConcurrentHashMap<> ();
-        view_name_to_provider = new ConcurrentHashMap<> ();
+    }
+
+    private ViewProvider get_or_create_proxy_view_provider (Navigator navigator)
+    {
+        UI current_ui = UI.getCurrent ();
+        VaadinSession current_session = (current_ui != null)? current_ui.getSession (): null;
+        ViewProvider proxy_view_provider = null;
+
+        if (current_session != null)
+        {
+            // Get or create the ProxyViewProvider, bound into VaadinSession
+            Object view_provider_obj = current_session.getAttribute (ATTR_VIEW_PROVIDER);
+
+            if (view_provider_obj instanceof ViewProvider)
+            {
+                // TODO: WHAT IF NAVIGATOR CHANGES INSIDE THE SAME UI? CREATE SOME WAY TO UPDATE IT.
+                proxy_view_provider = (ViewProvider)view_provider_obj;
+            }
+            else
+            {
+                proxy_view_provider = serviceContext.wrapObject (ProxyViewProvider.class, new ProxyViewProvider (this, navigator));
+                current_session.setAttribute (ATTR_VIEW_PROVIDER, proxy_view_provider);
+            }
+        }
+        return (proxy_view_provider);
+    }
+
+    @Override // NavigatorManager
+    public ViewProvider findViewProvider (String navigationState)
+    {
+        for (Map.Entry<String, ViewProvider> provider_entry: view_providers.entrySet ())
+        {
+            ViewProvider view_provider = provider_entry.getValue ();
+            String view_name = view_provider.getViewName (navigationState);
+
+            if (view_name != null)
+            {
+                return (view_provider);
+            }
+        }
+        return (null);
+    }
+
+    @Override // NavigatorManager
+    public boolean configureNavigator (Navigator navigator, Map<String, Object> properties)
+    {
+        ViewProvider proxy_view_provider = get_or_create_proxy_view_provider (navigator);
+
+        if (proxy_view_provider == null)
+        {
+            return (false);
+        }
+        navigator.addProvider (proxy_view_provider);
+        return (true);
+    }
+
+    @Override
+    public boolean navigateTo (String navigationState, Map<String, Object> dataProperties)
+    {
+        UI ui = UI.getCurrent ();
+
+        if (ui == null)
+        {
+            return (false);
+        }
+
+        Navigator navigator = ui.getNavigator ();
+
+        if (navigator == null)
+        {
+            return (false);
+        }
+
+        ViewProvider proxy_view_provider = get_or_create_proxy_view_provider (navigator);
+        String view_name = proxy_view_provider.getViewName (navigationState);
+
+        if (view_name == null)
+        {
+            return (false);
+        }
+
+        View view = proxy_view_provider.getView (view_name);
+
+        if (view instanceof AbstractComponent)
+        {
+            // Store properties as component data
+            ((AbstractComponent)view).setData (dataProperties);
+        }
+        navigator.navigateTo (navigationState);
+        return (true);
     }
 
     @Bind (aggregate=true, optional=true, specification = ViewProvider.class)
@@ -61,21 +158,6 @@ class DefaultNavigatorManager implements NavigatorManager, ViewProvider
         view_providers.put (factory_name, view_provider);
     }
 
-    private void clear_all_matching_values (String which_value)
-    {
-        Iterator<Map.Entry<String, String>> it = view_name_to_provider.entrySet ().iterator ();
-
-        while (it.hasNext ())
-        {
-            Map.Entry<String, String> entry = it.next ();
-
-            if (which_value.equals (entry.getValue ()))
-            {
-                it.remove ();
-            }
-        }
-    }
-
     @Unbind
     private void unbindViewProvider (ViewProvider view_provider, Map properties)
     {
@@ -83,7 +165,6 @@ class DefaultNavigatorManager implements NavigatorManager, ViewProvider
 
         log.info ("Removing view provider: {}", factory_name);
         view_providers.remove (factory_name);
-        clear_all_matching_values (factory_name);
     }
 
     @Validate
@@ -97,61 +178,6 @@ class DefaultNavigatorManager implements NavigatorManager, ViewProvider
     {
         log.info ("DefaultNavigatorManager stopped");
     }
-
-    @Override // NavigatorManager
-    public boolean configureNavigator (Navigator navigator, Map<String, Object> properties)
-    {
-        // We are the dinamic view provider :)
-        navigator.addProvider (this);
-        return (true);
-    }
-
-    @Override // ViewProvider
-    public String getViewName (String s)
-    {
-        log.info ("getViewName: {}", s);
-
-        for (Map.Entry<String, ViewProvider> provider_entry: view_providers.entrySet ())
-        {
-            ViewProvider provider = provider_entry.getValue ();
-            String view_name = provider.getViewName (s);
-
-            log.info ("provider={} view_name={}", provider, view_name);
-
-            if (view_name != null)
-            {
-                log.info ("Provider found! {} => {}", view_name, provider_entry.getKey ());
-                // We're actually looking for a provider which knowns the requested view
-                view_name_to_provider.put (view_name, provider_entry.getKey ());
-                return (view_name);
-            }
-        }
-
-        return (null);
-    }
-
-    @Override // ViewProvider
-    public View getView (String s)
-    {
-        log.info ("getView: {}", s);
-
-        String provider_name = view_name_to_provider.get (s);
-
-        if (provider_name == null)
-        {
-            log.error ("No provider associated with view '{}'", s);
-            return (null);
-        }
-
-        ViewProvider provider = view_providers.get (provider_name);
-
-        if (provider == null)
-        {
-            log.error ("Provider '{}' not available", provider_name);
-            return (null);
-        }
-
-        log.info ("getView: provider={}", provider);
-        return (provider.getView (s));
-    }
 }
+
+// EOF

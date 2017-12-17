@@ -19,9 +19,9 @@ package org.lucidj.gluon;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.Charset;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 public class GluonUtil
 {
-    private final static transient Logger log = LoggerFactory.getLogger (GluonUtil.class);
+    private final static Logger log = LoggerFactory.getLogger (GluonUtil.class);
 
     private static void dump_instance (GluonInstance instance, Writer writer, int level)
         throws IOException
@@ -76,10 +76,34 @@ public class GluonUtil
         }
     }
 
+    public static Path get_data_dir ()
+    {
+        Path data_dir = Paths.get (System.getProperty ("system.home"), "cache", GluonUtil.class.getName ());
+
+        if (!Files.exists (data_dir))
+        {
+            try
+            {
+                Files.createDirectory (data_dir);
+            }
+            catch (IOException e)
+            {
+                return (null);
+            }
+        }
+        return (data_dir);
+    }
+
     public static void dumpRepresentation (GluonInstance root, String filename)
     {
         // TODO: THIS SHOULD BE RECONFIGURABLE
-        Path userdir = FileSystems.getDefault ().getPath (System.getProperty ("system.home"), "userdata");
+        Path userdir = get_data_dir ();
+
+        if (userdir == null)
+        {
+            return;
+        }
+
         Path destination_path = userdir.resolve (filename);
         Charset cs = Charset.forName ("UTF-8");
         Writer writer = null;

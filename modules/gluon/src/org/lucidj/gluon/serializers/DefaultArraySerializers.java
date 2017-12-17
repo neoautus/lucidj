@@ -16,8 +16,8 @@
 
 package org.lucidj.gluon.serializers;
 
-import org.lucidj.api.Serializer;
-import org.lucidj.api.SerializerInstance;
+import org.lucidj.api.core.Serializer;
+import org.lucidj.api.core.SerializerInstance;
 
 public class DefaultArraySerializers
 {

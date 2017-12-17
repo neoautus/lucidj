@@ -16,6 +16,7 @@
 
 package org.lucidj.vaadinui;
 
+import com.vaadin.annotations.JavaScript;
 import com.vaadin.annotations.PreserveOnRefresh;
 import com.vaadin.annotations.Push;
 import com.vaadin.annotations.StyleSheet;
@@ -23,6 +24,9 @@ import com.vaadin.annotations.Theme;
 import com.vaadin.annotations.Title;
 import com.vaadin.annotations.Widgetset;
 import com.vaadin.data.Property;
+import com.vaadin.event.FieldEvents;
+import com.vaadin.event.ShortcutAction;
+import com.vaadin.event.ShortcutListener;
 import com.vaadin.server.FontAwesome;
 import com.vaadin.server.Responsive;
 import com.vaadin.server.Sizeable;
@@ -33,6 +37,7 @@ import com.vaadin.shared.ui.label.ContentMode;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.ComboBox;
+import com.vaadin.ui.Component;
 import com.vaadin.ui.CssLayout;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
@@ -40,53 +45,65 @@ import com.vaadin.ui.Layout;
 import com.vaadin.ui.UI;
 import com.vaadin.ui.VerticalLayout;
 
-import org.lucidj.api.DesktopInterface;
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.SecurityEngine;
+import org.lucidj.api.core.ClassManager;
+import org.lucidj.api.core.DesktopUI;
+import org.lucidj.api.core.SecurityEngine;
+import org.lucidj.api.core.ServiceContext;
+import org.lucidj.api.core.ServiceObject;
+import org.lucidj.api.vui.DesktopInterface;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
-import org.apache.felix.ipojo.annotations.Instantiate;
-import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
-import org.apache.felix.ipojo.annotations.Component;
-import org.apache.felix.ipojo.handlers.event.Publishes;
-import org.apache.felix.ipojo.handlers.event.publisher.Publisher;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 @Theme ("valo")
 @Title ("LucidJ Console")
 @Widgetset ("xyz.kuori.CustomWidgetSet")
-@StyleSheet ("vaadin://~/vaadinui_libraries/styles.css")
-@Component (immediate = true)
-@Instantiate
-@Provides (specifications = UI.class)
+@JavaScript ("vaadin://~/vaadinui_libraries/lucidj-vaadin-helper.js")
+@StyleSheet ({ "vaadin://~/vaadinui_libraries/styles.css", "vaadin://~/dynamic.css" })
 @Push (PushMode.MANUAL)
 @PreserveOnRefresh
-public class BaseVaadinUI extends UI
+public class BaseVaadinUI extends UI implements DesktopUI, Component.Listener
 {
-    private final static transient Logger log = LoggerFactory.getLogger (BaseVaadinUI.class);
+    private final static Logger log = LoggerFactory.getLogger (BaseVaadinUI.class);
 
     private DesktopInterface desktop;
     private SmartPush smart_push;
+    private Map<String, Set<DesktopUI.Listener>> topic_map = new HashMap<> ();
 
     private VerticalLayout desktop_canvas = new VerticalLayout ();
     private HorizontalLayout ui_header;
     private Layout empty_desktop = new CssLayout ();
     private Layout user_component;
-    private int default_sidebar_width_pixels = 250;
+    // TODO: DEFINE A WAY TO SHARE GLOBAL DEFINES/CONFIGS
+    private int default_sidebar_width_pixels = 240;
 
-    @Requires
+    // For some reason, Enter inside the combobox generates four events
+    // focus/blur/focus/blur and this messes with proper Enter key handling
+    private int nested_focus_blur_bug_count;
+
+    // When the combobox have new text, clicking the search button (magnifier
+    // glass) generates both changeEvent and clickEvent, but NOT Enter action.
+    // So we can't just throw in the handleAction, we must use changeEvent too.
+    // The flag below handles when to discard the click event in case we get
+    // changeEvent+clickEvent in sequence.
+    private boolean value_change_button_quirk;
+
     private SecurityEngine security;
 
-    @Requires
-    private ManagedObjectFactory object_factory;
+    @ServiceObject.Context
+    private ServiceContext serviceContext;
 
-    @Publishes (name = "searchbox", topics = "search", dataKey = "args")
-    private Publisher search;
+    public BaseVaadinUI (SecurityEngine security)
+    {
+        this.security = security;
+    }
 
     //=========================================================================================
     // LAYOUTS
@@ -137,29 +154,79 @@ public class BaseVaadinUI extends UI
 
                         // TODO: SOMEDAY DISCOVER HOW TO EXPAND THIS GROUPED COMPONENT, AND THE CURE FOR CANCER
                         search_text.setWidth("480px");
+                        search_text.addStyleName ("invisible-focus");
+                        search_text.addValueChangeListener (new Property.ValueChangeListener ()
+                        {
+                            @Override
+                            public void valueChange (Property.ValueChangeEvent valueChangeEvent)
+                            {
+                                String search_args = (String)search_text.getValue ();
+
+                                if (search_args != null)
+                                {
+                                    fireEvent ("search", search_text.getValue ());
+                                    value_change_button_quirk = true;
+                                }
+                            }
+                        });
+
+                        // Handles the Enter key by activating on focus and deactivating on blur
+                        final ShortcutListener handle_enter = new ShortcutListener ("Enter",
+                            ShortcutAction.KeyCode.ENTER, null)
+                        {
+                            @Override
+                            public void handleAction (Object o, Object o1)
+                            {
+                                value_change_button_quirk = false;
+                                fireEvent ("search", search_text.getValue ());
+                            }
+                        };
+
+                        search_text.addFocusListener (new FieldEvents.FocusListener ()
+                        {
+                            @Override
+                            public void focus (FieldEvents.FocusEvent focusEvent)
+                            {
+                                if (nested_focus_blur_bug_count++ == 0)
+                                {
+                                    search_text.addShortcutListener (handle_enter);
+                                }
+                            }
+                        });
+
+                        search_text.addBlurListener (new FieldEvents.BlurListener ()
+                        {
+                            @Override
+                            public void blur (FieldEvents.BlurEvent blurEvent)
+                            {
+                                if (--nested_focus_blur_bug_count == 0)
+                                {
+                                    search_text.removeShortcutListener (handle_enter);
+                                }
+                            }
+                        });
+
                     }
                     search_component.addComponent (search_text);
 
                     Button search_button = new Button ();
                     {
                         search_button.setIcon (FontAwesome.SEARCH);
+                        search_button.addClickListener (new Button.ClickListener ()
+                        {
+                            @Override
+                            public void buttonClick (Button.ClickEvent clickEvent)
+                            {
+                                if (!value_change_button_quirk)
+                                {
+                                    fireEvent ("search", search_text.getValue ());
+                                }
+                                value_change_button_quirk = false;
+                            }
+                        });
+                        search_button.addStyleName ("invisible-focus");
                     }
                     search_component.addComponent (search_button);
-
-                    search_text.addValueChangeListener (new Property.ValueChangeListener ()
-                    {
-                        @Override
-                        public void valueChange (Property.ValueChangeEvent valueChangeEvent)
-                        {
-                            String search_args = (String)search_text.getValue ();
-
-                            if (search_args != null)
-                            {
-                                log.info ("SEARCH: {}", search_args);
-                                search.sendData (search_text.getValue ());
-                            }
-                        }
-                    });
                 }
                 header_components.addComponent (search_component);
 
@@ -172,8 +239,8 @@ public class BaseVaadinUI extends UI
                 header_components.addComponent (user_component);
 
                 // I swear someday I'll learn CSS, AFTER implementing my own distributed
-                // operating system with virtual reality interface and a machine learning kernel,
-                // as a preparation for the task.
+                // operating system with augmented reality interface and a machine learning kernel,
+                // all written in Z80 assembly, as a preparation for the task.
                 Label spacer = new Label ();
                 spacer.setWidthUndefined ();
                 header_components.addComponent (spacer);
@@ -199,26 +266,21 @@ public class BaseVaadinUI extends UI
     {
         initSystemToolbar ();
 
-        ManagedObjectInstance[] desktops = object_factory.getManagedObjects (DesktopInterface.class, null);
+        desktop = serviceContext.newServiceObject (DesktopInterface.class);
 
-        if (desktops.length > 0)
+        log.info ("----------> desktop = {}", desktop);
+
+        // TODO: HANDLE MISSING DESKTOPS
+        if (desktop != null)
         {
-            ManagedObjectInstance desktop_instance = object_factory.newInstance (desktops [0]);
-            DesktopInterface desktop = desktop_instance.adapt (DesktopInterface.class);
+            desktop.init (this);
 
-            log.info ("----------> desktop = {}", desktop);
+            // Set the main desktop area
+            desktop_canvas.replaceComponent (empty_desktop, desktop.getMainLayout ());
 
-            if (desktop != null)
-            {
-                desktop.init (this);
-
-                // Set the main desktop area
-                desktop_canvas.replaceComponent (empty_desktop, desktop.getMainLayout ());
-
-                // Clear old security layout and set/add the newer one
-                user_component.removeAllComponents ();
-                user_component.addComponent (desktop.getSecurityLayout ());
-            }
+            // Clear old security layout and set/add the newer one
+            user_component.removeAllComponents ();
+            user_component.addComponent (desktop.getSecurityLayout ());
         }
     }
 
@@ -232,18 +294,23 @@ public class BaseVaadinUI extends UI
             VaadinServletRequest vsr = (VaadinServletRequest)vaadinRequest;
             InetAddress remote_addr = null;
 
-            // TODO: STILL CRAPPY, FIND A BETTER WAY
+            // TODO: USE AUTOMATIC KEY AUTHENTICATION FOR SINGLE MODE
             try
             {
                 remote_addr = InetAddress.getByName (vsr.getRemoteAddr ());
             }
             catch (UnknownHostException ignore) {};
 
-            // TODO: CAVEATS??
-            if (remote_addr != null && remote_addr.isLoopbackAddress ())
+            // Login tokens may be used only when browsing from the same machine
+            if (remote_addr != null && remote_addr.isLoopbackAddress ()
+                && Login.isValidLoginToken (vsr.getParameter ("token")))
             {
                 // Autologin into System when browsing from localhost
+                log.warn ("Automatic login from localhost using login token");
                 security.createSystemSubject ();
+
+                // Erase the token from URL
+                getPage ().getJavaScript().execute("window.lucidj_vaadin_helper.clearUrl ()");
             }
         }
 
@@ -269,6 +336,9 @@ public class BaseVaadinUI extends UI
     {
         init_desktop (vaadinRequest);
         smart_push = new SmartPush (this);
+
+        // Add custom UI event forwarding
+        addListener (this);
     }
 
     @Override
@@ -282,6 +352,83 @@ public class BaseVaadinUI extends UI
     // UI EVENTS
     //=========================================================================================
 
+    class DesktopEvent extends Component.Event
+    {
+        private String topic;
+        private Object eventObject;
+
+        public DesktopEvent (String topic, Object eventObject)
+        {
+            super (BaseVaadinUI.this);
+            this.topic = topic;
+            this.eventObject = eventObject;
+        }
+
+        public String getTopic ()
+        {
+            return (topic);
+        }
+
+        public Object getEventObject ()
+        {
+            return (eventObject);
+        }
+    }
+
+    @Override // DesktopUI
+    public void addListener (String topic, DesktopUI.Listener listener)
+    {
+        Set<DesktopUI.Listener> listener_set = topic_map.get (topic);
+
+        if (listener_set == null)
+        {
+            listener_set = new HashSet<> ();
+            topic_map.put (topic, listener_set);
+        }
+        listener_set.add (listener);
+    }
+
+    @Override // DesktopUI
+    public void fireEvent (String topic, Object eventObject)
+    {
+        fireEvent (new DesktopEvent (topic, eventObject));
+    }
+
+    @Override // Component.Listener
+    public void componentEvent (Event event)
+    {
+        if (event instanceof DesktopEvent)
+        {
+            DesktopEvent desktop_event = (DesktopEvent)event;
+            String topic = desktop_event.getTopic ();
+            Set<DesktopUI.Listener> listener_set = topic_map.get (topic);
+
+            if (listener_set == null)
+            {
+                return;
+            }
+
+            Object event_object = desktop_event.getEventObject ();
+            Iterator<DesktopUI.Listener> itl = listener_set.iterator ();
+
+            while (itl.hasNext ())
+            {
+                DesktopUI.Listener listener = itl.next ();
+
+                if (!ClassManager.isZoombie (listener))
+                {
+                    listener.event (topic, event_object);
+                }
+                else
+                {
+                    // Auto-clean topic sets
+                    log.info ("Removing zoombie listener: {}", listener);
+                    itl.remove ();
+                }
+            }
+        }
+    }
+
     @Override
     public void attach ()
     {
@@ -292,7 +439,7 @@ public class BaseVaadinUI extends UI
 
         if (desktop != null)
         {
-            desktop.detach ();
+            desktop.attach ();
         }
     }
 
@@ -308,6 +455,13 @@ public class BaseVaadinUI extends UI
 
         // Normal detach for everybody
         super.detach();
+    }
+
+    @ServiceObject.Invalidate
+    private void invalidate ()
+    {
+        // Get 'Session Expired' faster invalidating wrapped session
+        getSession ().getSession ().invalidate ();
     }
 }
 

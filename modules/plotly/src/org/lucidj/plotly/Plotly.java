@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -20,12 +20,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Observer;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.lucidj.api.EventHelper;
-import org.lucidj.api.Renderer;
+import org.lucidj.api.core.EventHelper;
+import org.lucidj.api.vui.Renderer;
 
 /* Plotly, what a neat library!
  * Be sure to visit https://plot.ly/ to know more.

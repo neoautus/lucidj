@@ -72,7 +72,7 @@ var JavaScriptHighlightRules = function(options) {
         "keyword":
             "const|yield|import|get|set|async|await|" +
             "break|case|catch|continue|default|delete|do|else|finally|for|function|" +
-            "if|in|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
+            "if|in|of|instanceof|new|return|switch|throw|try|typeof|let|var|while|with|debugger|" +
             "__parent__|__count__|escape|unescape|with|__proto__|" +
             "class|enum|extends|super|export|implements|private|public|interface|package|protected|static",
         "storage.type":
@@ -161,6 +161,9 @@ var JavaScriptHighlightRules = function(options) {
                 next: "function_arguments"
             }, {
                 token : "keyword",
+                regex : "from(?=\\s*('|\"))"
+            }, {
+                token : "keyword",
                 regex : "(?:" + kwBeforeRe + ")\\b",
                 next : "start"
             }, {
@@ -178,7 +181,7 @@ var JavaScriptHighlightRules = function(options) {
                 next  : "property"
             }, {
                 token : "keyword.operator",
-                regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?\:|[!$%&*+\-~\/^]=?/,
+                regex : /--|\+\+|\.{3}|===|==|=|!=|!==|<+=?|>+=?|!|&&|\|\||\?:|[!$%&*+\-~\/^]=?/,
                 next  : "start"
             }, {
                 token : "punctuation.operator",
@@ -342,8 +345,8 @@ var JavaScriptHighlightRules = function(options) {
             }
         ]
     };
-    
-    
+
+
     if (!options || !options.noES6) {
         this.$rules.no_regex.unshift({
             regex: "[{}]", onMatch: function(val, state, stack) {
@@ -378,14 +381,14 @@ var JavaScriptHighlightRules = function(options) {
                 defaultToken: "string.quasi"
             }]
         });
-        
+
         if (!options || options.jsx != false)
             JSX.call(this);
     }
-    
+
     this.embedRules(DocCommentHighlightRules, "doc-",
         [ DocCommentHighlightRules.getEndRule("no_regex") ]);
-    
+
     this.normalizeRules();
 };
 
@@ -436,8 +439,8 @@ function JSX() {
         {defaultToken: "string"}
     ];
     this.$rules.jsxAttributes = [{
-        token : "meta.tag.punctuation.tag-close.xml", 
-        regex : "/?>", 
+        token : "meta.tag.punctuation.tag-close.xml",
+        regex : "/?>",
         onMatch : function(value, currentState, stack) {
             if (currentState == stack[0])
                 stack.shift();
@@ -452,7 +455,7 @@ function JSX() {
             return [{type: this.token, value: value}];
         },
         nextState: "jsx"
-    }, 
+    },
     jsxJsRule,
     comments("jsxAttributes"),
     {
@@ -695,14 +698,13 @@ oop.inherits(FoldMode, BaseFoldMode);
 
 });
 
-ace.define("ace/mode/javascript",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/javascript_highlight_rules","ace/mode/matching_brace_outdent","ace/range","ace/worker/worker_client","ace/mode/behaviour/cstyle","ace/mode/folding/cstyle"], function(require, exports, module) {
+ace.define("ace/mode/javascript",["require","exports","module","ace/lib/oop","ace/mode/text","ace/mode/javascript_highlight_rules","ace/mode/matching_brace_outdent","ace/worker/worker_client","ace/mode/behaviour/cstyle","ace/mode/folding/cstyle"], function(require, exports, module) {
 "use strict";
 
 var oop = require("../lib/oop");
 var TextMode = require("./text").Mode;
 var JavaScriptHighlightRules = require("./javascript_highlight_rules").JavaScriptHighlightRules;
 var MatchingBraceOutdent = require("./matching_brace_outdent").MatchingBraceOutdent;
-var Range = require("../range").Range;
 var WorkerClient = require("../worker/worker_client").WorkerClient;
 var CstyleBehaviour = require("./behaviour/cstyle").CstyleBehaviour;
 var CStyleFoldMode = require("./folding/cstyle").FoldMode;
@@ -733,7 +735,7 @@ oop.inherits(Mode, TextMode);
         }
 
         if (state == "start" || state == "no_regex") {
-            var match = line.match(/^.*(?:\bcase\b.*\:|[\{\(\[])\s*$/);
+            var match = line.match(/^.*(?:\bcase\b.*:|[\{\(\[])\s*$/);
             if (match) {
                 indent += tab;
             }
@@ -926,12 +928,11 @@ var ScalaHighlightRules = function() {
         ],
         "tstring" : [
             {
-                token : "string", // closing comment
+                token : "string",
                 regex : '"{3,5}',
                 next : "start"
             }, {
-                token : "string", // comment spanning whole line
-                regex : ".+?"
+                defaultToken : "string"
             }
         ]
     };
@@ -954,7 +955,6 @@ var ScalaHighlightRules = require("./scala_highlight_rules").ScalaHighlightRules
 
 var Mode = function() {
     JavaScriptMode.call(this);
-    
     this.HighlightRules = ScalaHighlightRules;
 };
 oop.inherits(Mode, JavaScriptMode);

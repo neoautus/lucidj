@@ -16,36 +16,40 @@
 
 package org.lucidj.console;
 
-import org.lucidj.api.ManagedObjectFactory;
-import org.lucidj.api.ManagedObjectInstance;
-import org.lucidj.api.Renderer;
-import org.lucidj.api.RendererProvider;
+import org.lucidj.api.vui.Renderer;
+import org.lucidj.api.vui.RendererProvider;
+import org.lucidj.api.core.ServiceContext;
 
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
 import org.apache.felix.ipojo.annotations.Requires;
+import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides
 public class ConsoleRendererProvider implements RendererProvider
 {
-    private ConsoleRenderer console_filter = new ConsoleRenderer ();
-
     @Requires
-    private ManagedObjectFactory objectFactory;
+    private ServiceContext serviceContext;
 
     @Override
     public Renderer getCompatibleRenderer (Object object)
     {
-        if (console_filter.compatibleObject (object))
+        if (ConsoleRenderer.isCompatible (object))
         {
-            ManagedObjectInstance object_instance = objectFactory.wrapObject (new ConsoleRenderer ());
-            return (object_instance.adapt (ConsoleRenderer.class));
+            return (serviceContext.newServiceObject (ConsoleRenderer.class));
         }
         return (null);
     }
+
+    @Validate
+    private void validate ()
+    {
+        serviceContext.register (ConsoleRenderer.class);
+    }
+
 }
 
 // EOF

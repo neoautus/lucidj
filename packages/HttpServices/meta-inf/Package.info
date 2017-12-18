@@ -1,0 +1,13 @@
+X-Package-Icon: http-icon-32.svg
+X-Package-FullName: HttpServices
+X-Package-ShortName: HttpServices
+X-Package-ShortName-ptBR: HttpServices
+X-Package-ShortDescription: Publish Http services from OSGi Services
+X-Package-ShortDescription.ptBR: Publique serviços HTTP a partir de serviços OSGi
+X-Package-Release: 0.9.0
+X-Package-ReleaseDate: ${currenttime} ${now}
+X-Package-Licencing: free, Apache-2.0
+X-Package-Tags: utility, plugins
+X-Package-Languages: en, ptBR
+X-Package-Origin: https://neoautus.com/downloads/lucidj-0.9.0/package
+X-Package-Social: g+/httpservices, fb/httpservices

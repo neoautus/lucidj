@@ -37,7 +37,7 @@ import org.apache.felix.ipojo.annotations.Provides;
  * Be sure to visit https://plot.ly/ to know more.
  */
 
-@JavaScript ({ "plotly-latest.min.js", "plotlyrenderer.js" })
+@JavaScript ({ "vaadin://~/libraries_plotly_renderer/plotly-latest.min.js", "plotlyrenderer.js" })
 @org.apache.felix.ipojo.annotations.Component (immediate = true)
 @Instantiate
 @Provides (specifications = Renderer.class)

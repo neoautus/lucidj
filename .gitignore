@@ -6,8 +6,8 @@ extras/AntInstaller/ant.install.log
 extras/AntInstaller/AntInstaller-beta0.8/artifacts/prepare/*
 extras/AntInstaller/AntInstaller-beta0.8/lib/ant-installer-ext.jar
 extras/AntInstaller/AntInstaller-beta0.8/lib/ant-installer.jar
-extras/AceEditor/ace-builds/*
-extras/AceEditor/ace/*
+extras/AceEditor/ace-builds
+extras/AceEditor/ace
 
 # IntelliJ IDEA
 .ant-targets-build.xml

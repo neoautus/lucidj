@@ -1440,6 +1440,22 @@
             </then>
         </if>
 
+        <!-- Add zipped public resources, like javascript libraries -->
+        <if>
+            <and>
+                <available file="${bnd.root}/ext-unzip.list"/>
+                <length file="${bnd.root}/ext-unzip.list" when="greater" length="0" />
+            </and>
+            <then>
+                <!-- Add the unzipped contents from all unzip.list files into the public/ dir from jar -->
+                <jar destfile="${bnd.jar}" update="true" filesonly="true">
+                    <zipfileset prefix="public">
+                        <fileset dir="${basedir}" includesfile="${bnd.root}/ext-unzip.list"/>
+                    </zipfileset>
+                </jar>
+            </then>
+        </if>
+
         <!-- Add generic resource files -->
         <jar destfile="${bnd.jar}" update="true" filesonly="true">
             <fileset dir="${bnd.root}">
@@ -1450,6 +1466,7 @@
                 <exclude name="resources/**/*"/>
                 <exclude name="src/**/*"/>
                 <exclude name="test/**/*"/>
+                <exclude name="ext-*.list"/>
             </fileset>
         </jar>
 

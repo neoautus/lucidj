@@ -249,6 +249,7 @@ public class PackageInstance implements Artifact
 
                 if (entry.isDirectory ()) // Ensure the needed dirs are available
                 {
+                    // Create the directories listed as zip entries
                     if (!file_entry.exists () && !file_entry.mkdirs ())
                     {
                         log.error ("Unable create directory: {}", entry.getName ());
@@ -257,6 +258,17 @@ public class PackageInstance implements Artifact
                 }
                 else // Extract and/or replace changed files
                 {
+                    File parent_directory = file_entry.getParentFile ();
+
+                    // Ensure the full path of the entry is created
+                    if (parent_directory != null
+                        && !parent_directory.exists ()
+                        && !parent_directory.mkdirs ())
+                    {
+                        log.error ("Unable create directory: {}", entry.getName ());
+                        return (false);
+                    }
+
                     if (!file_entry.exists () || entry.getTime () != file_entry.lastModified ())
                     {
                         InputStream stream = zipFile.getInputStream(entry);

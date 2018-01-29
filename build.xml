@@ -400,7 +400,7 @@
                debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
                source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
                includeantruntime="false">
-            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <!--compilerarg line="${javac.optional}"/--><!-- No unchecked for now -->
             <classpath>
                 <fileset dir="${libcache.dir}" includes="apache-commons-exec/jar/**/*.jar"/>
             </classpath>
@@ -417,23 +417,30 @@
         </jar>
 
         <!-- Build windows exe -->
-        <launch4j>
-            <config
-                dontWrapJar="false"
-                headerType="gui"
-                jar="${launcher.bin}/launcher.jar"
-                outfile="${launcher.bin}/lucidj.exe"
-                downloadUrl="http://www.azul.com/downloads/zulu"
-                icon="${launcher.src.dir}/org/lucidj/launcher/tangram_64.ico">
-                <jre
-                    path="../runtime/zulu8.15.0.1-jdk8.0.92-win_x64"
-                    bundledJre64Bit="true"
-                    bundledJreAsFallback="true"
-                    minVersion="1.7.0"
-                    jdkPreference="preferJdk"
-                    runtimeBits="64/32"/>
-            </config>
-        </launch4j>
+        <if><os family="unix" arch="arm" />
+            <then>
+                <echo message="Running on Unix/ARM -- will NOT build .exe"/>
+            </then>
+            <else>
+                <launch4j>
+                    <config
+                        dontWrapJar="false"
+                        headerType="gui"
+                        jar="${launcher.bin}/launcher.jar"
+                        outfile="${launcher.bin}/lucidj.exe"
+                        downloadUrl="http://www.azul.com/downloads/zulu"
+                        icon="${launcher.src.dir}/org/lucidj/launcher/tangram_64.ico">
+                        <jre
+                            path="../runtime/zulu8.15.0.1-jdk8.0.92-win_x64"
+                            bundledJre64Bit="true"
+                            bundledJreAsFallback="true"
+                            minVersion="1.7.0"
+                            jdkPreference="preferJdk"
+                            runtimeBits="64/32"/>
+                    </config>
+                </launch4j>
+            </else>
+        </if>
 
         <!-- Strip -x from .exe -->
         <chmod perm="uog-x">
@@ -484,7 +491,7 @@
                    source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
                    debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
                    includeantruntime="false">
-                <compilerarg value="${javac.optional}"/>
+                <compilerarg line="${javac.optional}"/>
                 <classpath refid="classpath.runtime"/>
             </javac>
 
@@ -757,6 +764,7 @@
         <javac srcdir="${widgetset.tmp-src.dir}" includeantruntime="false"
             source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
             destdir="${widgetset.root.dir}">
+            <compilerarg line="-encoding UTF8"/>
             <classpath>
                 <path refid="classpath.build"/>
                 <pathelement path="${widgetset.root.dir}"/>
@@ -1096,7 +1104,7 @@
             debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
             source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
             includeantruntime="false">
-            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <!--compilerarg line="${javac.optional}"/--><!-- No unchecked for now -->
             <classpath>
                 <path refid="classpath.build"/>
                 <pathelement path="${libraries.class}"/>
@@ -1108,7 +1116,7 @@
                debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
                source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
                includeantruntime="false">
-            <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+            <!--compilerarg line="${javac.optional}"/--><!-- No unchecked for now -->
             <classpath>
                 <path refid="classpath.build"/>
                 <pathelement path="${libraries.class}"/>
@@ -1139,7 +1147,7 @@
                        debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
                        source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
                        includeantruntime="false">
-                    <!--compilerarg value="${javac.optional}"/--><!-- No unchecked for now -->
+                    <!--compilerarg line="${javac.optional}"/--><!-- No unchecked for now -->
                     <classpath>
                         <path refid="classpath.build"/>
                         <pathelement path="${libraries.class}"/>
@@ -1315,6 +1323,7 @@
                        debug="${javac.debug}" debuglevel="${javac.debuglevel}" deprecation="${javac.deprecation}"
                        source="${javac.source}" target="${javac.target}" bootclasspath="${javac.bootclasspath}"
                        includeantruntime="false">
+                    <compilerarg line="-encoding UTF8"/>
                     <classpath>
                         <pathelement path="${bnd.classpath}"/>
                     </classpath>

@@ -26,7 +26,6 @@ import java.util.Properties;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
-import org.apache.felix.ipojo.ServiceContext;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Provides;
@@ -42,9 +41,6 @@ public class DefaultDeploymentEngine implements DeploymentEngine
 
     @Requires
     private BundleManager bundleManager;
-
-    @Requires
-    private ServiceContext serviceContext;
 
     @Override
     public String getEngineName ()

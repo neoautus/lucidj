@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -45,7 +45,7 @@ public class LauncherUI extends JFrame
     private boolean prepend_timestamp;
 
     private final String app_title = "LucidJ Launcher"; // It will become LucidJ Monitor :)
-    private final String app_version = "version 1.1.0";
+    private final String app_version = "version 1.2.0";
     private Image app_icon = Toolkit.getDefaultToolkit ().getImage (getClass().getResource("tangram-32.png"));
 
     private final int STATUS_UNKNOWN = 0;
@@ -593,7 +593,7 @@ public class LauncherUI extends JFrame
     public boolean isBootstrapFinished ()
     {
         // TODO: MAKE PORT/HOST/ETC RECONFIGURABLE
-        String status = http_request ("http://localhost:8181/bootstrap");
+        String status = http_request ("http://localhost:8181/~localsvc");
         return (status.contains ("bootstrap_finished=true"));
     }
 

@@ -18,6 +18,8 @@ package org.lucidj.artifactdeployer;
 
 import org.lucidj.api.core.Artifact;
 import org.lucidj.api.core.ArtifactDeployer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -37,6 +39,8 @@ import org.apache.felix.ipojo.annotations.ServiceProperty;
 @Provides (specifications = HttpServlet.class)
 public class DeploySvc extends HttpServlet
 {
+    private final static Logger log = LoggerFactory.getLogger (DeploySvc.class);
+
     @Requires
     private ArtifactDeployer artifactDeployer;
 
@@ -49,8 +53,9 @@ public class DeploySvc extends HttpServlet
     {
         resp.setContentType ("text/plain");
         PrintWriter out = resp.getWriter ();
+        String artifact_file = req.getQueryString ();
 
-        if (req.getQueryString () == null)
+        if (artifact_file == null)
         {
             // Just the service returns true indicating it exists
             out.write ("true\n");
@@ -58,17 +63,17 @@ public class DeploySvc extends HttpServlet
         }
 
         out.write ("### Hello from " + this.getClass ().getName () + " ###\n");
-        out.write ("Artifact: " + req.getQueryString () + "\n");
+        out.write ("Artifact: " + artifact_file + "\n");
 
-        Artifact artifact = artifactDeployer.getArtifact (req.getQueryString ());
+        log.info ("Install requested: {}", artifact_file);
+        Artifact artifact = artifactDeployer.getArtifact (artifact_file);
 
         if (artifact == null)
         {
             try
             {
-                artifact = artifactDeployer.installArtifact (req.getQueryString ());
+                artifact = artifactDeployer.installArtifact (artifact_file);
                 out.write ("Artifact installed: " + artifact.toString ());
-                artifact.update ();
             }
             catch (Exception e)
             {

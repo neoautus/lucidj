@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -26,7 +26,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -327,14 +326,13 @@ public class DefaultBundleManager implements BundleManager, BundleListener
     @Override // BundleManager
     public Manifest getManifest (String location)
     {
-        try
-        {
-            return (getManifest (new File (new URI (location))));
-        }
-        catch (URISyntaxException e)
+        File bundle_file = get_valid_file (location);
+
+        if (bundle_file == null)
         {
             return (null);
         }
+        return (getManifest (bundle_file));
     }
 
     @Override // BundleManager

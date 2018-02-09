@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -18,13 +18,16 @@ package org.lucidj.artifactdeployer;
 
 import org.lucidj.api.core.Artifact;
 import org.lucidj.api.core.ArtifactDeployer;
+import org.lucidj.api.core.BundleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
@@ -45,15 +48,64 @@ public class DeploymentScanner implements Runnable
     @Requires
     private ArtifactDeployer artifactDeployer;
 
+    @Requires
+    private BundleManager bundleManager;
+
     private Map<String, Exception> troubled_artifacts = new HashMap<> ();
 
-    private String watched_directory;
+    private String watched_dir_uri;
+    private File watched_dir_file;
     private Thread poll_thread;
     private int thread_poll_ms = 1000;
 
+    private void poll_repository_for_updates_and_removals ()
+    {
+        Map<Bundle, Properties> bundles = bundleManager.getBundles ();
+
+        for (Map.Entry<Bundle, Properties> bundle_entry: bundles.entrySet ())
+        {
+            Bundle bundle = bundle_entry.getKey ();
+            String source = bundleManager.getBundleProperty (bundle, BundleManager.BND_SOURCE, null);
+
+            if (source == null || !source.startsWith (watched_dir_uri))
+            {
+                // Not managed by us
+                continue;
+            }
+
+            Artifact instance = artifactDeployer.getArtifact (bundle);
+
+            if (instance == null)
+            {
+                // Not managed by us
+                continue;
+            }
+
+            if (bundleManager.getManifest (source) == null)
+            {
+                // The bundle probably was removed
+                instance.uninstall ();
+            }
+            else // Bundle file exists, check for changes
+            {
+                // We only refresh if the bundle is active
+                if (bundle.getState () == Bundle.ACTIVE)
+                {
+                    try
+                    {
+                        // Refresh the artifact, but ignore if the DeploymentEngine is not available
+                        instance.refresh ();
+                    }
+                    catch (IllegalStateException ignore) {};
+                }
+            }
+        }
+    }
+
+
     private void locate_added_bundles ()
     {
-        File[] package_list = new File (watched_directory).listFiles ();
+        File[] package_list = watched_dir_file.listFiles ();
 
         if (package_list == null)
         {
@@ -95,14 +147,35 @@ public class DeploymentScanner implements Runnable
     {
         // Configuration
         // TODO: THIS SHOULD BE RECONFIGURABLE!!!
-        watched_directory = System.getProperty ("system.home") + "/system/apps";
+        String dir_to_watch = System.getProperty ("system.home") + "/system/apps";
 
-        // Start things
-        poll_thread = new Thread (this);
-        poll_thread.setName (this.getClass ().getSimpleName ());
-        poll_thread.start ();
+        try
+        {
+            File dir = new File (dir_to_watch);
 
-        log.info ("DeploymentScanner started: applications dir = {}", watched_directory);
+            if (dir.exists () && dir.canRead ())
+            {
+                watched_dir_file = dir;
+            }
+        }
+        catch (Exception ignore) {};
+
+        if (watched_dir_file != null)
+        {
+            // Start things
+            poll_thread = new Thread (this);
+            poll_thread.setName (this.getClass ().getSimpleName ());
+            poll_thread.start ();
+
+            // Store the URI
+            watched_dir_uri = watched_dir_file.toURI ().toString ();
+
+            log.info ("DeploymentScanner started: Scanning: {}", watched_dir_uri);
+        }
+        else
+        {
+            log.info ("DeploymentScanner NOT started: Directory {} is missing or unreadable", dir_to_watch);
+        }
     }
 
     @Invalidate
@@ -126,6 +199,7 @@ public class DeploymentScanner implements Runnable
         {
             try
             {
+                poll_repository_for_updates_and_removals ();
                 locate_added_bundles ();
 
                 synchronized (this)

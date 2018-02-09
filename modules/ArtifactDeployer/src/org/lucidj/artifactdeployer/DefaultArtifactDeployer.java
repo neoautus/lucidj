@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -39,29 +39,22 @@ import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
 import org.apache.felix.ipojo.annotations.Invalidate;
 import org.apache.felix.ipojo.annotations.Provides;
-import org.apache.felix.ipojo.annotations.Requires;
 import org.apache.felix.ipojo.annotations.Unbind;
 import org.apache.felix.ipojo.annotations.Validate;
 
 @Component (immediate = true, publicFactory = false)
 @Instantiate
 @Provides (specifications = ArtifactDeployer.class)
-public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
+public class DefaultArtifactDeployer implements ArtifactDeployer
 {
     private final static Logger log = LoggerFactory.getLogger (DefaultArtifactDeployer.class);
 
     @Context
     private BundleContext context;
 
-    @Requires
-    private BundleManager bundle_manager;
-
     private Map<String, DeploymentEngine> deployment_engines = new ConcurrentHashMap<> ();
     private Map<Bundle, Artifact> bundle_to_instance = new ConcurrentHashMap<> (); // TODO: REMOVE THIS
     private Map<String, Artifact> location_to_instance = new ConcurrentHashMap<> ();
-
-    private Thread poll_thread;
-    private int thread_poll_ms = 1000;
 
     private File get_valid_file (String location)
     {
@@ -160,84 +153,6 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
         return (location_to_instance.get (location));
     }
 
-    private void poll_repository_for_updates_and_removals ()
-    {
-        Map<Bundle, Properties> bundles = bundle_manager.getBundles ();
-
-        for (Map.Entry<Bundle, Properties> bundle_entry: bundles.entrySet ())
-        {
-            String location = bundle_entry.getValue ().getProperty (Constants.PROP_LOCATION);
-            Bundle bundle = bundle_entry.getKey ();
-            Artifact instance = bundle_to_instance.get (bundle);
-
-            if (instance == null)
-            {
-                // Not managed by us
-                continue;
-            }
-
-            // TODO: USE DeploymentEngine.validBundle() METHOD INSTEAD
-            if (get_valid_file (location) == null)
-            {
-                // The bundle probably was removed
-                instance.uninstall ();
-            }
-            else // Bundle file exists, check for changes
-            {
-                // We only refresh if the bundle is active
-                if (bundle.getState () == Bundle.ACTIVE)
-                {
-                    try
-                    {
-                        // Refresh the artifact, but ignore if the DeploymentEngine is not available
-                        instance.refresh ();
-                    }
-                    catch (IllegalStateException ignore) {};
-                }
-            }
-        }
-    }
-
-    @Override // Runnable
-    public void run ()
-    {
-        // TODO: MORE GRACEFUL START WHEN LOADING DEPLOYMENT ENGINES +++
-        while (!poll_thread.isInterrupted ())
-        {
-            try
-            {
-                synchronized (this)
-                {
-                    log.debug ("Sleeping for {}ms", thread_poll_ms);
-                    wait (thread_poll_ms);
-                }
-
-                poll_repository_for_updates_and_removals ();
-            }
-            catch (InterruptedException e)
-            {
-                // Interrupt status is clear, we should break loop
-                break;
-            }
-            catch (Throwable t)
-            {
-                try
-                {
-                    // This will fail if this bundle is uninstalled (zombie)
-                    context.getBundle ();
-                }
-                catch (IllegalStateException e)
-                {
-                    // This bundle has been uninstalled, exiting loop
-                    break;
-                }
-
-                // Since this bundle is still valid, something nasty happened...
-                log.error ("Package deployment exception", t);
-            }
-        }
-    }
-
     @Bind (aggregate=true, optional=true, specification = DeploymentEngine.class)
     private void bindDeploymentEngine (DeploymentEngine engine)
     {
@@ -255,25 +170,12 @@ public class DefaultArtifactDeployer implements ArtifactDeployer, Runnable
     @Validate
     private void validate ()
     {
-        // Start things
-        poll_thread = new Thread (this);
-        poll_thread.setName (this.getClass ().getSimpleName ());
-        poll_thread.start ();
-
         log.info ("DefaultArtifactDeployer started");
     }
 
     @Invalidate
     private void invalidate ()
     {
-        try
-        {
-            // Stop things, wait 10secs for clean stop
-            poll_thread.interrupt ();
-            poll_thread.join (10000);
-        }
-        catch (InterruptedException ignore) {};
-
         log.info ("DefaultArtifactDeployer stopped");
     }
 }

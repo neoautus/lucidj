@@ -179,6 +179,26 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         return ("Unknown");
     }
 
+    private void cycle_pending_installed_bundles ()
+    {
+        Bundle[] bundle_list = context.getBundles ();
+
+        for (int i = 0; i < bundle_list.length; i++)
+        {
+            if (bundle_list [i].getState () == Bundle.INSTALLED)
+            {
+                try
+                {
+                    bundle_list [i].getResource ("META-INF/MANIFEST.MF");
+                }
+                catch (Exception nah)
+                {
+                    log.warn ("Exception cycling installed bundle {}: {}", bundle_list [i], nah.getMessage ());
+                }
+            }
+        }
+    }
+
     @Override // BundleListener
     public void bundleChanged (BundleEvent bundleEvent)
     {
@@ -240,6 +260,7 @@ public class DefaultBundleManager implements BundleManager, BundleListener
             {
                 log.info ("Bundle {} is now ACTIVE", bnd);
                 msg = "STARTED";
+                cycle_pending_installed_bundles ();     // Give a chance to other bundles resolve
                 break;
             }
             case BundleEvent.STARTING:

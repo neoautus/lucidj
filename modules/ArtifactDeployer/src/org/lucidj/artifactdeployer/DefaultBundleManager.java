@@ -26,7 +26,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +41,12 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Version;
+import org.osgi.framework.namespace.BundleNamespace;
+import org.osgi.framework.namespace.PackageNamespace;
+import org.osgi.framework.wiring.BundleRequirement;
+import org.osgi.framework.wiring.BundleRevision;
+import org.osgi.resource.Namespace;
+import org.osgi.resource.Requirement;
 import org.apache.felix.ipojo.annotations.Component;
 import org.apache.felix.ipojo.annotations.Context;
 import org.apache.felix.ipojo.annotations.Instantiate;
@@ -179,22 +187,85 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         return ("Unknown");
     }
 
+    private boolean bundle_have_optional (Bundle bundle)
+    {
+        BundleRevision revision = bundle.adapt (BundleRevision.class);
+
+        if (revision == null)
+        {
+            return (false);
+        }
+
+        List<BundleRequirement> requirements = revision.getDeclaredRequirements (null);
+
+        if (requirements == null)
+        {
+            return (false);
+        }
+
+        for (Requirement req: requirements)
+        {
+            String namespace = req.getNamespace();
+
+            if (PackageNamespace.PACKAGE_NAMESPACE.equals (namespace)
+                || BundleNamespace.BUNDLE_NAMESPACE.equals (namespace))
+            {
+                String optional_directive = req.getDirectives ().get (Namespace.REQUIREMENT_RESOLUTION_DIRECTIVE);
+
+                if (Namespace.RESOLUTION_OPTIONAL.equals (optional_directive))
+                {
+                    return (true);
+                }
+            }
+        }
+        return (false);
+    }
+
     private void cycle_pending_installed_bundles ()
     {
-        Bundle[] bundle_list = context.getBundles ();
+        List<Bundle> bundles_without_optionals = new ArrayList<> ();
+        List<Bundle> bundles_to_resolve = new ArrayList<> ();
 
-        for (int i = 0; i < bundle_list.length; i++)
+        // First discover if we can prioritize bundles without optional imports
+        for (Bundle bundle: context.getBundles ())
         {
-            if (bundle_list [i].getState () == Bundle.INSTALLED)
+            if (bundle.getState () != Bundle.INSTALLED)
             {
-                try
-                {
-                    bundle_list [i].getResource ("META-INF/MANIFEST.MF");
-                }
-                catch (Exception nah)
-                {
-                    log.warn ("Exception cycling installed bundle {}: {}", bundle_list [i], nah.getMessage ());
-                }
+                continue;
+            }
+
+            // At this point, all bundles need to be resolved
+            bundles_to_resolve.add (bundle);
+
+            if (!bundle_have_optional (bundle))
+            {
+                // But these should be resolved before
+                bundles_without_optionals.add (bundle);
+            }
+        }
+
+        // Some bundles have pseudo-optional imports that could be better served
+        // if we could delay as much as possible the bundle resolution. So we try
+        // here to give a chance to them and solve first all bundles that don't
+        // have any optional import. So, when all bundles without optionals are
+        // resolved and active, we try to resolve bundles with optional imports.
+        // Kinda hacky, but works quite nicely.
+        //
+        if (!bundles_without_optionals.isEmpty ())
+        {
+            bundles_to_resolve = bundles_without_optionals;
+        }
+
+        // Now try to resolve the bundles
+        for (Bundle bundle: bundles_to_resolve)
+        {
+            try
+            {
+                bundle.getResource ("META-INF/MANIFEST.MF");
+            }
+            catch (Exception nah)
+            {
+                log.warn ("Exception cycling installed bundle {}: {}", bundle, nah.getMessage ());
             }
         }
     }

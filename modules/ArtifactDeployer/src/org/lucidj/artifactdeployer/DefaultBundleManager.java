@@ -97,13 +97,13 @@ public class DefaultBundleManager implements BundleManager, BundleListener
         bundle_prop_cache = new ConcurrentHashMap<> ();
 
         // TODO: THIS SHOULD BE RECONFIGURABLE
-        cache_dir = System.getProperty ("system.home") + "/cache/" + this.getClass ().getSimpleName ();
+        cache_dir = System.getProperty ("system.data") + "/bundle-manager/" + this.getClass ().getSimpleName ();
 
         File check_cache_dir = new File (cache_dir);
 
         if (!check_cache_dir.exists ())
         {
-            if (check_cache_dir.mkdir ())
+            if (check_cache_dir.mkdirs ())
             {
                 log.info ("Creating cache {}", cache_dir);
             }

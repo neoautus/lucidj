@@ -971,17 +971,22 @@
 
         <delete dir="${stage.dir}"/><!-- needed? -->
         <mkdir dir="${stage.dir}"/>
+
+        <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${stage.dir}">
+            <cutdirsmapper dirs="1"/>
+        </unzip>
+
         <mkdir dir="${runtime.dir}"/>
         <mkdir dir="${system.dir}"/>
         <mkdir dir="${applications.dir}"/>
 
 	    <!-- Apache Karaf is unziped first so it can be overwritten if needed -->
-        <property name="karaf.rt.dir" value="${runtime.dir}/Apache-Karaf/${karaf.release}"/>
+        <!--property name="karaf.rt.dir" value="${runtime.dir}/Apache-Karaf/${karaf.release}"/>
         <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${karaf.rt.dir}"/>
         <copy todir="${karaf.rt.dir}" overwrite="true">
             <fileset dir="${basedir}/extras/Apache-Karaf/${karaf.release}"
                  includes="**/*"/>
-        </copy>
+        </copy-->
 
 
         <copy todir="${stage.dir}" overwrite="true">
@@ -1020,7 +1025,7 @@
         </chmod>
 
         <!-- Preload maven2 repository if we have available files -->
-        <if><available file="${maven2.preload.dir}" type="dir"/>
+        <!--if><available file="${maven2.preload.dir}" type="dir"/>
             <then>
                 <echo message="Preloading Maven2 cache repository..."/>
                 <copy todir="${stage.dir}/cache/maven2">
@@ -1030,7 +1035,7 @@
                     </fileset>
                 </copy>
             </then>
-        </if>
+        </if-->
 
         <!-- Copy platform independent launcher -->
         <copy todir="${stage.dir}/bin" overwrite="true">
@@ -1038,14 +1043,14 @@
         </copy>
 
         <!-- Build Karaf deployment bootstrap -->
-        <ant target="build.bootstrap"/>
+        <!--ant target="build.bootstrap"/-->
 
         <!-- Expose needed classes -->
-        <ant target="build.extension.bundle"/>
+        <!--ant target="build.extension.bundle"/-->
 
         <!-- Copy support libraries directly to deploy dir,
              should figure out better placement -->
-        <copy todir="${system.dir}" flatten="true">
+        <copy todir="${runtime.dir}" flatten="true">
             <fileset dir="${libcache.dir}">
                 <!-- Vaadin -->
                 <include name="vaadin/jar/vaadin-server-*.jar"/>
@@ -1069,11 +1074,12 @@
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
                 <include name="javassist/bundle/*.jar"/>
-                <include name="karaf-util/bundle/org.apache.felix.gogo.runtime-*.jar"/>
+                <!--include name="karaf-util/bundle/org.apache.felix.gogo.runtime-*.jar"/-->
+                <include name="shiro/bundle/shiro-core-*.jar"/>
 
                 <!-- iPOJO -->
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>
-                <include name="ipojo/bundle/org.apache.felix.ipojo.handler.extender-*.jar"/>
+                <!--include name="ipojo/bundle/org.apache.felix.ipojo.handler.extender-*.jar"/-->
 
                 <!-- Hazelcast -->
                 <include name="hazelcast/jar/*.jar"/>

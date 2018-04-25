@@ -72,13 +72,13 @@ public class PackageDeploymentEngine implements
     public PackageDeploymentEngine ()
     {
         // TODO: THIS SHOULD BE RECONFIGURABLE
-        packages_dir = System.getProperty ("system.home") + "/cache/" + this.getClass ().getPackage ().getName ();
+        packages_dir = System.getProperty ("system.data") + "/leap-cache/" + this.getClass ().getPackage ().getName ();
 
         File check_packages_dir = new File (packages_dir);
 
         if (!check_packages_dir.exists ())
         {
-            if (check_packages_dir.mkdir ())
+            if (check_packages_dir.mkdirs ())
             {
                 log.info ("Creating cache {}", packages_dir);
             }

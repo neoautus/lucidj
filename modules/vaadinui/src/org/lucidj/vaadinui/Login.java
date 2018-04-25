@@ -255,7 +255,7 @@ public class Login extends LoginForm implements LoginForm.LoginListener
 
     static void configureLoginToken ()
     {
-        Path token_file = Paths.get (System.getProperty ("system.home"), "cache/login-token.txt");
+        Path token_file = Paths.get (System.getProperty ("system.data"), "cache/login-token.txt");
 
         if (System.getProperty ("user.conf") == null)
         {

@@ -976,6 +976,10 @@
             <cutdirsmapper dirs="1"/>
         </unzip>
 
+        <!-- We don't want fileinstall on deploy/ -->
+        <delete file="${stage.dir}/conf/org.apache.felix.fileinstall-deploy.cfg"/>
+        <delete dir="${stage.dir}/deploy"/>
+
         <mkdir dir="${runtime.dir}"/>
         <mkdir dir="${system.dir}"/>
         <mkdir dir="${applications.dir}"/>

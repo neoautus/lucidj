@@ -16,6 +16,7 @@
 
 package org.lucidj.karafbinding;
 
+/*
 import org.apache.karaf.shell.api.console.Session;
 import org.apache.karaf.shell.api.console.SessionFactory;
 import org.apache.karaf.util.jaas.JaasHelper;
@@ -190,5 +191,5 @@ public class KarafBinding implements ServiceBinding
         }
     }
 }
-
+*/
 // EOF

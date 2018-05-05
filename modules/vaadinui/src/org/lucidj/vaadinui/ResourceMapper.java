@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -14,9 +14,9 @@
  * the License.
  */
 
-package org.lucidj.artifactdeployer;
+package org.lucidj.vaadinui;
 
-import org.lucidj.api.core.BundleManager;
+import org.lucidj.api.artdeployer.BundleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

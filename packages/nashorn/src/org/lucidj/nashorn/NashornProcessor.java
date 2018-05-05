@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,7 +16,7 @@
 
 package org.lucidj.nashorn;
 
-import org.lucidj.api.core.Aggregate;
+import org.lucidj.api.stddef.Aggregate;
 import org.lucidj.api.core.CodeEngine;
 import org.lucidj.api.core.ComponentInterface;
 

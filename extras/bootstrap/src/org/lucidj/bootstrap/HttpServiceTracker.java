@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -17,6 +17,7 @@
 package org.lucidj.bootstrap;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.HttpContext;
@@ -27,21 +28,58 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.HashSet;
+import java.util.Set;
 
 public class HttpServiceTracker extends ServiceTracker<HttpService, HttpService>
 {
     private TinyLog log = new TinyLog ();
 
-    private final String APP_CONTEXT = "/bootstrap";
+    private final String APP_CONTEXT = "/~localsvc";
     private BootstrapDeployer deployer;
+    private BundleContext context;
+
+    private Set<String> local_addrs;
 
     public HttpServiceTracker (BundleContext context, BootstrapDeployer deployer)
     {
         super (context, HttpService.class.getName (), null);
         this.deployer = deployer;
+        this.context = context;
+    }
+
+    private boolean is_local (HttpServletRequest req)
+        throws ServletException
+    {
+        if (local_addrs == null)
+        {
+            local_addrs = new HashSet<> ();
+
+            try
+            {
+                // localhost ipv4/ipv6
+                local_addrs.add ("127.0.0.1");
+                local_addrs.add ("0:0:0:0:0:0:0:1");
+
+                // Hostname may have another address(es)
+                String hostname = InetAddress.getLocalHost().getHostName();
+                for (InetAddress inetAddress: InetAddress.getAllByName (hostname))
+                {
+                    local_addrs.add (inetAddress.getHostAddress());
+                }
+            }
+            catch (IOException e)
+            {
+                log.warn ("Exception retrieving local addresses", e);
+                throw (new ServletException ("Unable to lookup local addresses"));
+            }
+        }
+        return (local_addrs.contains (req.getRemoteAddr ()));
     }
 
     @Override
+    @SuppressWarnings ("unchecked")
     public HttpService addingService (ServiceReference<HttpService> reference)
     {
         HttpService http_service = context.getService (reference);
@@ -51,11 +89,52 @@ public class HttpServiceTracker extends ServiceTracker<HttpService, HttpService>
             HttpServlet servlet = new HttpServlet ()
             {
                 @Override
-                protected void doGet (HttpServletRequest req, HttpServletResponse resp)
+                protected void service (HttpServletRequest req, HttpServletResponse resp)
                     throws ServletException, IOException
                 {
-                    resp.setContentType ("text/plain");
-                    resp.getWriter().write ("bootstrap_finished=" + deployer.bootstrapFinished () + "\n");
+                    String path = req.getPathInfo ();
+
+                    // We allow only local requests for ~localsvc
+                    if (!is_local (req))
+                    {
+                        resp.sendError (HttpServletResponse.SC_FORBIDDEN);
+                        return;
+                    }
+
+                    // Compatibility
+                    if (path == null || path.equals ("/"))
+                    {
+                        resp.setContentType ("text/plain");
+                        resp.getWriter().write ("bootstrap_finished=" + deployer.bootstrapFinished () + "\n");
+                        return;
+                    }
+
+                    ServiceReference[] refs = null;
+
+                    // Look for the invoked service (/deploy, /status, etc)
+                    try
+                    {
+                        String filter = "(@service.path=" + path + ")";
+                        refs = context.getServiceReferences (HttpServlet.class.getName (), filter);
+                    }
+                    catch (InvalidSyntaxException ignore) {};
+
+                    if (refs == null || refs.length != 1)
+                    {
+                        resp.sendError (HttpServletResponse.SC_NOT_FOUND);
+                        return;
+                    }
+
+                    // Invoke the service
+                    try
+                    {
+                        HttpServlet mservlet = (HttpServlet)context.getService (refs [0]);
+                        mservlet.service (req, resp);
+                    }
+                    finally
+                    {
+                        context.ungetService (refs [0]);
+                    }
                 }
             };
 
@@ -77,7 +156,7 @@ public class HttpServiceTracker extends ServiceTracker<HttpService, HttpService>
     {
         service.unregister (APP_CONTEXT);
 
-        log.info ("Application servlet stopped: {}", APP_CONTEXT);
+        log.info ("Bootstrap servlet stopped: {}", APP_CONTEXT);
 
         super.removedService (reference, service);
     }

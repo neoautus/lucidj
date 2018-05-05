@@ -78,7 +78,7 @@ public class GluonUtil
 
     public static Path get_data_dir ()
     {
-        Path data_dir = Paths.get (System.getProperty ("system.home"), "cache", GluonUtil.class.getName ());
+        Path data_dir = Paths.get (System.getProperty ("system.data"), "cache", GluonUtil.class.getName ());
 
         if (!Files.exists (data_dir))
         {

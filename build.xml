@@ -1,4 +1,19 @@
 <?xml version="1.0"?>
+<!--
+   Copyright 2018 NEOautus Ltd. (http://neoautus.com)
+
+   Licensed under the Apache License, Version 2.0 (the "License"); you may not
+   use this file except in compliance with the License. You may obtain a copy of
+   the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+   License for the specific language governing permissions and limitations under
+   the License.
+-->
 <project name="lucidj" default="build" basedir=".">
 
 <!-- **********************************************************************
@@ -104,6 +119,10 @@
 
     </path>
 
+    <path id="project-libs">
+        <fileset dir="${libcache.dir}" includes="project-libs/**/*.jar"/>
+    </path>
+
     <!-- ***** MODULES & LIBRARIES CLASSPATH ********************************** -->
 
     <path id="classpath.runtime">
@@ -120,6 +139,9 @@
         <path refid="vaadin-sass-compiler.cp"/>
         <path refid="classpath.vaadin.server"/>
         <path refid="classpath.static"/>
+
+        <!-- Project libraries -->
+        <path refid="project-libs"/>
 
     </path>
 
@@ -158,6 +180,7 @@
         <!-- The LucidJ API -->
         <pathelement path="${dist.dir}/libraries_API.Core.jar"/>
         <pathelement path="${dist.dir}/libraries_API.VUI.jar"/>
+        <path refid="project-libs"/>
 
     </path>
 
@@ -971,17 +994,26 @@
 
         <delete dir="${stage.dir}"/><!-- needed? -->
         <mkdir dir="${stage.dir}"/>
+
+        <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${stage.dir}">
+            <cutdirsmapper dirs="1"/>
+        </unzip>
+
+        <!-- We don't want fileinstall on deploy/ -->
+        <delete file="${stage.dir}/conf/org.apache.felix.fileinstall-deploy.cfg"/>
+        <delete dir="${stage.dir}/deploy"/>
+
         <mkdir dir="${runtime.dir}"/>
         <mkdir dir="${system.dir}"/>
         <mkdir dir="${applications.dir}"/>
 
 	    <!-- Apache Karaf is unziped first so it can be overwritten if needed -->
-        <property name="karaf.rt.dir" value="${runtime.dir}/Apache-Karaf/${karaf.release}"/>
+        <!--property name="karaf.rt.dir" value="${runtime.dir}/Apache-Karaf/${karaf.release}"/>
         <unzip src="${karaf.dist.dir}/${karaf.dist.zip}" dest="${karaf.rt.dir}"/>
         <copy todir="${karaf.rt.dir}" overwrite="true">
             <fileset dir="${basedir}/extras/Apache-Karaf/${karaf.release}"
                  includes="**/*"/>
-        </copy>
+        </copy-->
 
 
         <copy todir="${stage.dir}" overwrite="true">
@@ -1020,7 +1052,7 @@
         </chmod>
 
         <!-- Preload maven2 repository if we have available files -->
-        <if><available file="${maven2.preload.dir}" type="dir"/>
+        <!--if><available file="${maven2.preload.dir}" type="dir"/>
             <then>
                 <echo message="Preloading Maven2 cache repository..."/>
                 <copy todir="${stage.dir}/cache/maven2">
@@ -1030,7 +1062,7 @@
                     </fileset>
                 </copy>
             </then>
-        </if>
+        </if-->
 
         <!-- Copy platform independent launcher -->
         <copy todir="${stage.dir}/bin" overwrite="true">
@@ -1038,14 +1070,14 @@
         </copy>
 
         <!-- Build Karaf deployment bootstrap -->
-        <ant target="build.bootstrap"/>
+        <!--ant target="build.bootstrap"/-->
 
         <!-- Expose needed classes -->
-        <ant target="build.extension.bundle"/>
+        <!--ant target="build.extension.bundle"/-->
 
         <!-- Copy support libraries directly to deploy dir,
              should figure out better placement -->
-        <copy todir="${system.dir}" flatten="true">
+        <copy todir="${runtime.dir}" flatten="true">
             <fileset dir="${libcache.dir}">
                 <!-- Vaadin -->
                 <include name="vaadin/jar/vaadin-server-*.jar"/>
@@ -1069,11 +1101,12 @@
                 <include name="guava/bundle/guava-*.jar"/>
                 <include name="apache-commons/jar/commons-lang3-*.jar"/>
                 <include name="javassist/bundle/*.jar"/>
-                <include name="karaf-util/bundle/org.apache.felix.gogo.runtime-*.jar"/>
+                <!--include name="karaf-util/bundle/org.apache.felix.gogo.runtime-*.jar"/-->
+                <include name="shiro/bundle/shiro-core-*.jar"/>
 
                 <!-- iPOJO -->
                 <include name="ipojo/bundle/org.apache.felix.ipojo.handler.eventadmin-*.jar"/>
-                <include name="ipojo/bundle/org.apache.felix.ipojo.handler.extender-*.jar"/>
+                <!--include name="ipojo/bundle/org.apache.felix.ipojo.handler.extender-*.jar"/-->
 
                 <!-- Hazelcast -->
                 <include name="hazelcast/jar/*.jar"/>

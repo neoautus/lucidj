@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -43,10 +43,10 @@ import com.vaadin.ui.VerticalLayout;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
-import org.lucidj.api.core.Aggregate;
-import org.lucidj.api.core.Artifact;
-import org.lucidj.api.core.ArtifactDeployer;
-import org.lucidj.api.core.BundleManager;
+import org.lucidj.api.stddef.Aggregate;
+import org.lucidj.api.artdeployer.Artifact;
+import org.lucidj.api.artdeployer.ArtifactDeployer;
+import org.lucidj.api.artdeployer.BundleManager;
 import org.lucidj.api.core.ComponentManager;
 import org.lucidj.api.core.ComponentState;
 import org.lucidj.api.core.EmbeddingContext;
@@ -757,6 +757,7 @@ public class BrowserView extends VerticalLayout implements View, ApplicationInte
         update_cell_focus (null, true);
     }
 
+    // TODO: GET RID OF THIS CONVOLUTED BundleManager/Artifact DEPENDENCY
     public boolean init_component (ViewChangeListener.ViewChangeEvent event)
     {
         Matcher m = NAV_PATTERN.matcher (event.getViewName ());

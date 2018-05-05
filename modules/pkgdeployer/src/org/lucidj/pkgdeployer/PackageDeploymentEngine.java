@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 NEOautus Ltd. (http://neoautus.com)
+ * Copyright 2018 NEOautus Ltd. (http://neoautus.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -16,9 +16,9 @@
 
 package org.lucidj.pkgdeployer;
 
-import org.lucidj.api.core.Artifact;
-import org.lucidj.api.core.BundleManager;
-import org.lucidj.api.core.DeploymentEngine;
+import org.lucidj.api.artdeployer.Artifact;
+import org.lucidj.api.artdeployer.BundleManager;
+import org.lucidj.api.artdeployer.DeploymentEngine;
 import org.lucidj.api.core.EmbeddingContext;
 import org.lucidj.api.core.EmbeddingManager;
 import org.slf4j.Logger;

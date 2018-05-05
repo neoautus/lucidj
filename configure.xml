@@ -1,4 +1,19 @@
 <?xml version="1.0"?>
+<!--
+   Copyright 2018 NEOautus Ltd. (http://neoautus.com)
+
+   Licensed under the Apache License, Version 2.0 (the "License"); you may not
+   use this file except in compliance with the License. You may obtain a copy of
+   the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+   License for the specific language governing permissions and limitations under
+   the License.
+-->
 <project name="lucidj" default="configure-reps" basedir="." xmlns:ivy="antlib:org.apache.ivy.ant">
 
 <!-- **********************************************************************
@@ -32,6 +47,28 @@
         </sequential>
     </macrodef>
 
+    <macrodef name="getDependency">
+        <attribute name="group"/>
+        <attribute name="org"/>
+        <attribute name="name"/>
+        <attribute name="rev"/>
+        <attribute name="type" default="jar"/>
+        <sequential>
+            <local name="dest.file"/>
+            <property name="dest.file" value="${libcache.dir}/@{group}/@{name}-@{rev}.@{type}"/>
+            <if><not><available file="${dest.file}"/></not>
+                <then>
+                    <mkdir dir="${libcache.dir}/@{group}"/>
+                    <get dest="${libcache.dir}/@{group}/@{name}.tmp"
+                         src="https://github.com/@{org}/releases/download/@{rev}/@{name}-@{rev}.jar"
+                         skipexisting="false"/>
+                    <move file="${libcache.dir}/@{group}/@{name}.tmp"
+                          tofile="${dest.file}"/>
+                </then>
+            </if>
+        </sequential>
+    </macrodef>
+
     <target name="configure-reps" description="Configure all libraries needed to build this project.">
 
         <!-- Guard against unfinished configures -->
@@ -53,6 +90,19 @@
         <!-- ==================== -->
         <!-- PROJECT DEPENDENCIES -->
         <!-- ==================== -->
+
+        <!-- =================================== -->
+        <!-- Dependencies from our distributions -->
+        <!-- =================================== -->
+
+        <getDependency group="project-libs"
+            org="neoautus/lucidj-stddef" name="org.lucidj.api.stddef" rev="1.0.1"/>
+        <getDependency group="project-libs"
+            org="neoautus/lucidj-artifactdeployer" name="org.lucidj.api.artdeployer" rev="1.2.0"/>
+
+        <!-- ==================================== -->
+        <!-- Dependencies from Maven repositories -->
+        <!-- ==================================== -->
 
         <pathdep group="bnd">
             <ivy:dependency org="biz.aQute.bnd" name="bnd" rev="2.4.0" transitive="false"/>

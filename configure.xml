@@ -74,6 +74,10 @@
         <!-- Guard against unfinished configures -->
         <delete file="${configure.ok.file}"/>
 
+        <!-- ====================== -->
+        <!-- ANT/TASKS DEPENDENCIES -->
+        <!-- ====================== -->
+
         <!-- Get Ivy if we don't have it yet -->
         <mkdir dir="${cache.dir}/ivy-bin"/>
         <get dest="${cache.dir}/ivy-bin/ivy.jar"
@@ -84,6 +88,29 @@
         <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant">
             <classpath>
                 <fileset dir="${cache.dir}/ivy-bin" includes="ivy.jar"/>
+            </classpath>
+        </taskdef>
+
+        <pathdep group="bnd">
+            <ivy:dependency org="biz.aQute.bnd" name="bnd" rev="2.4.0" transitive="false"/>
+        </pathdep>
+
+        <pathdep group="tasks">
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.ant" rev="1.12.1" transitive="false"/>
+            <ivy:dependency org="ant-contrib"      name="ant-contrib"                rev="1.0b3" transitive="false"/>
+        </pathdep>
+
+        <!-- For <propertyregex/> -->
+        <taskdef resource="net/sf/antcontrib/antlib.xml">
+            <classpath>
+                <fileset dir="${libcache.dir}" includes="tasks/**/*.jar"/>
+            </classpath>
+        </taskdef>
+
+        <!-- For <bnd/> -->
+        <taskdef resource="aQute/bnd/ant/taskdef.properties">
+            <classpath id="bnd.cp">
+                <fileset dir="${libcache.dir}" includes="bnd/jar/*.jar"/>
             </classpath>
         </taskdef>
 
@@ -103,15 +130,6 @@
         <!-- ==================================== -->
         <!-- Dependencies from Maven repositories -->
         <!-- ==================================== -->
-
-        <pathdep group="bnd">
-            <ivy:dependency org="biz.aQute.bnd" name="bnd" rev="2.4.0" transitive="false"/>
-        </pathdep>
-
-        <pathdep group="tasks">
-            <ivy:dependency org="org.apache.felix" name="org.apache.felix.ipojo.ant" rev="1.12.1" transitive="false"/>
-            <ivy:dependency org="ant-contrib"      name="ant-contrib"                rev="1.0b3" transitive="false"/>
-        </pathdep>
 
         <pathdep group="slf4j">
             <ivy:dependency org="org.slf4j" name="slf4j-api" rev="1.7.16" />
@@ -240,20 +258,6 @@
             <ivy:dependency org="org.javassist" name="javassist" rev="3.21.0-GA"/>
         </pathdep>
 
-        <!-- For <propertyregex/> -->
-        <taskdef resource="net/sf/antcontrib/antlib.xml">
-            <classpath>
-                <fileset dir="${libcache.dir}" includes="tasks/**/*.jar"/>
-            </classpath>
-        </taskdef>
-
-        <!-- For <bnd/> -->
-        <taskdef resource="aQute/bnd/ant/taskdef.properties">
-            <classpath id="bnd.cp">
-                <fileset dir="${libcache.dir}" includes="bnd/jar/*.jar"/>
-            </classpath>
-        </taskdef>
-	
 	<echo>
 	    ==================================================================
 	</echo>

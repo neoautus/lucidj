@@ -197,23 +197,9 @@
             <ivy:dependency org="org.osgi" name="org.osgi.enterprise" rev="5.0.0" />
         </pathdep>
 
-        <!--pathdep group="karaf-runtime">
-            <ivy:dependency org="org.apache.karaf.shell" name="org.apache.karaf.shell.console"
-                rev="${karaf.release}" transitive="false"/>
-            <ivy:dependency org="org.apache.karaf.shell" name="org.apache.karaf.shell.core"
-                rev="${karaf.release}" transitive="false"/>
-            <ivy:dependency org="org.apache.karaf.features" name="org.apache.karaf.features.core"
-                rev="${karaf.release}" transitive="false"/>
-        </pathdep-->
-
-        <pathdep group="karaf-util">
-            <!--ivy:dependency org="org.apache.karaf" name="org.apache.karaf.util"
-                rev="${karaf.release}" transitive="false"/>
-            <ivy:dependency org="org.apache.felix" name="org.apache.felix.utils"
-                rev="1.8.4" transitive="false"/-->
+        <pathdep group="felix-runtime">
             <!-- TODO: CHANGE THIS TO SOME REF TO LUCIDJ-CORE EMBEDDED MODULES -->
-            <ivy:dependency org="org.apache.felix" name="org.apache.felix.gogo.runtime"
-                rev="1.0.4"/><!-- For ThreadIO -->
+            <ivy:dependency org="org.apache.felix" name="org.apache.felix.gogo.runtime" rev="1.0.4"/><!-- For ThreadIO -->
         </pathdep>
 
         <pathdep group="javaee-api">

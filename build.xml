@@ -93,8 +93,8 @@
         <fileset dir="${libcache.dir}" includes="osgi/jar/**/*.jar"/>
     </path>
 
-    <path id="karaf-runtime.cp">
-        <fileset dir="${libcache.dir}" includes="karaf-runtime/bundle/**/*.jar"/>
+    <path id="felix-runtime.cp">
+        <fileset dir="${libcache.dir}" includes="felix-runtime/bundle/**/*.jar"/>
     </path>
 
     <path id="javaee-api.cp">
@@ -133,7 +133,7 @@
         <!-- OSGi -->
         <path refid="osgi.ext"/>
         <path refid="ipojo.cp"/>
-        <path refid="karaf-runtime.cp"/>
+        <path refid="felix-runtime.cp"/>
 
         <!-- Vaadin etc -->
         <path refid="vaadin-sass-compiler.cp"/>
@@ -169,7 +169,7 @@
         <!-- OSGi -->
         <path refid="osgi.ext"/>
         <path refid="ipojo.cp"/>
-        <path refid="karaf-runtime.cp"/>
+        <path refid="felix-runtime.cp"/>
 
         <!-- Built-in utilities -->
         <path refid="slf4j.cp"/>

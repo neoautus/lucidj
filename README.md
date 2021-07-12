@@ -1,3 +1,0 @@
-# LucidJ
-Readme later...
-
